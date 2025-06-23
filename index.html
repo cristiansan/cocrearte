@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cocrearte - Gestión de Terapeutas</title>
+    <meta name="description" content="Plataforma web para gestión de psicólogos y terapeutas en Espacio Cocrearte">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
+        import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, query, where, orderBy } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+
+        // Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyA8o-63pwyl-32b5_TjDd16Avc6Pa6_yAU",
+            authDomain: "espacio-cocrearte.firebaseapp.com",
+            projectId: "espacio-cocrearte",
+            storageBucket: "espacio-cocrearte.firebasestorage.app",
+            messagingSenderId: "879735027281",
+            appId: "1:879735027281:web:18e1b44e945960be1cea70"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Tailwind config
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        };
+
+        // Global variables
+        window.currentUser = null;
+        window.auth = auth;
+        window.db = db;
+
+        // Auth state listener
+        onAuthStateChanged(auth, (user) => {
+            window.currentUser = user;
+            updateUI();
+        });
+
+        // Update UI based on auth state
+        function updateUI() {
+            const loginSection = document.getElementById('loginSection');
+            const dashboardSection = document.getElementById('dashboardSection');
+            const userInfo = document.getElementById('userInfo');
+
+            if (window.currentUser) {
+                loginSection.style.display = 'none';
+                dashboardSection.style.display = 'block';
+                userInfo.textContent = `Bienvenido, ${window.currentUser.email}`;
+            } else {
+                loginSection.style.display = 'block';
+                dashboardSection.style.display = 'none';
+                userInfo.textContent = '';
+            }
+        }
+
+        // Login function
+        window.loginUser = async function() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                showMessage('Inicio de sesión exitoso!', 'success');
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        };
+
+        // Register function
+        window.registerUser = async function() {
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const nombre = document.getElementById('nombre').value;
+            const tipo = document.getElementById('tipo').value;
+
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // Save user data to Firestore
+                await setDoc(doc(db, 'usuarios', user.uid), {
+                    uid: user.uid,
+                    email: user.email,
+                    nombre: nombre,
+                    tipo: tipo,
+                    activo: true,
+                    fechaCreacion: new Date()
+                });
+
+                showMessage('Usuario registrado exitosamente!', 'success');
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        };
+
+        // Logout function
+        window.logoutUser = async function() {
+            try {
+                await signOut(auth);
+                showMessage('Sesión cerrada exitosamente!', 'success');
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        };
+
+        // Show message function
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = message;
+            messageDiv.className = `fixed top-4 right-4 p-4 rounded-lg text-white ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+            messageDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        // Initialize UI
+        document.addEventListener('DOMContentLoaded', function() {
+            updateUI();
+        });
+    </script>
+
+    <style>
+        .btn-primary {
+            @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+        }
+        .btn-secondary {
+            @apply bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+        }
+        .input-field {
+            @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+        }
+        .card {
+            @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Message Display -->
+    <div id="message" class="fixed top-4 right-4 p-4 rounded-lg text-white hidden z-50"></div>
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-6">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-primary-600">🧠 Cocrearte</h1>
+                </div>
+                <div id="userInfo" class="text-gray-600"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Login Section -->
+    <div id="loginSection" class="min-h-screen bg-gradient-to-br from-primary-50 to-blue-50 flex items-center justify-center py-12">
+        <div class="max-w-md w-full space-y-8">
+            <!-- Hero -->
+            <div class="text-center">
+                <h2 class="text-3xl font-bold text-gray-900">Bienvenido a Cocrearte</h2>
+                <p class="mt-2 text-gray-600">Plataforma de gestión para terapeutas</p>
+            </div>
+
+            <!-- Login Form -->
+            <div class="card">
+                <h3 class="text-lg font-semibold mb-4">Iniciar Sesión</h3>
+                <form class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" id="email" class="input-field mt-1" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Contraseña</label>
+                        <input type="password" id="password" class="input-field mt-1" required>
+                    </div>
+                    <button type="button" onclick="loginUser()" class="btn-primary w-full">
+                        Iniciar Sesión
+                    </button>
+                </form>
+            </div>
+
+            <!-- Register Form -->
+            <div class="card">
+                <h3 class="text-lg font-semibold mb-4">Registrarse</h3>
+                <form class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Nombre</label>
+                        <input type="text" id="nombre" class="input-field mt-1" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" id="regEmail" class="input-field mt-1" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Contraseña</label>
+                        <input type="password" id="regPassword" class="input-field mt-1" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Tipo de Usuario</label>
+                        <select id="tipo" class="input-field mt-1">
+                            <option value="terapeuta">Terapeuta</option>
+                            <option value="paciente">Paciente</option>
+                        </select>
+                    </div>
+                    <button type="button" onclick="registerUser()" class="btn-primary w-full">
+                        Registrarse
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Section -->
+    <div id="dashboardSection" class="min-h-screen bg-gray-50" style="display: none;">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-2xl font-bold text-gray-900">Dashboard</h2>
+                <button onclick="logoutUser()" class="btn-secondary">
+                    Cerrar Sesión
+                </button>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-900">Pacientes</h3>
+                    <p class="text-3xl font-bold text-primary-600">0</p>
+                </div>
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-900">Sesiones Hoy</h3>
+                    <p class="text-3xl font-bold text-green-600">0</p>
+                </div>
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-gray-900">Ingresos del Mes</h3>
+                    <p class="text-3xl font-bold text-blue-600">$0</p>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Acciones Rápidas</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <button class="btn-primary">
+                        📝 Nueva Sesión
+                    </button>
+                    <button class="btn-secondary">
+                        👥 Agregar Paciente
+                    </button>
+                    <button class="btn-secondary">
+                        📅 Ver Calendario
+                    </button>
+                    <button class="btn-secondary">
+                        💰 Ver Pagos
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 
