@@ -65,4 +65,17 @@ Brindar una herramienta simple y eficaz para:
 
 ## 📁 Estructura inicial (sugerida)
 
+/cocrearte-app
+├── public/
+├── src/
+│ ├── components/
+│ ├── pages/
+│ ├── services/
+│ ├── utils/
+│ └── styles/
+├── .env
+├── README.md
+└── package.json
+
+
 
