@@ -134,14 +134,14 @@ async function loadPatients(uid) {
     snapshot.forEach(doc => {
         const p = doc.data();
         const div = document.createElement('div');
-        div.className = 'border rounded p-4 flex flex-col md:flex-row md:items-center md:justify-between cursor-pointer hover:bg-gray-50 transition';
+        div.className = 'border rounded p-4 flex flex-col md:flex-row md:items-center md:justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-darkborder transition';
         div.setAttribute('data-paciente-id', doc.id);
         div.innerHTML = `
             <div>
-                <div class="font-bold text-primary-700">${p.nombre || ''}</div>
-                <div class="text-gray-600 text-sm">${p.email || ''}</div>
-                <div class="text-gray-600 text-sm">${p.telefono || ''}</div>
-                <div class="text-gray-600 text-sm">${p.motivo || ''}</div>
+                <div class=\"font-bold text-[#2d3748] dark:text-gray-100\">${p.nombre || ''}</div>
+                <div class=\"text-[#4b5563] dark:text-gray-200 text-sm\">${p.email || ''}</div>
+                <div class=\"text-[#4b5563] dark:text-gray-200 text-sm\">${p.telefono || ''}</div>
+                <div class=\"text-[#4b5563] dark:text-gray-200 text-sm\">${p.motivo || ''}</div>
             </div>
         `;
         patientsList.appendChild(div);
@@ -195,10 +195,10 @@ patientsList.addEventListener('click', async (e) => {
     if (!doc.exists) return;
     const p = doc.data();
     fichaPacienteDatos.innerHTML = `
-        <div><span class="font-semibold">Nombre:</span> ${p.nombre || ''}</div>
-        <div><span class="font-semibold">Email:</span> ${p.email || ''}</div>
-        <div><span class="font-semibold">Teléfono:</span> ${p.telefono || ''}</div>
-        <div><span class="font-semibold">Motivo:</span> ${p.motivo || ''}</div>
+        <div class=\"font-bold text-[#2d3748] dark:text-gray-100 text-lg\">${p.nombre || ''}</div>
+        <div class=\"text-[#4b5563] dark:text-gray-200 text-sm\"><span class=\"font-semibold\">Email:</span> ${p.email || ''}</div>
+        <div class=\"text-[#4b5563] dark:text-gray-200 text-sm\"><span class=\"font-semibold\">Teléfono:</span> ${p.telefono || ''}</div>
+        <div class=\"text-[#4b5563] dark:text-gray-200 text-sm\"><span class=\"font-semibold\">Motivo:</span> ${p.motivo || ''}</div>
     `;
     fichaPacienteModal.classList.remove('hidden');
     loadSesiones();
@@ -217,10 +217,10 @@ async function loadSesiones() {
     snapshot.forEach(doc => {
         const s = doc.data();
         const div = document.createElement('div');
-        div.className = 'border rounded p-3 bg-gray-50';
+        div.className = 'border rounded p-3 bg-gray-50 dark:bg-darkbg';
         div.innerHTML = `
-            <div class="text-sm text-gray-700"><span class="font-semibold">Fecha:</span> ${s.fecha || ''}</div>
-            <div class="text-gray-900">${s.comentario || ''}</div>
+            <div class=\"text-sm font-bold text-[#2d3748] dark:text-gray-100\"><span class=\"font-semibold\">Fecha:</span> ${s.fecha || ''}</div>
+            <div class=\"text-gray-900 dark:text-gray-200\">${s.comentario || ''}</div>
         `;
         sesionesList.appendChild(div);
     });
