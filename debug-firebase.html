@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Firebase - Cocrearte</title>
+    <title>Debug Firebase - Cocrearte</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-8">
-    <div class="max-w-md mx-auto bg-white rounded-lg shadow p-6">
-        <h1 class="text-2xl font-bold mb-4">🧠 Test Firebase</h1>
+    <div class="max-w-2xl mx-auto bg-white rounded-lg shadow p-6">
+        <h1 class="text-2xl font-bold mb-4">🔧 Debug Firebase Connection</h1>
         
         <div id="status" class="mb-4 p-3 rounded bg-yellow-100 text-yellow-800">
             Inicializando Firebase...
@@ -23,15 +23,18 @@
                 <label class="block text-sm font-medium mb-1">Password:</label>
                 <input type="password" id="password" class="w-full p-2 border rounded" value="123456">
             </div>
-            <button onclick="testRegister()" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
-                Test Registro
+            <button onclick="testConnection()" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
+                Test Connection
             </button>
-            <button onclick="testLogin()" class="w-full bg-green-500 text-white p-2 rounded hover:bg-green-600">
-                Test Login
+            <button onclick="testRegister()" class="w-full bg-green-500 text-white p-2 rounded hover:bg-green-600">
+                Test Register
+            </button>
+            <button onclick="clearLog()" class="w-full bg-gray-500 text-white p-2 rounded hover:bg-gray-600">
+                Clear Log
             </button>
         </div>
 
-        <div id="log" class="mt-4 p-3 bg-gray-100 rounded text-sm font-mono max-h-40 overflow-y-auto">
+        <div id="log" class="mt-4 p-3 bg-gray-100 rounded text-sm font-mono max-h-60 overflow-y-auto">
             Log de eventos...
         </div>
     </div>
@@ -68,48 +71,50 @@
 
         try {
             log('Inicializando Firebase...');
+            log(`Config: ${JSON.stringify(firebaseConfig, null, 2)}`);
+            
             const app = initializeApp(firebaseConfig);
             const auth = getAuth(app);
             
             log('Firebase inicializado correctamente');
+            log(`Auth domain: ${auth.config.authDomain}`);
             updateStatus('Firebase conectado correctamente', 'success');
+
+            window.testConnection = function() {
+                log('=== Test de Conexión ===');
+                log(`App name: ${app.name}`);
+                log(`Auth config: ${JSON.stringify(auth.config, null, 2)}`);
+                log('Conexión exitosa');
+            };
 
             window.testRegister = async function() {
                 const email = document.getElementById('email').value;
                 const password = document.getElementById('password').value;
                 
+                log('=== Test de Registro ===');
                 log(`Intentando registrar: ${email}`);
                 updateStatus('Registrando usuario...', 'info');
                 
                 try {
                     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                    log(`Usuario registrado exitosamente: ${userCredential.user.uid}`);
+                    log(`✅ Usuario registrado exitosamente: ${userCredential.user.uid}`);
+                    log(`Email verificado: ${userCredential.user.emailVerified}`);
                     updateStatus('Usuario registrado exitosamente!', 'success');
                 } catch (error) {
-                    log(`Error en registro: ${error.code} - ${error.message}`);
+                    log(`❌ Error en registro: ${error.code}`);
+                    log(`Mensaje: ${error.message}`);
+                    log(`Detalles: ${JSON.stringify(error, null, 2)}`);
                     updateStatus(`Error: ${error.message}`, 'error');
                 }
             };
 
-            window.testLogin = async function() {
-                const email = document.getElementById('email').value;
-                const password = document.getElementById('password').value;
-                
-                log(`Intentando login: ${email}`);
-                updateStatus('Iniciando sesión...', 'info');
-                
-                try {
-                    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                    log(`Login exitoso: ${userCredential.user.uid}`);
-                    updateStatus('Login exitoso!', 'success');
-                } catch (error) {
-                    log(`Error en login: ${error.code} - ${error.message}`);
-                    updateStatus(`Error: ${error.message}`, 'error');
-                }
+            window.clearLog = function() {
+                document.getElementById('log').innerHTML = 'Log de eventos...\n';
             };
 
         } catch (error) {
-            log(`Error al inicializar Firebase: ${error.message}`);
+            log(`❌ Error al inicializar Firebase: ${error.message}`);
+            log(`Stack: ${error.stack}`);
             updateStatus(`Error de inicialización: ${error.message}`, 'error');
         }
     </script>

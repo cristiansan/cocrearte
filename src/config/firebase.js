@@ -4,12 +4,12 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyA8o-63pwyl-32b5_TjDd16Avc6Pa6_yAU",
-  authDomain: "espacio-cocrearte.firebaseapp.com",
-  projectId: "espacio-cocrearte",
-  storageBucket: "espacio-cocrearte.firebasestorage.app",
-  messagingSenderId: "879735027281",
-  appId: "1:879735027281:web:18e1b44e945960be1cea70"
+  apiKey: "AIzaSyBzG7qc45t37BgbuRD5S-SgRpo52NpSGGA",
+  authDomain: "monitor-entrenamiento-1fc15.firebaseapp.com",
+  projectId: "monitor-entrenamiento-1fc15",
+  storageBucket: "monitor-entrenamiento-1fc15.firebasestorage.app",
+  messagingSenderId: "662506260306",
+  appId: "1:662506260306:web:9497e4cbbd1826d8ca5c8b"
 };
 
 // Initialize Firebase

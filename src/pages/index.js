@@ -70,16 +70,16 @@ export default function Home() {
               <span className="text-primary-600"> Terapeutas</span>
             </h1>
             <p className="mt-6 text-xl text-gray-600 max-w-3xl mx-auto">
-              Plataforma web diseñada para psicólogos y terapeutas que trabajan de manera colaborativa 
-              en un espacio físico común. Gestiona pacientes, agenda sesiones y administra pagos.
+              Plataforma web diseñada exclusivamente para psicólogos y terapeutas. 
+              Gestiona pacientes, mantén fichas clínicas completas y administra sesiones de manera eficiente.
             </p>
             
             <div className="mt-10 flex justify-center space-x-4">
               <a href="/register" className="btn-primary text-lg px-8 py-3">
-                Comenzar Ahora
+                Registrarse como Terapeuta
               </a>
-              <a href="/about" className="btn-secondary text-lg px-8 py-3">
-                Conocer Más
+              <a href="/login" className="btn-secondary text-lg px-8 py-3">
+                Ya tengo cuenta
               </a>
             </div>
           </div>
@@ -90,24 +90,60 @@ export default function Home() {
               <div className="text-4xl mb-4">👥</div>
               <h3 className="card-title">Gestión de Pacientes</h3>
               <p className="text-gray-600">
-                Lleva fichas completas de tus pacientes con notas personales y resúmenes de sesiones.
+                Lleva fichas completas de tus pacientes con datos personales, antecedentes y motivo de consulta.
               </p>
             </div>
 
             <div className="card text-center">
-              <div className="text-4xl mb-4">📅</div>
-              <h3 className="card-title">Agenda Inteligente</h3>
+              <div className="text-4xl mb-4">📋</div>
+              <h3 className="card-title">Fichas Clínicas</h3>
               <p className="text-gray-600">
-                Sistema de reservas automático con confirmación de pagos y recordatorios.
+                Registra sesiones detalladas con observaciones, diagnósticos, tratamientos y tareas.
               </p>
             </div>
 
             <div className="card text-center">
-              <div className="text-4xl mb-4">💰</div>
-              <h3 className="card-title">Gestión de Pagos</h3>
+              <div className="text-4xl mb-4">🔒</div>
+              <h3 className="card-title">Privacidad Garantizada</h3>
               <p className="text-gray-600">
-                Control automático de comisiones y seguimiento de transacciones.
+                Tus datos y los de tus pacientes están protegidos con la máxima seguridad.
               </p>
+            </div>
+          </div>
+
+          {/* How it works */}
+          <div className="mt-20">
+            <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
+              ¿Cómo funciona?
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center text-primary-600 text-2xl font-bold mx-auto mb-4">
+                  1
+                </div>
+                <h3 className="text-lg font-semibold mb-2">Regístrate</h3>
+                <p className="text-gray-600">
+                  Crea tu cuenta como terapeuta con tu información profesional
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center text-primary-600 text-2xl font-bold mx-auto mb-4">
+                  2
+                </div>
+                <h3 className="text-lg font-semibold mb-2">Agrega Pacientes</h3>
+                <p className="text-gray-600">
+                  Registra a tus pacientes con sus datos personales y motivo de consulta
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center text-primary-600 text-2xl font-bold mx-auto mb-4">
+                  3
+                </div>
+                <h3 className="text-lg font-semibold mb-2">Gestiona Sesiones</h3>
+                <p className="text-gray-600">
+                  Lleva un registro detallado de cada sesión con observaciones y seguimiento
+                </p>
+              </div>
             </div>
           </div>
         </main>
@@ -116,7 +152,7 @@ export default function Home() {
         <footer className="bg-white border-t border-gray-200 mt-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="text-center text-gray-600">
-              <p>&copy; 2024 Espacio Cocrearte. Todos los derechos reservados.</p>
+              <p>&copy; 2024 Espacio Cocrearte. Plataforma exclusiva para terapeutas.</p>
             </div>
           </div>
         </footer>

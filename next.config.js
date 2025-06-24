@@ -41,6 +41,11 @@ const nextConfig = {
       },
     ];
   },
+
+  output: 'export',
+  // Si tu repo está en una subcarpeta, puedes agregar basePath y assetPrefix aquí
+  // basePath: '/NOMBRE_DEL_REPO',
+  // assetPrefix: '/NOMBRE_DEL_REPO/',
 };
 
 module.exports = nextConfig; 

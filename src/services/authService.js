@@ -8,15 +8,11 @@ import {
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 
-// Tipos de usuario
-export const USER_TYPES = {
-  TERAPEUTA: 'terapeuta',
-  PACIENTE: 'paciente',
-  ADMIN: 'admin'
-};
+// Solo terapeutas
+export const USER_TYPE = 'terapeuta';
 
-// Registrar nuevo usuario
-export const registerUser = async (email, password, userData) => {
+// Registrar nuevo terapeuta
+export const registerTherapist = async (email, password, userData) => {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
@@ -26,12 +22,12 @@ export const registerUser = async (email, password, userData) => {
       displayName: userData.nombre
     });
 
-    // Crear documento del usuario en Firestore
-    await setDoc(doc(db, 'usuarios', user.uid), {
+    // Crear documento del terapeuta en Firestore
+    await setDoc(doc(db, 'terapeutas', user.uid), {
       uid: user.uid,
       email: user.email,
       nombre: userData.nombre,
-      tipo: userData.tipo || USER_TYPES.PACIENTE,
+      tipo: USER_TYPE,
       telefono: userData.telefono || '',
       especialidad: userData.especialidad || '',
       activo: true,
@@ -41,7 +37,7 @@ export const registerUser = async (email, password, userData) => {
 
     return { success: true, user };
   } catch (error) {
-    console.error('Error al registrar usuario:', error);
+    console.error('Error al registrar terapeuta:', error);
     return { success: false, error: error.message };
   }
 };
@@ -78,17 +74,17 @@ export const onAuthStateChange = (callback) => {
   return onAuthStateChanged(auth, callback);
 };
 
-// Obtener datos completos del usuario desde Firestore
-export const getUserData = async (uid) => {
+// Obtener datos completos del terapeuta desde Firestore
+export const getTherapistData = async (uid) => {
   try {
-    const userDoc = await getDoc(doc(db, 'usuarios', uid));
-    if (userDoc.exists()) {
-      return { success: true, data: userDoc.data() };
+    const therapistDoc = await getDoc(doc(db, 'terapeutas', uid));
+    if (therapistDoc.exists()) {
+      return { success: true, data: therapistDoc.data() };
     } else {
-      return { success: false, error: 'Usuario no encontrado' };
+      return { success: false, error: 'Terapeuta no encontrado' };
     }
   } catch (error) {
-    console.error('Error al obtener datos del usuario:', error);
+    console.error('Error al obtener datos del terapeuta:', error);
     return { success: false, error: error.message };
   }
 }; 
