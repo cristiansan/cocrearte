@@ -27,6 +27,12 @@ let fichaPacienteRef = null;
 const themeToggle = document.getElementById('themeToggle');
 const themeIcon = document.getElementById('themeIcon');
 
+// Modal de confirmación personalizado
+const customConfirmModal = document.getElementById('customConfirmModal');
+const customConfirmMessage = document.getElementById('customConfirmMessage');
+const customConfirmOk = document.getElementById('customConfirmOk');
+const customConfirmCancel = document.getElementById('customConfirmCancel');
+
 function setTheme(dark) {
     if (dark) {
         document.documentElement.classList.add('dark');
@@ -226,10 +232,30 @@ async function loadSesiones() {
     });
 }
 
-// Agregar nueva sesión
+// Modal de confirmación personalizado
+function customConfirm(message) {
+    return new Promise((resolve) => {
+        customConfirmMessage.textContent = message;
+        customConfirmModal.classList.remove('hidden');
+        function cleanup(result) {
+            customConfirmModal.classList.add('hidden');
+            customConfirmOk.removeEventListener('click', okHandler);
+            customConfirmCancel.removeEventListener('click', cancelHandler);
+            resolve(result);
+        }
+        function okHandler() { cleanup(true); }
+        function cancelHandler() { cleanup(false); }
+        customConfirmOk.addEventListener('click', okHandler);
+        customConfirmCancel.addEventListener('click', cancelHandler);
+    });
+}
+
+// Modificar submit de sesión para usar el modal
 addSesionForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!fichaPacienteRef) return;
+    const ok = await customConfirm('¿Está seguro de guardar esta sesión? No podrá editarla después.');
+    if (!ok) return;
     const fecha = addSesionForm.sesionFecha.value;
     const comentario = addSesionForm.sesionComentario.value;
     try {

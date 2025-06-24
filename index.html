@@ -62,11 +62,11 @@
                 <form id="loginForm" class="space-y-4">
                     <h3 class="text-lg font-semibold mb-2">Iniciar Sesión</h3>
                     <div>
-                        <label for="loginEmail" class="block text-sm font-medium text-gray-700">Email</label>
+                        <label for="loginEmail" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Email</label>
                         <input id="loginEmail" name="loginEmail" type="email" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Correo electrónico">
                     </div>
                     <div>
-                        <label for="loginPassword" class="block text-sm font-medium text-gray-700">Contraseña</label>
+                        <label for="loginPassword" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Contraseña</label>
                         <input id="loginPassword" name="loginPassword" type="password" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Contraseña">
                     </div>
                     <div class="flex justify-center">
@@ -76,15 +76,15 @@
                 <form id="registerForm" class="space-y-4 mt-8">
                     <h3 class="text-lg font-semibold mb-2">Registrarse</h3>
                     <div>
-                        <label for="registerName" class="block text-sm font-medium text-gray-700">Nombre</label>
+                        <label for="registerName" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Nombre</label>
                         <input id="registerName" name="registerName" type="text" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Nombre completo">
                     </div>
                     <div>
-                        <label for="registerEmail" class="block text-sm font-medium text-gray-700">Email</label>
+                        <label for="registerEmail" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Email</label>
                         <input id="registerEmail" name="registerEmail" type="email" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Correo electrónico">
                     </div>
                     <div>
-                        <label for="registerPassword" class="block text-sm font-medium text-gray-700">Contraseña</label>
+                        <label for="registerPassword" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Contraseña</label>
                         <input id="registerPassword" name="registerPassword" type="password" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Contraseña">
                     </div>
                     <div class="flex justify-center">
@@ -120,19 +120,19 @@
                 <h3 class="text-xl font-bold text-primary-600 mb-4">Agregar Paciente</h3>
                 <form id="addPatientForm" class="space-y-4">
                     <div>
-                        <label for="patientName" class="block text-sm font-medium text-gray-700">Nombre</label>
+                        <label for="patientName" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Nombre</label>
                         <input id="patientName" name="patientName" type="text" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Nombre completo">
                     </div>
                     <div>
-                        <label for="patientEmail" class="block text-sm font-medium text-gray-700">Email</label>
+                        <label for="patientEmail" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Email</label>
                         <input id="patientEmail" name="patientEmail" type="email" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Correo electrónico">
                     </div>
                     <div>
-                        <label for="patientTelefono" class="block text-sm font-medium text-gray-700">Teléfono</label>
+                        <label for="patientTelefono" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Teléfono</label>
                         <input id="patientTelefono" name="patientTelefono" type="tel" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Teléfono">
                     </div>
                     <div>
-                        <label for="patientMotivo" class="block text-sm font-medium text-gray-700">Motivo de Consulta</label>
+                        <label for="patientMotivo" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Motivo de Consulta</label>
                         <textarea id="patientMotivo" name="patientMotivo" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" rows="2" placeholder="Motivo de consulta"></textarea>
                     </div>
                     <div class="flex justify-end gap-3 pt-4">
@@ -153,11 +153,11 @@
                 <div id="noSesionesMsg" class="text-gray-500 text-center mb-4 hidden">No hay sesiones registradas.</div>
                 <form id="addSesionForm" class="space-y-2 border-t pt-4 mt-4">
                     <div>
-                        <label for="sesionFecha" class="block text-sm font-medium text-gray-700">Fecha</label>
+                        <label for="sesionFecha" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Fecha</label>
                         <input id="sesionFecha" name="sesionFecha" type="date" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder">
                     </div>
                     <div>
-                        <label for="sesionComentario" class="block text-sm font-medium text-gray-700">Comentario</label>
+                        <label for="sesionComentario" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Comentario</label>
                         <textarea id="sesionComentario" name="sesionComentario" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" rows="2" placeholder="Detalle de la sesión"></textarea>
                     </div>
                     <div class="flex justify-end gap-3 pt-2">
@@ -165,6 +165,17 @@
                         <button type="submit" class="bg-primary-700 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded border-2 border-primary-600 shadow-sm dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-darkbg">Agregar Sesión</button>
                     </div>
                 </form>
+            </div>
+        </div>
+        <!-- Modal de confirmación personalizado -->
+        <div id="customConfirmModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+            <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg p-8 w-full max-w-sm relative border dark:border-darkborder flex flex-col items-center">
+                <h3 class="text-lg font-bold text-primary-700 dark:text-primary-600 mb-4">Espacio Cocrearte dice</h3>
+                <p id="customConfirmMessage" class="text-center text-[#2d3748] dark:text-gray-100 mb-6">¿Está seguro de guardar esta sesión? No podrá editarla después.</p>
+                <div class="flex gap-4 justify-center">
+                    <button id="customConfirmCancel" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded">Cancelar</button>
+                    <button id="customConfirmOk" class="bg-primary-700 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded border-2 border-primary-600 shadow-sm dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-darkbg">Aceptar</button>
+                </div>
             </div>
         </div>
     </main>
