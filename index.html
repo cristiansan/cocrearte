@@ -8,15 +8,48 @@
     <link rel="icon" href="public/favicon.ico">
     <!-- Tailwind CSS CDN para prototipo -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                600: '#818cf8', // violeta claro
+                700: '#6366f1',
+                800: '#3730a3',
+              },
+              secondary: {
+                100: '#e5e7eb',
+                900: '#2d3748',
+              },
+              darkbg: '#181f2a',
+              darkcard: '#232b3b',
+              darkborder: '#313a4d',
+              darktext: '#d1d5db',
+            },
+            fontFamily: {
+              sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+            },
+          },
+        },
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-secondary-100 dark:bg-darkbg min-h-screen font-sans transition-colors duration-300">
     <!-- Header -->
-    <header class="bg-white shadow py-4 px-6 flex justify-between items-center">
+    <header class="bg-white dark:bg-darkcard shadow py-4 px-6 flex justify-between items-center border-b border-secondary-100 dark:border-darkborder">
         <div class="flex items-center gap-2">
             <span class="text-2xl">🧠</span>
-            <span class="text-2xl font-bold text-primary-600">Cocrearte</span>
+            <span class="text-2xl font-bold text-primary-600 dark:text-primary-600">Cocrearte</span>
         </div>
-        <span class="text-sm text-gray-400">Plataforma para terapeutas</span>
+        <div class="flex items-center gap-4">
+            <span class="text-sm text-gray-400 dark:text-gray-300">Plataforma para terapeutas</span>
+            <button id="themeToggle" title="Cambiar tema" class="ml-2 p-2 rounded-full border border-secondary-100 dark:border-secondary-800 bg-white dark:bg-secondary-900 hover:bg-secondary-100 dark:hover:bg-secondary-800 transition">
+                <span id="themeIcon" class="text-xl">🌙</span>
+            </button>
+        </div>
     </header>
 
     <!-- Main Content -->
@@ -30,11 +63,11 @@
                     <h3 class="text-lg font-semibold mb-2">Iniciar Sesión</h3>
                     <div>
                         <label for="loginEmail" class="block text-sm font-medium text-gray-700">Email</label>
-                        <input id="loginEmail" name="loginEmail" type="email" required class="input input-bordered w-full" placeholder="Correo electrónico">
+                        <input id="loginEmail" name="loginEmail" type="email" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Correo electrónico">
                     </div>
                     <div>
                         <label for="loginPassword" class="block text-sm font-medium text-gray-700">Contraseña</label>
-                        <input id="loginPassword" name="loginPassword" type="password" required class="input input-bordered w-full" placeholder="Contraseña">
+                        <input id="loginPassword" name="loginPassword" type="password" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Contraseña">
                     </div>
                     <div class="flex justify-center">
                         <button type="submit" class="bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 px-6 rounded transition">Iniciar Sesión</button>
@@ -44,15 +77,15 @@
                     <h3 class="text-lg font-semibold mb-2">Registrarse</h3>
                     <div>
                         <label for="registerName" class="block text-sm font-medium text-gray-700">Nombre</label>
-                        <input id="registerName" name="registerName" type="text" required class="input input-bordered w-full" placeholder="Nombre completo">
+                        <input id="registerName" name="registerName" type="text" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Nombre completo">
                     </div>
                     <div>
                         <label for="registerEmail" class="block text-sm font-medium text-gray-700">Email</label>
-                        <input id="registerEmail" name="registerEmail" type="email" required class="input input-bordered w-full" placeholder="Correo electrónico">
+                        <input id="registerEmail" name="registerEmail" type="email" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Correo electrónico">
                     </div>
                     <div>
                         <label for="registerPassword" class="block text-sm font-medium text-gray-700">Contraseña</label>
-                        <input id="registerPassword" name="registerPassword" type="password" required class="input input-bordered w-full" placeholder="Contraseña">
+                        <input id="registerPassword" name="registerPassword" type="password" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Contraseña">
                     </div>
                     <div class="flex justify-center">
                         <button type="submit" class="bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 px-6 rounded transition">Registrarse</button>
@@ -62,17 +95,17 @@
         </section>
         <!-- Dashboard Section (se muestra tras login) -->
         <section id="dashboardSection" class="w-full max-w-3xl mt-10 hidden">
-            <div class="bg-white rounded-lg shadow p-6 mb-6 flex justify-between items-center">
+            <div class="bg-white dark:bg-darkcard rounded-lg shadow p-6 mb-6 flex justify-between items-center border dark:border-darkborder">
                 <div>
                     <h2 class="text-2xl font-bold text-primary-700" id="welcomeUser">Bienvenido</h2>
                     <p class="text-gray-500" id="userEmail"></p>
                 </div>
                 <button id="logoutBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded transition">Cerrar sesión</button>
             </div>
-            <div class="bg-white rounded-lg shadow p-6">
+            <div class="bg-white dark:bg-darkcard rounded-lg shadow p-6 border dark:border-darkborder">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-xl font-semibold text-gray-900">Pacientes</h3>
-                    <button id="showAddPatientBtn" class="bg-primary-700 hover:bg-primary-800 text-white font-bold py-2 px-4 rounded border-2 border-primary-800 shadow-sm">+ Agregar Paciente</button>
+                    <button id="showAddPatientBtn" class="bg-primary-700 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded border-2 border-primary-600 shadow-sm dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-darkbg">+ Agregar Paciente</button>
                 </div>
                 <div id="patientsList" class="space-y-4">
                     <!-- Aquí se listarán los pacientes -->
@@ -82,36 +115,36 @@
         </section>
         <!-- Modal para agregar paciente -->
         <div id="addPatientModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
-            <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-md relative">
+            <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg p-8 w-full max-w-md relative border dark:border-darkborder">
                 <button onclick="hideAddPatientModal()" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">×</button>
                 <h3 class="text-xl font-bold text-primary-600 mb-4">Agregar Paciente</h3>
                 <form id="addPatientForm" class="space-y-4">
                     <div>
                         <label for="patientName" class="block text-sm font-medium text-gray-700">Nombre</label>
-                        <input id="patientName" name="patientName" type="text" required class="input input-bordered w-full" placeholder="Nombre completo">
+                        <input id="patientName" name="patientName" type="text" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Nombre completo">
                     </div>
                     <div>
                         <label for="patientEmail" class="block text-sm font-medium text-gray-700">Email</label>
-                        <input id="patientEmail" name="patientEmail" type="email" class="input input-bordered w-full" placeholder="Correo electrónico">
+                        <input id="patientEmail" name="patientEmail" type="email" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Correo electrónico">
                     </div>
                     <div>
                         <label for="patientTelefono" class="block text-sm font-medium text-gray-700">Teléfono</label>
-                        <input id="patientTelefono" name="patientTelefono" type="tel" class="input input-bordered w-full" placeholder="Teléfono">
+                        <input id="patientTelefono" name="patientTelefono" type="tel" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Teléfono">
                     </div>
                     <div>
                         <label for="patientMotivo" class="block text-sm font-medium text-gray-700">Motivo de Consulta</label>
-                        <textarea id="patientMotivo" name="patientMotivo" class="input input-bordered w-full" rows="2" placeholder="Motivo de consulta"></textarea>
+                        <textarea id="patientMotivo" name="patientMotivo" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" rows="2" placeholder="Motivo de consulta"></textarea>
                     </div>
                     <div class="flex justify-end gap-3 pt-4">
                         <button type="button" onclick="hideAddPatientModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded">Cancelar</button>
-                        <button type="submit" class="bg-primary-700 hover:bg-primary-800 text-white font-bold py-2 px-4 rounded border-2 border-primary-800 shadow-sm">Agregar</button>
+                        <button type="submit" class="bg-primary-700 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded border-2 border-primary-600 shadow-sm dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-darkbg">Agregar</button>
                     </div>
                 </form>
             </div>
         </div>
         <!-- Modal Ficha Clínica Paciente -->
         <div id="fichaPacienteModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
-            <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-2xl relative">
+            <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg p-8 w-full max-w-2xl relative border dark:border-darkborder">
                 <button onclick="hideFichaPacienteModal()" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">×</button>
                 <h3 class="text-xl font-bold text-primary-600 mb-2">Ficha Clínica</h3>
                 <div id="fichaPacienteDatos" class="mb-4"></div>
@@ -121,15 +154,15 @@
                 <form id="addSesionForm" class="space-y-2 border-t pt-4 mt-4">
                     <div>
                         <label for="sesionFecha" class="block text-sm font-medium text-gray-700">Fecha</label>
-                        <input id="sesionFecha" name="sesionFecha" type="date" required class="input input-bordered w-full">
+                        <input id="sesionFecha" name="sesionFecha" type="date" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder">
                     </div>
                     <div>
                         <label for="sesionComentario" class="block text-sm font-medium text-gray-700">Comentario</label>
-                        <textarea id="sesionComentario" name="sesionComentario" required class="input input-bordered w-full" rows="2" placeholder="Detalle de la sesión"></textarea>
+                        <textarea id="sesionComentario" name="sesionComentario" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" rows="2" placeholder="Detalle de la sesión"></textarea>
                     </div>
                     <div class="flex justify-end gap-3 pt-2">
                         <button type="button" onclick="hideFichaPacienteModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded">Cerrar</button>
-                        <button type="submit" class="bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 px-4 rounded">Agregar Sesión</button>
+                        <button type="submit" class="bg-primary-700 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded border-2 border-primary-600 shadow-sm dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-darkbg">Agregar Sesión</button>
                     </div>
                 </form>
             </div>

@@ -23,6 +23,37 @@ const addSesionForm = document.getElementById('addSesionForm');
 let fichaPacienteId = null;
 let fichaPacienteRef = null;
 
+// Toggle modo oscuro
+const themeToggle = document.getElementById('themeToggle');
+const themeIcon = document.getElementById('themeIcon');
+
+function setTheme(dark) {
+    if (dark) {
+        document.documentElement.classList.add('dark');
+        themeIcon.textContent = '☀️';
+        localStorage.setItem('theme', 'dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+        themeIcon.textContent = '🌙';
+        localStorage.setItem('theme', 'light');
+    }
+}
+
+// Detectar preferencia inicial
+(function() {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        setTheme(true);
+    } else {
+        setTheme(false);
+    }
+})();
+
+themeToggle.addEventListener('click', () => {
+    const isDark = document.documentElement.classList.contains('dark');
+    setTheme(!isDark);
+});
+
 // Mostrar mensajes
 function showMessage(msg, type = 'error') {
     alert(msg); // Puedes mejorar esto con un sistema de mensajes visual
