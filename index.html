@@ -160,6 +160,15 @@
                         <label for="sesionComentario" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Comentario</label>
                         <textarea id="sesionComentario" name="sesionComentario" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" rows="2" placeholder="Detalle de la sesión"></textarea>
                     </div>
+                    <div>
+                        <label for="sesionNotas" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Notas</label>
+                        <textarea id="sesionNotas" name="sesionNotas" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" rows="4" placeholder="Notas adicionales (opcional)"></textarea>
+                    </div>
+                    <div>
+                        <label for="sesionArchivo" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Adjuntar archivos (opcional)</label>
+                        <input id="sesionArchivo" name="sesionArchivo" type="file" multiple class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-darkbg dark:file:text-gray-100" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.txt">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Máximo 5 archivos, 10MB cada uno.</p>
+                    </div>
                     <div class="flex justify-end gap-3 pt-2">
                         <button type="button" onclick="hideFichaPacienteModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded">Cerrar</button>
                         <button type="submit" class="bg-primary-700 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded border-2 border-primary-600 shadow-sm dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-darkbg">Agregar Sesión</button>
@@ -186,5 +195,15 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
     <script src="firebase-config.js"></script>
     <script src="main.js"></script>
+    <script>
+    function disableFileInput() {
+      const archivoInput = document.getElementById('sesionArchivo');
+      if (archivoInput) archivoInput.disabled = true;
+    }
+    function enableFileInput() {
+      const archivoInput = document.getElementById('sesionArchivo');
+      if (archivoInput) archivoInput.disabled = false;
+    }
+    </script>
 </body>
 </html> 

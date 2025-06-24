@@ -33,6 +33,10 @@ const customConfirmMessage = document.getElementById('customConfirmMessage');
 const customConfirmOk = document.getElementById('customConfirmOk');
 const customConfirmCancel = document.getElementById('customConfirmCancel');
 
+// Guardar cambios de 1era sesión en Firestore
+const primeraSesionFechaInput = document.getElementById('primeraSesionFecha');
+const primeraSesionEstadoInput = document.getElementById('primeraSesionEstado');
+
 function setTheme(dark) {
     if (dark) {
         document.documentElement.classList.add('dark');
@@ -204,8 +208,17 @@ patientsList.addEventListener('click', async (e) => {
         <div class=\"font-bold text-[#2d3748] dark:text-gray-100 text-lg\">${p.nombre || ''}</div>
         <div class=\"text-[#4b5563] dark:text-gray-200 text-sm\"><span class=\"font-semibold\">Email:</span> ${p.email || ''}</div>
         <div class=\"text-[#4b5563] dark:text-gray-200 text-sm\"><span class=\"font-semibold\">Teléfono:</span> ${p.telefono || ''}</div>
-        <div class=\"text-[#4b5563] dark:text-gray-200 text-sm\"><span class=\"font-semibold\">Motivo:</span> ${p.motivo || ''}</div>
+        <div class=\"text-[#4b5563] dark:text-gray-200 text-sm\">${p.motivo || ''}</div>
     `;
+    // Reasignar listeners después de renderizar
+    setTimeout(() => {
+      const fechaInput = document.getElementById('primeraSesionFecha');
+      const estadoInput = document.getElementById('primeraSesionEstado');
+      if (fechaInput && estadoInput) {
+        fechaInput.addEventListener('change', () => savePrimeraSesion(fichaPacienteId));
+        estadoInput.addEventListener('change', () => savePrimeraSesion(fichaPacienteId));
+      }
+    }, 0);
     fichaPacienteModal.classList.remove('hidden');
     loadSesiones();
 });
@@ -227,6 +240,8 @@ async function loadSesiones() {
         div.innerHTML = `
             <div class=\"text-sm font-bold text-[#2d3748] dark:text-gray-100\"><span class=\"font-semibold\">Fecha:</span> ${s.fecha || ''}</div>
             <div class=\"text-gray-900 dark:text-gray-200\">${s.comentario || ''}</div>
+            ${s.notas ? `<div class=\"text-xs mt-2 text-[#4b5563] dark:text-gray-400\"><span class=\"font-semibold\">Notas:</span> ${s.notas}</div>` : ''}
+            ${s.archivosUrls && s.archivosUrls.length ? `<div class=\"mt-2 flex flex-col gap-1\">${s.archivosUrls.map(url => `<a href=\"${url}\" target=\"_blank\" class=\"text-primary-700 underline dark:text-primary-600\">Ver archivo adjunto</a>`).join('')}</div>` : ''}
         `;
         sesionesList.appendChild(div);
     });
@@ -258,18 +273,67 @@ addSesionForm.addEventListener('submit', async (e) => {
     if (!ok) return;
     const fecha = addSesionForm.sesionFecha.value;
     const comentario = addSesionForm.sesionComentario.value;
+    const notas = addSesionForm.sesionNotas.value;
+    const archivoInput = document.getElementById('sesionArchivo');
+    let archivosUrls = [];
+    if (archivoInput && archivoInput.files && archivoInput.files.length > 0) {
+        if (archivoInput.files.length > 5) {
+            showMessage('Solo puedes adjuntar hasta 5 archivos por sesión.');
+            return;
+        }
+        for (let i = 0; i < archivoInput.files.length; i++) {
+            const archivo = archivoInput.files[i];
+            if (archivo.size > 10 * 1024 * 1024) { // 10MB
+                showMessage('El archivo "' + archivo.name + '" supera el tamaño máximo de 10MB.');
+                return;
+            }
+        }
+        const storageRef = window.firebase.storage().ref();
+        const sesionId = window.firebaseDB.collection('tmp').doc().id; // id único
+        for (let i = 0; i < archivoInput.files.length; i++) {
+            const archivo = archivoInput.files[i];
+            const fileRef = storageRef.child(`sesiones_adjuntos/${fichaPacienteId}/${sesionId}_${i}_${archivo.name}`);
+            await fileRef.put(archivo);
+            const url = await fileRef.getDownloadURL();
+            archivosUrls.push(url);
+        }
+    }
     try {
         await fichaPacienteRef.collection('sesiones').add({
             fecha,
             comentario,
+            notas,
+            archivosUrls,
             creado: new Date()
         });
         addSesionForm.reset();
         loadSesiones();
+        disableFileInput();
     } catch (error) {
         showMessage('Error al agregar sesión: ' + error.message);
     }
 });
+
+// Guardar cambios de 1era sesión en Firestore
+async function savePrimeraSesion(pacienteId) {
+    if (!pacienteId) return;
+    const fecha = primeraSesionFechaInput.value;
+    const estado = primeraSesionEstadoInput.value;
+    await window.firebaseDB.collection('pacientes').doc(pacienteId).update({
+        primeraSesionFecha: fecha,
+        primeraSesionEstado: estado
+    });
+}
+
+if (primeraSesionFechaInput && primeraSesionEstadoInput) {
+    primeraSesionFechaInput.addEventListener('change', () => savePrimeraSesion(fichaPacienteId));
+    primeraSesionEstadoInput.addEventListener('change', () => savePrimeraSesion(fichaPacienteId));
+}
+
+// Al abrir el modal de agregar sesión, habilitar input de archivos
+if (addSesionForm) {
+    addSesionForm.addEventListener('reset', enableFileInput);
+}
 
 // TODO: Mostrar dashboard tras login, ocultar sección de auth
 // TODO: Lógica de logout, gestión de pacientes, etc. 
