@@ -140,246 +140,203 @@ export default function PatientRecord() {
         <title>Ficha Clínica - {patient.nombre} {patient.apellido}</title>
       </Head>
 
-      <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <header className="bg-white shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-6">
-              <div className="flex items-center">
-                <button
-                  onClick={() => router.back()}
-                  className="mr-4 text-gray-600 hover:text-gray-900"
-                >
-                  ← Volver
-                </button>
-                <h1 className="text-2xl font-bold text-primary-600">🧠 Cocrearte</h1>
-                <span className="ml-4 text-gray-600">Ficha Clínica</span>
-              </div>
-              <div className="flex items-center space-x-4">
-                <button
-                  onClick={() => setShowAddSession(true)}
-                  className="btn-primary"
-                >
-                  + Nueva Sesión
-                </button>
-              </div>
-            </div>
-          </div>
+      <div className="flex flex-col min-h-screen items-center">
+        <header className="w-full flex flex-col items-center py-8">
+          <h1 className="text-3xl md:text-4xl font-extrabold text-primary-700 mb-2">Ficha de Paciente</h1>
+          <p className="text-primary-900 mb-6">Consulta y edita los datos y sesiones del paciente</p>
         </header>
-
-        {/* Message */}
-        {message && (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-              {message}
+        <main className="w-full max-w-3xl">
+          <div className="card mb-8">
+            <h2 className="text-xl font-bold text-primary-700 mb-4">Datos del Paciente</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">
+                {patient.nombre} {patient.apellido}
+              </h2>
+              <button
+                onClick={() => setEditing(!editing)}
+                className="text-primary-600 hover:text-primary-700"
+              >
+                {editing ? 'Cancelar' : 'Editar'}
+              </button>
             </div>
-          </div>
-        )}
 
-        {/* Main Content */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Patient Info */}
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900">
-                    {patient.nombre} {patient.apellido}
-                  </h2>
+            {editing ? (
+              <form onSubmit={handleUpdatePatient} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Nombre</label>
+                    <input
+                      type="text"
+                      value={editPatient.nombre || ''}
+                      onChange={(e) => setEditPatient({...editPatient, nombre: e.target.value})}
+                      className="input-field"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Apellido</label>
+                    <input
+                      type="text"
+                      value={editPatient.apellido || ''}
+                      onChange={(e) => setEditPatient({...editPatient, apellido: e.target.value})}
+                      className="input-field"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Email</label>
+                  <input
+                    type="email"
+                    value={editPatient.email || ''}
+                    onChange={(e) => setEditPatient({...editPatient, email: e.target.value})}
+                    className="input-field"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Teléfono</label>
+                  <input
+                    type="tel"
+                    value={editPatient.telefono || ''}
+                    onChange={(e) => setEditPatient({...editPatient, telefono: e.target.value})}
+                    className="input-field"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Fecha de Nacimiento</label>
+                  <input
+                    type="date"
+                    value={editPatient.fechaNacimiento || ''}
+                    onChange={(e) => setEditPatient({...editPatient, fechaNacimiento: e.target.value})}
+                    className="input-field"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Motivo de Consulta</label>
+                  <textarea
+                    value={editPatient.motivoConsulta || ''}
+                    onChange={(e) => setEditPatient({...editPatient, motivoConsulta: e.target.value})}
+                    className="input-field"
+                    rows="3"
+                  />
+                </div>
+                
+                <div className="flex justify-end space-x-3 pt-4">
                   <button
-                    onClick={() => setEditing(!editing)}
-                    className="text-primary-600 hover:text-primary-700"
+                    type="button"
+                    onClick={() => setEditing(false)}
+                    className="btn-secondary"
                   >
-                    {editing ? 'Cancelar' : 'Editar'}
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn-primary"
+                  >
+                    Guardar
                   </button>
                 </div>
-
-                {editing ? (
-                  <form onSubmit={handleUpdatePatient} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Nombre</label>
-                        <input
-                          type="text"
-                          value={editPatient.nombre || ''}
-                          onChange={(e) => setEditPatient({...editPatient, nombre: e.target.value})}
-                          className="input-field"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Apellido</label>
-                        <input
-                          type="text"
-                          value={editPatient.apellido || ''}
-                          onChange={(e) => setEditPatient({...editPatient, apellido: e.target.value})}
-                          className="input-field"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Email</label>
-                      <input
-                        type="email"
-                        value={editPatient.email || ''}
-                        onChange={(e) => setEditPatient({...editPatient, email: e.target.value})}
-                        className="input-field"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Teléfono</label>
-                      <input
-                        type="tel"
-                        value={editPatient.telefono || ''}
-                        onChange={(e) => setEditPatient({...editPatient, telefono: e.target.value})}
-                        className="input-field"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Fecha de Nacimiento</label>
-                      <input
-                        type="date"
-                        value={editPatient.fechaNacimiento || ''}
-                        onChange={(e) => setEditPatient({...editPatient, fechaNacimiento: e.target.value})}
-                        className="input-field"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Motivo de Consulta</label>
-                      <textarea
-                        value={editPatient.motivoConsulta || ''}
-                        onChange={(e) => setEditPatient({...editPatient, motivoConsulta: e.target.value})}
-                        className="input-field"
-                        rows="3"
-                      />
-                    </div>
-                    
-                    <div className="flex justify-end space-x-3 pt-4">
-                      <button
-                        type="button"
-                        onClick={() => setEditing(false)}
-                        className="btn-secondary"
-                      >
-                        Cancelar
-                      </button>
-                      <button
-                        type="submit"
-                        className="btn-primary"
-                      >
-                        Guardar
-                      </button>
-                    </div>
-                  </form>
-                ) : (
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Email</label>
-                      <p className="text-gray-900">{patient.email || 'No especificado'}</p>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Teléfono</label>
-                      <p className="text-gray-900">{patient.telefono || 'No especificado'}</p>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Fecha de Nacimiento</label>
-                      <p className="text-gray-900">{formatDate(patient.fechaNacimiento) || 'No especificada'}</p>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Motivo de Consulta</label>
-                      <p className="text-gray-900">{patient.motivoConsulta || 'No especificado'}</p>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Fecha de Registro</label>
-                      <p className="text-gray-900">{formatDate(patient.fechaCreacion?.toDate())}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Sessions */}
-            <div className="lg:col-span-2">
-              <div className="bg-white rounded-lg shadow">
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <h2 className="text-lg font-medium text-gray-900">Sesiones Clínicas</h2>
+              </form>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Email</label>
+                  <p className="text-gray-900">{patient.email || 'No especificado'}</p>
                 </div>
-
-                <div className="p-6">
-                  {sessions.length === 0 ? (
-                    <div className="text-center py-12">
-                      <div className="text-gray-400 text-6xl mb-4">📋</div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No hay sesiones registradas</h3>
-                      <p className="text-gray-600 mb-4">Comienza agregando la primera sesión</p>
-                      <button
-                        onClick={() => setShowAddSession(true)}
-                        className="btn-primary"
-                      >
-                        Agregar Primera Sesión
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="space-y-6">
-                      {sessions.map((session) => (
-                        <div key={session.id} className="border border-gray-200 rounded-lg p-4">
-                          <div className="flex justify-between items-start mb-3">
-                            <div>
-                              <h3 className="font-medium text-gray-900">
-                                Sesión del {formatDate(session.fecha)}
-                              </h3>
-                              <p className="text-sm text-gray-600">
-                                Duración: {session.duracion} minutos | Tipo: {session.tipo}
-                              </p>
-                            </div>
-                            <span className={`px-2 py-1 text-xs rounded-full ${
-                              session.estado === 'completada' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                            }`}>
-                              {session.estado}
-                            </span>
-                          </div>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                            <div>
-                              <label className="font-medium text-gray-700">Motivo:</label>
-                              <p className="text-gray-900">{session.motivo}</p>
-                            </div>
-                            <div>
-                              <label className="font-medium text-gray-700">Diagnóstico:</label>
-                              <p className="text-gray-900">{session.diagnostico || 'No especificado'}</p>
-                            </div>
-                            <div className="md:col-span-2">
-                              <label className="font-medium text-gray-700">Observaciones:</label>
-                              <p className="text-gray-900">{session.observaciones || 'No especificadas'}</p>
-                            </div>
-                            <div className="md:col-span-2">
-                              <label className="font-medium text-gray-700">Tratamiento:</label>
-                              <p className="text-gray-900">{session.tratamiento || 'No especificado'}</p>
-                            </div>
-                            {session.tareas && (
-                              <div className="md:col-span-2">
-                                <label className="font-medium text-gray-700">Tareas:</label>
-                                <p className="text-gray-900">{session.tareas}</p>
-                              </div>
-                            )}
-                            {session.proximaSesion && (
-                              <div>
-                                <label className="font-medium text-gray-700">Próxima Sesión:</label>
-                                <p className="text-gray-900">{formatDate(session.proximaSesion)}</p>
-                              </div>
-                            )}
-                          </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Teléfono</label>
+                  <p className="text-gray-900">{patient.telefono || 'No especificado'}</p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Fecha de Nacimiento</label>
+                  <p className="text-gray-900">{formatDate(patient.fechaNacimiento) || 'No especificada'}</p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Motivo de Consulta</label>
+                  <p className="text-gray-900">{patient.motivoConsulta || 'No especificado'}</p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Fecha de Registro</label>
+                  <p className="text-gray-900">{formatDate(patient.fechaCreacion?.toDate())}</p>
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="card">
+            <h2 className="text-xl font-bold text-accent-700 mb-4">Sesiones Clínicas</h2>
+            <div className="p-6">
+              {sessions.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-gray-400 text-6xl mb-4">📋</div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No hay sesiones registradas</h3>
+                  <p className="text-gray-600 mb-4">Comienza agregando la primera sesión</p>
+                  <button
+                    onClick={() => setShowAddSession(true)}
+                    className="btn-primary"
+                  >
+                    Agregar Primera Sesión
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {sessions.map((session) => (
+                    <div key={session.id} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <h3 className="font-medium text-gray-900">
+                            Sesión del {formatDate(session.fecha)}
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            Duración: {session.duracion} minutos | Tipo: {session.tipo}
+                          </p>
                         </div>
-                      ))}
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          session.estado === 'completada' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {session.estado}
+                        </span>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <label className="font-medium text-gray-700">Motivo:</label>
+                          <p className="text-gray-900">{session.motivo}</p>
+                        </div>
+                        <div>
+                          <label className="font-medium text-gray-700">Diagnóstico:</label>
+                          <p className="text-gray-900">{session.diagnostico || 'No especificado'}</p>
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className="font-medium text-gray-700">Observaciones:</label>
+                          <p className="text-gray-900">{session.observaciones || 'No especificadas'}</p>
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className="font-medium text-gray-700">Tratamiento:</label>
+                          <p className="text-gray-900">{session.tratamiento || 'No especificado'}</p>
+                        </div>
+                        {session.tareas && (
+                          <div className="md:col-span-2">
+                            <label className="font-medium text-gray-700">Tareas:</label>
+                            <p className="text-gray-900">{session.tareas}</p>
+                          </div>
+                        )}
+                        {session.proximaSesion && (
+                          <div>
+                            <label className="font-medium text-gray-700">Próxima Sesión:</label>
+                            <p className="text-gray-900">{formatDate(session.proximaSesion)}</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  )}
+                  ))}
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </main>

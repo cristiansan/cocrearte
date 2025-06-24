@@ -41,18 +41,12 @@ export default function Login() {
         <title>Iniciar Sesión - Cocrearte</title>
       </Head>
 
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-blue-50 flex items-center justify-center py-12 dark:bg-darkbg">
-        <div className="max-w-md w-full space-y-8">
-          {/* Header */}
-          <div className="text-center flex flex-col items-center justify-center">
-            <div className="flex items-center justify-center w-full mb-2">
-              <h1 className="text-3xl font-bold text-primary-600 dark:text-accent-400">🧠 Cocrearte</h1>
-              <ThemeToggle />
-            </div>
-            <h2 className="mt-2 text-3xl font-bold text-gray-900 dark:text-darktext">Iniciar Sesión</h2>
-            <p className="mt-2 text-gray-600 dark:text-darkmuted">Accede a tu panel de terapeuta</p>
-          </div>
-
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <header className="w-full flex flex-col items-center py-8">
+          <h1 className="text-3xl md:text-4xl font-extrabold text-primary-700 mb-2">Iniciar sesión</h1>
+          <p className="text-primary-900 mb-6">Accede a tu cuenta de terapeuta</p>
+        </header>
+        <main className="card w-full max-w-md">
           {/* Login Form */}
           <div className="bg-white rounded-lg shadow p-8 dark:bg-darkcard dark:text-darktext dark:border dark:border-darkborder">
             {message && (
@@ -61,53 +55,14 @@ export default function Login() {
               </div>
             )}
 
-            <form onSubmit={handleLogin} className="space-y-6">
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-darkmuted">
-                  Email
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="input-field mt-1"
-                  placeholder="tu@email.com"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-darkmuted">
-                  Contraseña
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="input-field mt-1"
-                  placeholder="••••••••"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full btn-primary disabled:opacity-50 dark:bg-accent-500 dark:text-white dark:hover:bg-accent-600"
-              >
-                {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-              </button>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <input type="email" className="input-field w-full" placeholder="Correo electrónico" value={email} onChange={e => setEmail(e.target.value)} required />
+              <input type="password" className="input-field w-full" placeholder="Contraseña" value={password} onChange={e => setPassword(e.target.value)} required />
+              <button type="submit" className="btn-primary w-full">Entrar</button>
             </form>
 
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600 dark:text-darkmuted">
-                ¿No tienes cuenta?{' '}
-                <a href="/register" className="text-primary-600 hover:text-primary-500 dark:text-accent-400 dark:hover:text-accent-300">
-                  Registrarse como terapeuta
-                </a>
-              </p>
+            <div className="mt-4 text-center">
+              <a href="/register" className="btn-accent w-full block">¿No tienes cuenta? Regístrate</a>
             </div>
           </div>
 
@@ -117,7 +72,7 @@ export default function Login() {
               ← Volver al inicio
             </a>
           </div>
-        </div>
+        </main>
       </div>
     </>
   );

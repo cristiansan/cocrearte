@@ -98,7 +98,6 @@
             const email = document.getElementById('regEmail').value;
             const password = document.getElementById('regPassword').value;
             const nombre = document.getElementById('nombre').value;
-            const tipo = document.getElementById('tipo').value;
 
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -109,7 +108,6 @@
                     uid: user.uid,
                     email: user.email,
                     nombre: nombre,
-                    tipo: tipo,
                     activo: true,
                     fechaCreacion: new Date()
                 });

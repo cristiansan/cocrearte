@@ -3,7 +3,7 @@ import { Toaster } from 'react-hot-toast';
 
 function MyApp({ Component, pageProps }) {
   return (
-    <>
+    <div className="bg-geo min-h-screen">
       <Component {...pageProps} />
       <Toaster 
         position="top-right"
@@ -29,7 +29,7 @@ function MyApp({ Component, pageProps }) {
           },
         }}
       />
-    </>
+    </div>
   );
 }
 

@@ -75,18 +75,12 @@ export default function Register() {
         <title>Registrarse - Cocrearte</title>
       </Head>
 
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-blue-50 flex items-center justify-center py-12 dark:bg-darkbg">
-        <div className="max-w-md w-full space-y-8">
-          {/* Header */}
-          <div className="text-center flex flex-col items-center justify-center">
-            <div className="flex items-center justify-center w-full mb-2">
-              <h1 className="text-3xl font-bold text-primary-600 dark:text-accent-400">🧠 Cocrearte</h1>
-              <ThemeToggle />
-            </div>
-            <h2 className="mt-2 text-3xl font-bold text-gray-900 dark:text-darktext">Registrarse</h2>
-            <p className="mt-2 text-gray-600 dark:text-darkmuted">Únete como terapeuta</p>
-          </div>
-
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <header className="w-full flex flex-col items-center py-8">
+          <h1 className="text-3xl md:text-4xl font-extrabold text-primary-700 mb-2">Registro de Terapeuta</h1>
+          <p className="text-primary-900 mb-6">Crea tu cuenta para comenzar a gestionar pacientes</p>
+        </header>
+        <main className="card w-full max-w-md">
           {/* Registration Form */}
           <div className="bg-white rounded-lg shadow p-8 dark:bg-darkcard dark:text-darktext dark:border dark:border-darkborder">
             {message && (
@@ -222,14 +216,7 @@ export default function Register() {
               </p>
             </div>
           </div>
-
-          {/* Footer */}
-          <div className="text-center">
-            <a href="/" className="text-sm text-gray-600 hover:text-gray-900 dark:text-darkmuted dark:hover:text-darktext">
-              ← Volver al inicio
-            </a>
-          </div>
-        </div>
+        </main>
       </div>
     </>
   );
