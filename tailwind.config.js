@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: 'class',
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -67,7 +68,29 @@ module.exports = {
           700: '#b91c1c',
           800: '#991b1b',
           900: '#7f1d1d',
-        }
+        },
+        accent: {
+          50: '#f5f3ff',
+          100: '#ede9fe',
+          200: '#ddd6fe',
+          300: '#c4b5fd',
+          400: '#a78bfa',
+          500: '#8b5cf6',
+          600: '#7c3aed',
+          700: '#6d28d9',
+          800: '#5b21b6',
+          900: '#4c1d95',
+        },
+        darkbg: '#18181b',
+        darkcard: '#232336',
+        darkborder: '#2d2d3a',
+        darktext: '#e5e7eb',
+        darkmuted: '#a1a1aa',
+        teal: {
+          400: '#2dd4bf',
+          500: '#14b8a6',
+          600: '#0d9488',
+        },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

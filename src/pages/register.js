@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { registerTherapist, onAuthStateChange } from '../services/authService';
+import ThemeToggle from '../components/ThemeToggle';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -74,22 +75,25 @@ export default function Register() {
         <title>Registrarse - Cocrearte</title>
       </Head>
 
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-blue-50 flex items-center justify-center py-12">
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-blue-50 flex items-center justify-center py-12 dark:bg-darkbg">
         <div className="max-w-md w-full space-y-8">
           {/* Header */}
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-primary-600">🧠 Cocrearte</h1>
-            <h2 className="mt-6 text-3xl font-bold text-gray-900">Registrarse</h2>
-            <p className="mt-2 text-gray-600">Únete como terapeuta</p>
+          <div className="text-center flex flex-col items-center justify-center">
+            <div className="flex items-center justify-center w-full mb-2">
+              <h1 className="text-3xl font-bold text-primary-600 dark:text-accent-400">🧠 Cocrearte</h1>
+              <ThemeToggle />
+            </div>
+            <h2 className="mt-2 text-3xl font-bold text-gray-900 dark:text-darktext">Registrarse</h2>
+            <p className="mt-2 text-gray-600 dark:text-darkmuted">Únete como terapeuta</p>
           </div>
 
           {/* Registration Form */}
-          <div className="bg-white rounded-lg shadow p-8">
+          <div className="bg-white rounded-lg shadow p-8 dark:bg-darkcard dark:text-darktext dark:border dark:border-darkborder">
             {message && (
               <div className={`mb-4 p-3 rounded border ${
                 message.includes('Error') 
-                  ? 'bg-red-100 border-red-400 text-red-700'
-                  : 'bg-green-100 border-green-400 text-green-700'
+                  ? 'bg-red-100 border-red-400 text-red-700 dark:bg-accent-500 dark:border-accent-700 dark:text-darktext'
+                  : 'bg-green-100 border-green-400 text-green-700 dark:bg-teal-600 dark:border-teal-500 dark:text-darktext'
               }`}>
                 {message}
               </div>
@@ -97,7 +101,7 @@ export default function Register() {
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label htmlFor="nombre" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 dark:text-darkmuted">
                   Nombre Completo *
                 </label>
                 <input
@@ -113,7 +117,7 @@ export default function Register() {
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-darkmuted">
                   Email *
                 </label>
                 <input
@@ -129,7 +133,7 @@ export default function Register() {
               </div>
 
               <div>
-                <label htmlFor="telefono" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="telefono" className="block text-sm font-medium text-gray-700 dark:text-darkmuted">
                   Teléfono
                 </label>
                 <input
@@ -144,7 +148,7 @@ export default function Register() {
               </div>
 
               <div>
-                <label htmlFor="especialidad" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="especialidad" className="block text-sm font-medium text-gray-700 dark:text-darkmuted">
                   Especialidad
                 </label>
                 <select
@@ -167,7 +171,7 @@ export default function Register() {
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-darkmuted">
                   Contraseña *
                 </label>
                 <input
@@ -181,11 +185,11 @@ export default function Register() {
                   placeholder="••••••••"
                   minLength="6"
                 />
-                <p className="mt-1 text-sm text-gray-500">Mínimo 6 caracteres</p>
+                <p className="mt-1 text-sm text-gray-500 dark:text-darkmuted">Mínimo 6 caracteres</p>
               </div>
 
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-darkmuted">
                   Confirmar Contraseña *
                 </label>
                 <input
@@ -203,16 +207,16 @@ export default function Register() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full btn-primary disabled:opacity-50"
+                className="w-full btn-primary disabled:opacity-50 dark:bg-accent-500 dark:text-white dark:hover:bg-accent-600"
               >
                 {loading ? 'Registrando...' : 'Registrarse como Terapeuta'}
               </button>
             </form>
 
             <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-darkmuted">
                 ¿Ya tienes cuenta?{' '}
-                <a href="/login" className="text-primary-600 hover:text-primary-500">
+                <a href="/login" className="text-primary-600 hover:text-primary-500 dark:text-accent-400 dark:hover:text-accent-300">
                   Iniciar sesión
                 </a>
               </p>
@@ -221,7 +225,7 @@ export default function Register() {
 
           {/* Footer */}
           <div className="text-center">
-            <a href="/" className="text-sm text-gray-600 hover:text-gray-900">
+            <a href="/" className="text-sm text-gray-600 hover:text-gray-900 dark:text-darkmuted dark:hover:text-darktext">
               ← Volver al inicio
             </a>
           </div>
