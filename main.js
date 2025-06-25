@@ -16,7 +16,7 @@ const loginFormContainer = document.getElementById('loginFormContainer');
 const registerFormContainer = document.getElementById('registerFormContainer');
 
 // Referencias a elementos del dashboard
-const dashboardSection = document.getElementById('dashboardSection');
+const welcomeBlock = document.getElementById('welcomeBlock');
 const welcomeUser = document.getElementById('welcomeUser');
 const userEmail = document.getElementById('userEmail');
 const logoutBtn = document.getElementById('logoutBtn');
@@ -44,6 +44,13 @@ const customConfirmModal = document.getElementById('customConfirmModal');
 const customConfirmMessage = document.getElementById('customConfirmMessage');
 const customConfirmOk = document.getElementById('customConfirmOk');
 const customConfirmCancel = document.getElementById('customConfirmCancel');
+
+// Panel admin
+let isAdmin = false;
+let adminPanel = null;
+
+// Panel admin: muestra lista de profesionales y permite ver pacientes/sesiones de cada uno
+let adminPanelState = { selectedUser: null, profesionales: [], pacientes: [], sesiones: {} };
 
 // Configuración del tema
 function setTheme(dark) {
@@ -131,13 +138,27 @@ function showMessage(msg, type = 'error') {
 }
 
 // Mostrar dashboard y ocultar landing page
-function showDashboard(user) {
+async function showDashboard(user) {
     welcomeUser.textContent = `Bienvenido${user.displayName ? ', ' + user.displayName : ''}`;
     userEmail.textContent = user.email;
-    dashboardSection.classList.remove('hidden');
+    welcomeBlock.classList.remove('hidden');
     document.getElementById('landingPage').classList.add('hidden');
     hideAuthModal();
-    loadPatients(user.uid);
+    // Detectar admin
+    const userDoc = await window.firebaseDB.collection('usuarios').doc(user.uid).get();
+    isAdmin = userDoc.exists && userDoc.data().isAdmin === true;
+    if (isAdmin) {
+        // Ocultar dashboard de pacientes propios
+        document.getElementById('dashboardPacientesSection').style.display = 'none';
+        // Seleccionar por defecto el propio usuario
+        adminPanelState.selectedUser = user.uid;
+        await showAdminPanel();
+    } else if (adminPanel) {
+        adminPanel.remove();
+        adminPanel = null;
+        document.getElementById('dashboardPacientesSection').style.display = '';
+    }
+    if (!isAdmin) loadPatients(user.uid);
 }
 
 // Login
@@ -147,7 +168,6 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     const password = e.target.loginPassword.value;
     try {
         const cred = await window.firebaseAuth.signInWithEmailAndPassword(email, password);
-        showDashboard(cred.user);
     } catch (error) {
         showMessage('Error al iniciar sesión: ' + error.message);
     }
@@ -162,7 +182,7 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
     try {
         const userCredential = await window.firebaseAuth.createUserWithEmailAndPassword(email, password);
         await userCredential.user.updateProfile({ displayName: name });
-        showDashboard(userCredential.user);
+        await saveUserToFirestore(userCredential.user, name);
     } catch (error) {
         showMessage('Error al registrarse: ' + error.message);
     }
@@ -173,14 +193,14 @@ window.firebaseAuth.onAuthStateChanged(user => {
     if (user) {
         showDashboard(user);
     } else {
-        dashboardSection.classList.add('hidden');
+        welcomeBlock.classList.add('hidden');
     }
 });
 
 // Logout
 logoutBtn.addEventListener('click', async () => {
     await window.firebaseAuth.signOut();
-    dashboardSection.classList.add('hidden');
+    welcomeBlock.classList.add('hidden');
     document.getElementById('landingPage').classList.remove('hidden');
     location.hash = '';
 });
@@ -421,4 +441,111 @@ function enableFileInput() {
 // Al abrir el modal de agregar sesión, habilitar input de archivos
 if (addSesionForm) {
     addSesionForm.addEventListener('reset', enableFileInput);
+}
+
+// Al registrar usuario, guardar en Firestore
+async function saveUserToFirestore(user, name) {
+    await window.firebaseDB.collection('usuarios').doc(user.uid).set({
+        uid: user.uid,
+        email: user.email,
+        displayName: name || user.displayName || '',
+        isAdmin: false // Cambia manualmente a true en Firestore para el admin
+    }, { merge: true });
+}
+
+// Panel admin: muestra lista de profesionales y permite ver pacientes/sesiones de cada uno
+async function showAdminPanel() {
+    // Elimino cualquier panel admin existente antes de crear uno nuevo
+    const oldPanel = document.getElementById('adminPanel');
+    if (oldPanel) oldPanel.remove();
+    adminPanel = document.createElement('div');
+    adminPanel.id = 'adminPanel';
+    adminPanel.className = 'w-full max-w-7xl mx-auto mb-8 bg-white dark:bg-darkcard rounded-lg shadow p-6 border dark:border-darkborder';
+    adminPanel.innerHTML = '<h3 class="text-xl font-bold mb-6 text-primary-700">Panel de Administración</h3>';
+    // Layout responsive: grid-cols-1 en móvil, grid-cols-2 en md+
+    let html = `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div id="adminProList">
+        <h4 class="font-semibold mb-2">Profesionales registrados</h4>
+        <ul class="space-y-2">`;
+    if (!adminPanelState.profesionales.length) {
+      const usuariosSnap = await window.firebaseDB.collection('usuarios').get();
+      adminPanelState.profesionales = usuariosSnap.docs.map(doc => doc.data());
+    }
+    adminPanelState.profesionales.forEach(u => {
+      html += `<li>
+        <button class="w-full text-left flex items-center gap-2 px-3 py-2 rounded transition font-medium
+          ${adminPanelState.selectedUser === u.uid ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300' : 'hover:bg-primary-50 dark:hover:bg-darkborder text-gray-700 dark:text-gray-200'}"
+          data-uid="${u.uid}">
+          <span class="text-lg">👤</span> ${u.displayName || u.email}
+          <span class="text-xs text-gray-400">(${u.email})</span>
+          ${u.isAdmin ? '<span class=\"text-xs bg-green-100 text-green-700 rounded px-2 py-0.5 ml-2\">admin</span>' : ''}
+        </button>
+      </li>`;
+    });
+    html += `</ul></div>`;
+    // Columna de pacientes/sesiones
+    html += `<div id="adminPacientesCol">`;
+    if (!adminPanelState.selectedUser) {
+      html += `<div class="text-gray-500 mt-8 md:mt-0">Selecciona un profesional para ver sus pacientes.</div>`;
+    } else {
+      const u = adminPanelState.profesionales.find(u => u.uid === adminPanelState.selectedUser);
+      html += `<div class="mb-4 font-bold text-lg flex items-center gap-2">👤 ${u.displayName || u.email} <span class="text-xs text-gray-400">(${u.email})</span> ${u.isAdmin ? '<span class=\"text-xs bg-green-100 text-green-700 rounded px-2 py-0.5 ml-2\">admin</span>' : ''}</div>`;
+      const pacientesSnap = await window.firebaseDB.collection('pacientes').where('owner', '==', adminPanelState.selectedUser).orderBy('creado', 'desc').get();
+      if (pacientesSnap.empty) {
+        html += '<div class="text-gray-500">No hay pacientes registrados para este profesional.</div>';
+      } else {
+        html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+        for (const doc of pacientesSnap.docs) {
+          const p = doc.data();
+          html += `<div class="border rounded p-3 bg-gray-50 dark:bg-darkbg cursor-pointer hover:bg-primary-50 dark:hover:bg-darkborder transition" data-paciente-id="${doc.id}">
+            <div class="font-bold text-[#2d3748] dark:text-gray-100">${p.nombre || '(sin nombre)'}</div>
+            <div class="text-[#4b5563] dark:text-gray-200 text-sm">${p.email || ''}</div>
+            <div class="text-[#4b5563] dark:text-gray-200 text-sm">${p.telefono || ''}</div>
+            <div class="text-[#4b5563] dark:text-gray-200 text-sm">${p.motivo || ''}</div>`;
+          const sesionesSnap = await window.firebaseDB.collection('pacientes').doc(doc.id).collection('sesiones').orderBy('fecha', 'desc').get();
+          if (sesionesSnap.empty) {
+            html += '<div class="text-xs text-gray-400 mt-2">Sin sesiones</div>';
+          } else {
+            html += '<ul class="ml-2 mt-2 text-xs">';
+            sesionesSnap.forEach(sdoc => {
+              const s = sdoc.data();
+              html += `<li>📅 ${s.fecha} - ${s.comentario || ''}</li>`;
+            });
+            html += '</ul>';
+          }
+          html += '</div>';
+        }
+        html += '</div>';
+      }
+    }
+    html += `</div></div>`;
+    adminPanel.innerHTML += html;
+    welcomeBlock.parentNode.insertBefore(adminPanel, welcomeBlock.nextSibling);
+    // Listeners para seleccionar profesional
+    adminPanel.querySelectorAll('button[data-uid]').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        adminPanelState.selectedUser = btn.getAttribute('data-uid');
+        await showAdminPanel();
+      });
+    });
+    // Después de insertar el HTML, agrego listeners para abrir ficha clínica
+    adminPanel.querySelectorAll('[data-paciente-id]').forEach(div => {
+      div.addEventListener('click', async (e) => {
+        const pacienteId = div.getAttribute('data-paciente-id');
+        fichaPacienteId = pacienteId;
+        fichaPacienteRef = window.firebaseDB.collection('pacientes').doc(pacienteId);
+        // Cargar datos paciente
+        const doc = await fichaPacienteRef.get();
+        if (!doc.exists) return;
+        const p = doc.data();
+        fichaPacienteDatos.innerHTML = `
+            <div class=\"font-bold text-[#2d3748] dark:text-gray-100 text-lg\">${p.nombre || ''}</div>
+            <div class=\"text-[#4b5563] dark:text-gray-200 text-sm\"><span class=\"font-semibold\">Email:</span> ${p.email || ''}</div>
+            <div class=\"text-[#4b5563] dark:text-gray-200 text-sm\"><span class=\"font-semibold\">Teléfono:</span> ${p.telefono || ''}</div>
+            <div class=\"text-[#4b5563] dark:text-gray-200 text-sm\">${p.motivo || ''}</div>
+        `;
+        fichaPacienteModal.classList.remove('hidden');
+        loadSesiones();
+      });
+    });
 } 
