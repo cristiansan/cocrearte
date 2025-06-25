@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cocrearte</title>
-    <meta name="description" content="Plataforma para terapeutas - Cocrearte">
+    <title>Espacio Cocrearte - Plataforma para Terapeutas</title>
+    <meta name="description" content="Plataforma integral de gestión para terapeutas. Gestiona pacientes, sesiones y documentación clínica de manera eficiente y segura.">
     <link rel="icon" href="public/favicon.ico">
     <!-- Tailwind CSS CDN para prototipo -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -15,9 +15,13 @@
           extend: {
             colors: {
               primary: {
-                600: '#818cf8', // violeta claro
+                50: '#f5f3ff',
+                100: '#ede9fe',
+                500: '#8b5cf6',
+                600: '#818cf8',
                 700: '#6366f1',
                 800: '#3730a3',
+                900: '#312e81',
               },
               secondary: {
                 100: '#e5e7eb',
@@ -35,175 +39,492 @@
         },
       }
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body class="bg-secondary-100 dark:bg-darkbg min-h-screen font-sans transition-colors duration-300">
-    <!-- Header -->
-    <header class="bg-white dark:bg-darkcard shadow py-4 px-6 flex justify-between items-center border-b border-secondary-100 dark:border-darkborder">
-        <div class="flex items-center gap-2">
-            <span class="text-2xl">🧠</span>
-            <span class="text-2xl font-bold text-primary-600 dark:text-primary-600">Espacio Cocrearte</span>
-        </div>
-        <div class="flex items-center gap-4">
-            <span class="text-sm text-gray-400 dark:text-gray-300">Plataforma para terapeutas</span>
-            <button id="themeToggle" title="Cambiar tema" class="ml-2 p-2 rounded-full border border-secondary-100 dark:border-secondary-800 bg-white dark:bg-secondary-900 hover:bg-secondary-100 dark:hover:bg-secondary-800 transition">
-                <span id="themeIcon" class="text-xl">🌙</span>
-            </button>
+<body class="bg-white dark:bg-darkbg font-sans transition-colors duration-300">
+    <!-- Header/Navigation -->
+    <header class="bg-white dark:bg-darkcard shadow-sm border-b border-gray-100 dark:border-darkborder sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center">
+                        <span class="text-white text-xl font-bold">🧠</span>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-900 dark:text-white">Espacio Cocrearte</h1>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Plataforma para terapeutas</p>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <nav class="hidden md:flex items-center space-x-8">
+                    <a href="#inicio" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition">Inicio</a>
+                    <a href="#caracteristicas" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition">Características</a>
+                    <a href="#beneficios" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition">Beneficios</a>
+                    <a href="#contacto" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition">Contacto</a>
+                </nav>
+
+                <!-- Auth Buttons -->
+                <div class="flex items-center space-x-4">
+                    <button id="themeToggle" title="Cambiar tema" class="p-2 rounded-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                        <span id="themeIcon" class="text-lg">🌙</span>
+                    </button>
+                    <button id="loginBtn" class="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium transition">Iniciar Sesión</button>
+                    <button id="registerBtn" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium transition shadow-sm">Registrarse</button>
+                </div>
+            </div>
         </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="flex flex-col items-center justify-center py-12 px-4">
-        <!-- Login/Register Section -->
-        <section id="authSection" class="w-full max-w-md space-y-8">
-            <div class="bg-white dark:bg-darkcard rounded-lg shadow p-6 border dark:border-darkborder">
-                <h2 class="text-xl font-bold mb-4 text-primary-700 text-center">Bienvenido a Cocrearte</h2>
-                <p class="text-center text-gray-500 mb-6">Plataforma de gestión para terapeutas</p>
-                <form id="loginForm" class="space-y-4">
-                    <h3 class="text-lg font-semibold mb-2">Iniciar Sesión</h3>
-                    <div>
-                        <label for="loginEmail" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Email</label>
-                        <input id="loginEmail" name="loginEmail" type="email" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Correo electrónico">
-                    </div>
-                    <div>
-                        <label for="loginPassword" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Contraseña</label>
-                        <input id="loginPassword" name="loginPassword" type="password" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Contraseña">
-                    </div>
-                    <div class="flex justify-center">
-                        <button type="submit" class="bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 px-6 rounded transition">Iniciar Sesión</button>
-                    </div>
-                </form>
-                <form id="registerForm" class="space-y-4 mt-8">
-                    <h3 class="text-lg font-semibold mb-2">Registrarse</h3>
-                    <div>
-                        <label for="registerName" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Nombre</label>
-                        <input id="registerName" name="registerName" type="text" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Nombre completo">
-                    </div>
-                    <div>
-                        <label for="registerEmail" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Email</label>
-                        <input id="registerEmail" name="registerEmail" type="email" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Correo electrónico">
-                    </div>
-                    <div>
-                        <label for="registerPassword" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Contraseña</label>
-                        <input id="registerPassword" name="registerPassword" type="password" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Contraseña">
-                    </div>
-                    <div class="flex justify-center">
-                        <button type="submit" class="bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 px-6 rounded transition">Registrarse</button>
-                    </div>
-                </form>
+    <!-- Hero Section -->
+    <section id="inicio" class="bg-gradient-to-br from-primary-50 to-indigo-50 dark:from-darkbg dark:to-gray-900 py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <h1 class="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
+                    Gestiona tu <span class="text-primary-600 dark:text-primary-400">práctica terapéutica</span> de manera eficiente
+                </h1>
+                <p class="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
+                    Espacio Cocrearte es la plataforma integral que necesitas para gestionar pacientes, 
+                    documentar sesiones y mantener un historial clínico seguro y organizado.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button id="ctaRegisterBtn" class="bg-primary-600 hover:bg-primary-700 text-white px-8 py-4 rounded-lg font-semibold text-lg transition shadow-lg hover:shadow-xl">
+                        Comenzar Gratis
+                    </button>
+                    <button id="demoBtn" class="border-2 border-primary-600 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 px-8 py-4 rounded-lg font-semibold text-lg transition">
+                        Ver Demo
+                    </button>
+                </div>
             </div>
-        </section>
-        <!-- Dashboard Section (se muestra tras login) -->
-        <section id="dashboardSection" class="w-full max-w-3xl mt-10 hidden">
-            <div class="bg-white dark:bg-darkcard rounded-lg shadow p-6 mb-6 flex justify-between items-center border dark:border-darkborder">
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="caracteristicas" class="py-20 bg-white dark:bg-darkcard">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                    Todo lo que necesitas en una plataforma
+                </h2>
+                <p class="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                    Herramientas diseñadas específicamente para profesionales de la salud mental
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="bg-gray-50 dark:bg-darkbg p-8 rounded-xl border border-gray-100 dark:border-darkborder">
+                    <div class="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center mb-6">
+                        <span class="text-2xl">👥</span>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Gestión de Pacientes</h3>
+                    <p class="text-gray-600 dark:text-gray-300">
+                        Organiza la información de tus pacientes de manera clara y accesible. 
+                        Mantén historiales completos con datos de contacto y motivos de consulta.
+                    </p>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="bg-gray-50 dark:bg-darkbg p-8 rounded-xl border border-gray-100 dark:border-darkborder">
+                    <div class="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center mb-6">
+                        <span class="text-2xl">📝</span>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Documentación de Sesiones</h3>
+                    <p class="text-gray-600 dark:text-gray-300">
+                        Registra cada sesión con fecha, comentarios y notas detalladas. 
+                        Adjunta archivos importantes para mantener todo organizado.
+                    </p>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="bg-gray-50 dark:bg-darkbg p-8 rounded-xl border border-gray-100 dark:border-darkborder">
+                    <div class="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center mb-6">
+                        <span class="text-2xl">🔒</span>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Seguridad y Privacidad</h3>
+                    <p class="text-gray-600 dark:text-gray-300">
+                        Tus datos están protegidos con las más altas medidas de seguridad. 
+                        Cumplimos con estándares de confidencialidad médica.
+                    </p>
+                </div>
+
+                <!-- Feature 4 -->
+                <div class="bg-gray-50 dark:bg-darkbg p-8 rounded-xl border border-gray-100 dark:border-darkborder">
+                    <div class="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center mb-6">
+                        <span class="text-2xl">📊</span>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Historial Clínico</h3>
+                    <p class="text-gray-600 dark:text-gray-300">
+                        Accede al historial completo de cada paciente. 
+                        Visualiza el progreso y mantén un registro detallado de las sesiones.
+                    </p>
+                </div>
+
+                <!-- Feature 5 -->
+                <div class="bg-gray-50 dark:bg-darkbg p-8 rounded-xl border border-gray-100 dark:border-darkborder">
+                    <div class="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center mb-6">
+                        <span class="text-2xl">📱</span>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Acceso Móvil</h3>
+                    <p class="text-gray-600 dark:text-gray-300">
+                        Accede a tu información desde cualquier dispositivo. 
+                        Interfaz responsive diseñada para trabajar desde donde estés.
+                    </p>
+                </div>
+
+                <!-- Feature 6 -->
+                <div class="bg-gray-50 dark:bg-darkbg p-8 rounded-xl border border-gray-100 dark:border-darkborder">
+                    <div class="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center mb-6">
+                        <span class="text-2xl">⚡</span>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Fácil de Usar</h3>
+                    <p class="text-gray-600 dark:text-gray-300">
+                        Interfaz intuitiva que no requiere capacitación especial. 
+                        Comienza a usar la plataforma en minutos.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Benefits Section -->
+    <section id="beneficios" class="py-20 bg-gray-50 dark:bg-darkbg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                    ¿Por qué elegir Espacio Cocrearte?
+                </h2>
+                <p class="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                    Descubre cómo nuestra plataforma puede transformar tu práctica terapéutica
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
                 <div>
-                    <h2 class="text-2xl font-bold text-[#2d3748] dark:text-gray-100" id="welcomeUser">Bienvenido</h2>
-                    <p class="text-gray-500" id="userEmail"></p>
+                    <div class="space-y-6">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                <span class="text-white text-sm font-bold">✓</span>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Ahorra Tiempo</h3>
+                                <p class="text-gray-600 dark:text-gray-300">
+                                    Reduce el tiempo dedicado a la administración y enfócate en lo que realmente importa: tus pacientes.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start space-x-4">
+                            <div class="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                <span class="text-white text-sm font-bold">✓</span>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Mejora la Organización</h3>
+                                <p class="text-gray-600 dark:text-gray-300">
+                                    Mantén toda la información de tus pacientes organizada y fácilmente accesible.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start space-x-4">
+                            <div class="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                <span class="text-white text-sm font-bold">✓</span>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Cumple Normativas</h3>
+                                <p class="text-gray-600 dark:text-gray-300">
+                                    Cumple con los estándares de confidencialidad y protección de datos médicos.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start space-x-4">
+                            <div class="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                <span class="text-white text-sm font-bold">✓</span>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Escalabilidad</h3>
+                                <p class="text-gray-600 dark:text-gray-300">
+                                    Crece tu práctica sin preocuparte por la gestión administrativa.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <button id="logoutBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded transition">Cerrar sesión</button>
+
+                <div class="bg-white dark:bg-darkcard p-8 rounded-xl shadow-lg border border-gray-100 dark:border-darkborder">
+                    <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">
+                        Comienza Hoy Mismo
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-2xl">🎯</span>
+                            <span class="text-gray-700 dark:text-gray-300">Registro gratuito</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <span class="text-2xl">⚡</span>
+                            <span class="text-gray-700 dark:text-gray-300">Configuración en minutos</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <span class="text-2xl">🔒</span>
+                            <span class="text-gray-700 dark:text-gray-300">Datos seguros</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <span class="text-2xl">📱</span>
+                            <span class="text-gray-700 dark:text-gray-300">Acceso desde cualquier dispositivo</span>
+                        </div>
+                    </div>
+                    <button id="ctaRegisterBtn2" class="w-full bg-primary-600 hover:bg-primary-700 text-white py-3 rounded-lg font-semibold mt-6 transition">
+                        Crear Cuenta Gratis
+                    </button>
+                </div>
             </div>
-            <div class="bg-white dark:bg-darkcard rounded-lg shadow p-6 border dark:border-darkborder">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-semibold text-[#2d3748] dark:text-gray-100">Pacientes</h3>
-                    <button id="showAddPatientBtn" class="bg-primary-700 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded border-2 border-primary-600 shadow-sm dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-darkbg">+ Agregar Paciente</button>
-                </div>
-                <div id="patientsList" class="space-y-4">
-                    <!-- Aquí se listarán los pacientes -->
-                </div>
-                <div id="noPatientsMsg" class="text-gray-500 text-center mt-8 hidden">No hay pacientes registrados.</div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contacto" class="py-20 bg-white dark:bg-darkcard">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                ¿Tienes preguntas?
+            </h2>
+            <p class="text-xl text-gray-600 dark:text-gray-300 mb-8">
+                Estamos aquí para ayudarte a comenzar con Espacio Cocrearte
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button id="contactBtn" class="bg-primary-600 hover:bg-primary-700 text-white px-8 py-3 rounded-lg font-semibold transition">
+                    Contactar Soporte
+                </button>
+                <button id="demoBtn2" class="border-2 border-primary-600 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 px-8 py-3 rounded-lg font-semibold transition">
+                    Solicitar Demo
+                </button>
             </div>
-        </section>
-        <!-- Modal para agregar paciente -->
-        <div id="addPatientModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
-            <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg p-8 w-full max-w-md relative border dark:border-darkborder">
-                <button onclick="hideAddPatientModal()" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">×</button>
-                <h3 class="text-xl font-bold text-primary-600 mb-4">Agregar Paciente</h3>
-                <form id="addPatientForm" class="space-y-4">
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 dark:bg-black text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div class="col-span-2">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
+                            <span class="text-white font-bold">🧠</span>
+                        </div>
+                        <span class="text-xl font-bold">Espacio Cocrearte</span>
+                    </div>
+                    <p class="text-gray-400 mb-4 max-w-md">
+                        Plataforma integral para la gestión de prácticas terapéuticas. 
+                        Simplifica tu trabajo y mejora la atención a tus pacientes.
+                    </p>
+                </div>
+                
+                <div>
+                    <h3 class="font-semibold mb-4">Producto</h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#caracteristicas" class="hover:text-white transition">Características</a></li>
+                        <li><a href="#beneficios" class="hover:text-white transition">Beneficios</a></li>
+                        <li><a href="#" class="hover:text-white transition">Precios</a></li>
+                        <li><a href="#" class="hover:text-white transition">Demo</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="font-semibold mb-4">Soporte</h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-white transition">Centro de Ayuda</a></li>
+                        <li><a href="#" class="hover:text-white transition">Contacto</a></li>
+                        <li><a href="#" class="hover:text-white transition">Documentación</a></li>
+                        <li><a href="#" class="hover:text-white transition">Estado del Servicio</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-400 text-sm">
+                    © 2024 Espacio Cocrearte. Todos los derechos reservados.
+                </p>
+                <div class="flex space-x-6 mt-4 md:mt-0">
+                    <a href="#" class="text-gray-400 hover:text-white transition">Privacidad</a>
+                    <a href="#" class="text-gray-400 hover:text-white transition">Términos</a>
+                    <a href="#" class="text-gray-400 hover:text-white transition">Cookies</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg p-8 w-full max-w-md relative">
+            <button id="closeAuthModal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl">×</button>
+            
+            <!-- Login Form -->
+            <div id="loginFormContainer">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">Iniciar Sesión</h2>
+                <form id="loginForm" class="space-y-4">
                     <div>
-                        <label for="patientName" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Nombre</label>
-                        <input id="patientName" name="patientName" type="text" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Nombre completo">
+                        <label for="loginEmail" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+                        <input id="loginEmail" name="loginEmail" type="email" required 
+                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800 dark:text-white" 
+                               placeholder="tu@email.com">
                     </div>
                     <div>
-                        <label for="patientEmail" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Email</label>
-                        <input id="patientEmail" name="patientEmail" type="email" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Correo electrónico">
+                        <label for="loginPassword" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contraseña</label>
+                        <input id="loginPassword" name="loginPassword" type="password" required 
+                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800 dark:text-white" 
+                               placeholder="••••••••">
                     </div>
-                    <div>
-                        <label for="patientTelefono" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Teléfono</label>
-                        <input id="patientTelefono" name="patientTelefono" type="tel" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Teléfono">
-                    </div>
-                    <div>
-                        <label for="patientMotivo" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Motivo de Consulta</label>
-                        <textarea id="patientMotivo" name="patientMotivo" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" rows="2" placeholder="Motivo de consulta"></textarea>
-                    </div>
-                    <div class="flex justify-end gap-3 pt-4">
-                        <button type="button" onclick="hideAddPatientModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded">Cancelar</button>
-                        <button type="submit" class="bg-primary-700 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded border-2 border-primary-600 shadow-sm dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-darkbg">Agregar</button>
-                    </div>
+                    <button type="submit" class="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+                        Iniciar Sesión
+                    </button>
                 </form>
+                <div class="mt-4 text-center">
+                    <button id="showRegisterForm" class="text-primary-600 hover:text-primary-700 text-sm">
+                        ¿No tienes cuenta? Regístrate
+                    </button>
+                </div>
             </div>
-        </div>
-        <!-- Modal Ficha Clínica Paciente -->
-        <div id="fichaPacienteModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
-            <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg p-8 w-full max-w-2xl relative border dark:border-darkborder">
-                <button onclick="hideFichaPacienteModal()" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">×</button>
-                <h3 class="text-xl font-bold text-primary-600 mb-2">Ficha Clínica</h3>
-                <div id="fichaPacienteDatos" class="mb-4"></div>
-                <h4 class="text-lg font-semibold mb-2">Sesiones</h4>
-                <div id="sesionesList" class="space-y-3 mb-4 max-h-60 overflow-y-auto"></div>
-                <div id="noSesionesMsg" class="text-gray-500 text-center mb-4 hidden">No hay sesiones registradas.</div>
-                <form id="addSesionForm" class="space-y-2 border-t pt-4 mt-4">
+
+            <!-- Register Form -->
+            <div id="registerFormContainer" class="hidden">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">Crear Cuenta</h2>
+                <form id="registerForm" class="space-y-4">
                     <div>
-                        <label for="sesionFecha" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Fecha</label>
-                        <input id="sesionFecha" name="sesionFecha" type="date" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder">
+                        <label for="registerName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre Completo</label>
+                        <input id="registerName" name="registerName" type="text" required 
+                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800 dark:text-white" 
+                               placeholder="Tu nombre completo">
                     </div>
                     <div>
-                        <label for="sesionComentario" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Comentario</label>
-                        <textarea id="sesionComentario" name="sesionComentario" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" rows="2" placeholder="Detalle de la sesión"></textarea>
+                        <label for="registerEmail" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+                        <input id="registerEmail" name="registerEmail" type="email" required 
+                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800 dark:text-white" 
+                               placeholder="tu@email.com">
                     </div>
                     <div>
-                        <label for="sesionNotas" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Notas</label>
-                        <textarea id="sesionNotas" name="sesionNotas" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" rows="4" placeholder="Notas adicionales (opcional)"></textarea>
+                        <label for="registerPassword" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contraseña</label>
+                        <input id="registerPassword" name="registerPassword" type="password" required 
+                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800 dark:text-white" 
+                               placeholder="••••••••">
                     </div>
-                    <div>
-                        <label for="sesionArchivo" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Adjuntar archivos (opcional)</label>
-                        <input id="sesionArchivo" name="sesionArchivo" type="file" multiple class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-darkbg dark:file:text-gray-100" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.txt">
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Máximo 5 archivos, 10MB cada uno.</p>
-                    </div>
-                    <div class="flex justify-end gap-3 pt-2">
-                        <button type="button" onclick="hideFichaPacienteModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded">Cerrar</button>
-                        <button type="submit" class="bg-primary-700 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded border-2 border-primary-600 shadow-sm dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-darkbg">Agregar Sesión</button>
-                    </div>
+                    <button type="submit" class="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+                        Crear Cuenta
+                    </button>
                 </form>
-            </div>
-        </div>
-        <!-- Modal de confirmación personalizado -->
-        <div id="customConfirmModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
-            <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg p-8 w-full max-w-sm relative border dark:border-darkborder flex flex-col items-center">
-                <h3 class="text-lg font-bold text-primary-700 dark:text-primary-600 mb-4">Espacio Cocrearte dice</h3>
-                <p id="customConfirmMessage" class="text-center text-[#2d3748] dark:text-gray-100 mb-6">¿Está seguro de guardar esta sesión? No podrá editarla después.</p>
-                <div class="flex gap-4 justify-center">
-                    <button id="customConfirmCancel" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded">Cancelar</button>
-                    <button id="customConfirmOk" class="bg-primary-700 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded border-2 border-primary-600 shadow-sm dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-darkbg">Aceptar</button>
+                <div class="mt-4 text-center">
+                    <button id="showLoginForm" class="text-primary-600 hover:text-primary-700 text-sm">
+                        ¿Ya tienes cuenta? Inicia sesión
+                    </button>
                 </div>
             </div>
         </div>
-    </main>
+    </div>
+
+    <!-- Dashboard Section (se muestra tras login) -->
+    <section id="dashboardSection" class="w-full max-w-3xl mt-10 hidden">
+        <div class="bg-white dark:bg-darkcard rounded-lg shadow p-6 mb-6 flex justify-between items-center border dark:border-darkborder">
+            <div>
+                <h2 class="text-2xl font-bold text-[#2d3748] dark:text-gray-100" id="welcomeUser">Bienvenido</h2>
+                <p class="text-gray-500" id="userEmail"></p>
+            </div>
+            <button id="logoutBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded transition">Cerrar sesión</button>
+        </div>
+        <div class="bg-white dark:bg-darkcard rounded-lg shadow p-6 border dark:border-darkborder">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-[#2d3748] dark:text-gray-100">Pacientes</h3>
+                <button id="showAddPatientBtn" class="bg-primary-700 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded border-2 border-primary-600 shadow-sm dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-darkbg">+ Agregar Paciente</button>
+            </div>
+            <div id="patientsList" class="space-y-4">
+                <!-- Aquí se listarán los pacientes -->
+            </div>
+            <div id="noPatientsMsg" class="text-gray-500 text-center mt-8 hidden">No hay pacientes registrados.</div>
+        </div>
+    </section>
+
+    <!-- Modal para agregar paciente -->
+    <div id="addPatientModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+        <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg p-8 w-full max-w-md relative border dark:border-darkborder">
+            <button onclick="hideAddPatientModal()" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">×</button>
+            <h3 class="text-xl font-bold text-primary-600 mb-4">Agregar Paciente</h3>
+            <form id="addPatientForm" class="space-y-4">
+                <div>
+                    <label for="patientName" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Nombre</label>
+                    <input id="patientName" name="patientName" type="text" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Nombre completo">
+                </div>
+                <div>
+                    <label for="patientEmail" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Email</label>
+                    <input id="patientEmail" name="patientEmail" type="email" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Correo electrónico">
+                </div>
+                <div>
+                    <label for="patientTelefono" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Teléfono</label>
+                    <input id="patientTelefono" name="patientTelefono" type="tel" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Teléfono">
+                </div>
+                <div>
+                    <label for="patientMotivo" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Motivo de Consulta</label>
+                    <textarea id="patientMotivo" name="patientMotivo" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" rows="2" placeholder="Motivo de consulta"></textarea>
+                </div>
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" onclick="hideAddPatientModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded">Cancelar</button>
+                    <button type="submit" class="bg-primary-700 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded border-2 border-primary-600 shadow-sm dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-darkbg">Agregar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Ficha Clínica Paciente -->
+    <div id="fichaPacienteModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+        <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg p-8 w-full max-w-2xl relative border dark:border-darkborder">
+            <button onclick="hideFichaPacienteModal()" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">×</button>
+            <h3 class="text-xl font-bold text-primary-600 mb-2">Ficha Clínica</h3>
+            <div id="fichaPacienteDatos" class="mb-4"></div>
+            <h4 class="text-lg font-semibold mb-2">Sesiones</h4>
+            <div id="sesionesList" class="space-y-3 mb-4 max-h-60 overflow-y-auto"></div>
+            <div id="noSesionesMsg" class="text-gray-500 text-center mb-4 hidden">No hay sesiones registradas.</div>
+            <form id="addSesionForm" class="space-y-2 border-t pt-4 mt-4">
+                <div>
+                    <label for="sesionFecha" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Fecha</label>
+                    <input id="sesionFecha" name="sesionFecha" type="date" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder">
+                </div>
+                <div>
+                    <label for="sesionComentario" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Comentario</label>
+                    <textarea id="sesionComentario" name="sesionComentario" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" rows="2" placeholder="Detalle de la sesión"></textarea>
+                </div>
+                <div>
+                    <label for="sesionNotas" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Notas</label>
+                    <textarea id="sesionNotas" name="sesionNotas" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" rows="4" placeholder="Notas adicionales (opcional)"></textarea>
+                </div>
+                <div>
+                    <label for="sesionArchivo" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Adjuntar archivos (opcional)</label>
+                    <input id="sesionArchivo" name="sesionArchivo" type="file" multiple class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-darkbg dark:file:text-gray-100" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.txt">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Máximo 5 archivos, 5MB cada uno.</p>
+                </div>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="hideFichaPacienteModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded">Cerrar</button>
+                    <button type="submit" class="bg-primary-700 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded border-2 border-primary-600 shadow-sm dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-darkbg">Agregar Sesión</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación personalizado -->
+    <div id="customConfirmModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+        <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg p-8 w-full max-w-sm relative border dark:border-darkborder flex flex-col items-center">
+            <h3 class="text-lg font-bold text-primary-700 dark:text-primary-600 mb-4">Espacio Cocrearte dice</h3>
+            <p id="customConfirmMessage" class="text-center text-[#2d3748] dark:text-gray-100 mb-6">¿Está seguro de guardar esta sesión? No podrá editarla después.</p>
+            <div class="flex gap-4 justify-center">
+                <button id="customConfirmCancel" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded">Cancelar</button>
+                <button id="customConfirmOk" class="bg-primary-700 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded border-2 border-primary-600 shadow-sm dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-darkbg">Aceptar</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Firebase SDKs para HTML puro -->
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
     <script src="firebase-config.js"></script>
     <script src="main.js"></script>
-    <script>
-    function disableFileInput() {
-      const archivoInput = document.getElementById('sesionArchivo');
-      if (archivoInput) archivoInput.disabled = true;
-    }
-    function enableFileInput() {
-      const archivoInput = document.getElementById('sesionArchivo');
-      if (archivoInput) archivoInput.disabled = false;
-    }
-    </script>
 </body>
 </html> 

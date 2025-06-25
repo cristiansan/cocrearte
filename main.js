@@ -1,9 +1,21 @@
-// main.js
+// main.js - Espacio Cocrearte
 
-// Referencias a elementos
-const loginForm = document.getElementById('loginForm');
-const registerForm = document.getElementById('registerForm');
-const authSection = document.getElementById('authSection');
+// Referencias a elementos de la landing page
+const loginBtn = document.getElementById('loginBtn');
+const registerBtn = document.getElementById('registerBtn');
+const ctaRegisterBtn = document.getElementById('ctaRegisterBtn');
+const ctaRegisterBtn2 = document.getElementById('ctaRegisterBtn2');
+const demoBtn = document.getElementById('demoBtn');
+const demoBtn2 = document.getElementById('demoBtn2');
+const contactBtn = document.getElementById('contactBtn');
+const authModal = document.getElementById('authModal');
+const closeAuthModal = document.getElementById('closeAuthModal');
+const showRegisterFormBtn = document.getElementById('showRegisterForm');
+const showLoginFormBtn = document.getElementById('showLoginForm');
+const loginFormContainer = document.getElementById('loginFormContainer');
+const registerFormContainer = document.getElementById('registerFormContainer');
+
+// Referencias a elementos del dashboard
 const dashboardSection = document.getElementById('dashboardSection');
 const welcomeUser = document.getElementById('welcomeUser');
 const userEmail = document.getElementById('userEmail');
@@ -33,10 +45,7 @@ const customConfirmMessage = document.getElementById('customConfirmMessage');
 const customConfirmOk = document.getElementById('customConfirmOk');
 const customConfirmCancel = document.getElementById('customConfirmCancel');
 
-// Guardar cambios de 1era sesión en Firestore
-const primeraSesionFechaInput = document.getElementById('primeraSesionFecha');
-const primeraSesionEstadoInput = document.getElementById('primeraSesionEstado');
-
+// Configuración del tema
 function setTheme(dark) {
     if (dark) {
         document.documentElement.classList.add('dark');
@@ -59,46 +68,82 @@ function setTheme(dark) {
     }
 })();
 
+// Event listeners para el tema
 themeToggle.addEventListener('click', () => {
     const isDark = document.documentElement.classList.contains('dark');
     setTheme(!isDark);
 });
 
-// Mostrar mensajes
-function showMessage(msg, type = 'error') {
-    alert(msg); // Puedes mejorar esto con un sistema de mensajes visual
+// Funciones para el modal de autenticación
+function showAuthModal() {
+    authModal.classList.remove('hidden');
+    showLoginForm();
 }
 
-// Mostrar/Ocultar modal de paciente
-window.hideAddPatientModal = function() {
-    addPatientModal.classList.add('hidden');
-    addPatientForm.reset();
-};
-showAddPatientBtn.addEventListener('click', () => {
-    addPatientModal.classList.remove('hidden');
+function hideAuthModal() {
+    authModal.classList.add('hidden');
+    loginFormContainer.classList.remove('hidden');
+    registerFormContainer.classList.add('hidden');
+}
+
+function showLoginForm() {
+    loginFormContainer.classList.remove('hidden');
+    registerFormContainer.classList.add('hidden');
+}
+
+function showRegisterForm() {
+    registerFormContainer.classList.remove('hidden');
+    loginFormContainer.classList.add('hidden');
+}
+
+// Event listeners para botones de la landing page
+loginBtn.addEventListener('click', showAuthModal);
+registerBtn.addEventListener('click', () => {
+    showAuthModal();
+    showRegisterForm();
+});
+ctaRegisterBtn.addEventListener('click', () => {
+    showAuthModal();
+    showRegisterForm();
+});
+ctaRegisterBtn2.addEventListener('click', () => {
+    showAuthModal();
+    showRegisterForm();
+});
+closeAuthModal.addEventListener('click', hideAuthModal);
+showRegisterFormBtn.addEventListener('click', showRegisterForm);
+showLoginFormBtn.addEventListener('click', showLoginForm);
+
+// Botones de demo y contacto (placeholder)
+demoBtn.addEventListener('click', () => {
+    alert('Demo en desarrollo. ¡Regístrate para probar la plataforma!');
+});
+demoBtn2.addEventListener('click', () => {
+    alert('Demo en desarrollo. ¡Regístrate para probar la plataforma!');
+});
+contactBtn.addEventListener('click', () => {
+    alert('Contacto: soporte@cocrearte.com');
 });
 
-// Logout
-logoutBtn.addEventListener('click', async () => {
-    await window.firebaseAuth.signOut();
-    dashboardSection.classList.add('hidden');
-    authSection.classList.remove('hidden');
-});
+// Mostrar mensajes
+function showMessage(msg, type = 'error') {
+    alert(msg);
+}
 
-// Mostrar datos de usuario y pacientes tras login
+// Mostrar dashboard y ocultar landing page
 function showDashboard(user) {
     welcomeUser.textContent = `Bienvenido${user.displayName ? ', ' + user.displayName : ''}`;
     userEmail.textContent = user.email;
-    authSection.classList.add('hidden');
     dashboardSection.classList.remove('hidden');
+    hideAuthModal();
     loadPatients(user.uid);
 }
 
 // Login
-loginForm.addEventListener('submit', async (e) => {
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = loginForm.loginEmail.value;
-    const password = loginForm.loginPassword.value;
+    const email = e.target.loginEmail.value;
+    const password = e.target.loginPassword.value;
     try {
         const cred = await window.firebaseAuth.signInWithEmailAndPassword(email, password);
         showDashboard(cred.user);
@@ -108,11 +153,11 @@ loginForm.addEventListener('submit', async (e) => {
 });
 
 // Registro
-registerForm.addEventListener('submit', async (e) => {
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const name = registerForm.registerName.value;
-    const email = registerForm.registerEmail.value;
-    const password = registerForm.registerPassword.value;
+    const name = e.target.registerName.value;
+    const email = e.target.registerEmail.value;
+    const password = e.target.registerPassword.value;
     try {
         const userCredential = await window.firebaseAuth.createUserWithEmailAndPassword(email, password);
         await userCredential.user.updateProfile({ displayName: name });
@@ -128,8 +173,24 @@ window.firebaseAuth.onAuthStateChanged(user => {
         showDashboard(user);
     } else {
         dashboardSection.classList.add('hidden');
-        authSection.classList.remove('hidden');
     }
+});
+
+// Logout
+logoutBtn.addEventListener('click', async () => {
+    await window.firebaseAuth.signOut();
+    dashboardSection.classList.add('hidden');
+    location.reload(); // Recargar para mostrar la landing page
+});
+
+// Mostrar/Ocultar modal de paciente
+window.hideAddPatientModal = function() {
+    addPatientModal.classList.add('hidden');
+    addPatientForm.reset();
+};
+
+showAddPatientBtn.addEventListener('click', () => {
+    addPatientModal.classList.remove('hidden');
 });
 
 // Cargar pacientes desde Firestore
@@ -148,10 +209,10 @@ async function loadPatients(uid) {
         div.setAttribute('data-paciente-id', doc.id);
         div.innerHTML = `
             <div>
-                <div class=\"font-bold text-[#2d3748] dark:text-gray-100\">${p.nombre || ''}</div>
-                <div class=\"text-[#4b5563] dark:text-gray-200 text-sm\">${p.email || ''}</div>
-                <div class=\"text-[#4b5563] dark:text-gray-200 text-sm\">${p.telefono || ''}</div>
-                <div class=\"text-[#4b5563] dark:text-gray-200 text-sm\">${p.motivo || ''}</div>
+                <div class="font-bold text-[#2d3748] dark:text-gray-100">${p.nombre || ''}</div>
+                <div class="text-[#4b5563] dark:text-gray-200 text-sm">${p.email || ''}</div>
+                <div class="text-[#4b5563] dark:text-gray-200 text-sm">${p.telefono || ''}</div>
+                <div class="text-[#4b5563] dark:text-gray-200 text-sm">${p.motivo || ''}</div>
             </div>
         `;
         patientsList.appendChild(div);
@@ -205,20 +266,11 @@ patientsList.addEventListener('click', async (e) => {
     if (!doc.exists) return;
     const p = doc.data();
     fichaPacienteDatos.innerHTML = `
-        <div class=\"font-bold text-[#2d3748] dark:text-gray-100 text-lg\">${p.nombre || ''}</div>
-        <div class=\"text-[#4b5563] dark:text-gray-200 text-sm\"><span class=\"font-semibold\">Email:</span> ${p.email || ''}</div>
-        <div class=\"text-[#4b5563] dark:text-gray-200 text-sm\"><span class=\"font-semibold\">Teléfono:</span> ${p.telefono || ''}</div>
-        <div class=\"text-[#4b5563] dark:text-gray-200 text-sm\">${p.motivo || ''}</div>
+        <div class="font-bold text-[#2d3748] dark:text-gray-100 text-lg">${p.nombre || ''}</div>
+        <div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Email:</span> ${p.email || ''}</div>
+        <div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Teléfono:</span> ${p.telefono || ''}</div>
+        <div class="text-[#4b5563] dark:text-gray-200 text-sm">${p.motivo || ''}</div>
     `;
-    // Reasignar listeners después de renderizar
-    setTimeout(() => {
-      const fechaInput = document.getElementById('primeraSesionFecha');
-      const estadoInput = document.getElementById('primeraSesionEstado');
-      if (fechaInput && estadoInput) {
-        fechaInput.addEventListener('change', () => savePrimeraSesion(fichaPacienteId));
-        estadoInput.addEventListener('change', () => savePrimeraSesion(fichaPacienteId));
-      }
-    }, 0);
     fichaPacienteModal.classList.remove('hidden');
     loadSesiones();
 });
@@ -228,22 +280,31 @@ async function loadSesiones() {
     sesionesList.innerHTML = '';
     noSesionesMsg.classList.add('hidden');
     if (!fichaPacienteRef) return;
+    
+    console.log(`📋 Cargando sesiones del paciente...`);
     const snapshot = await fichaPacienteRef.collection('sesiones').orderBy('fecha', 'desc').get();
     if (snapshot.empty) {
         noSesionesMsg.classList.remove('hidden');
+        console.log(`ℹ️ No hay sesiones registradas para este paciente`);
         return;
     }
+    
+    console.log(`📄 Encontradas ${snapshot.size} sesión(es)`);
     snapshot.forEach(doc => {
         const s = doc.data();
         const div = document.createElement('div');
         div.className = 'border rounded p-3 bg-gray-50 dark:bg-darkbg';
         div.innerHTML = `
-            <div class=\"text-sm font-bold text-[#2d3748] dark:text-gray-100\"><span class=\"font-semibold\">Fecha:</span> ${s.fecha || ''}</div>
-            <div class=\"text-gray-900 dark:text-gray-200\">${s.comentario || ''}</div>
-            ${s.notas ? `<div class=\"text-xs mt-2 text-[#4b5563] dark:text-gray-400\"><span class=\"font-semibold\">Notas:</span> ${s.notas}</div>` : ''}
-            ${s.archivosUrls && s.archivosUrls.length ? `<div class=\"mt-2 flex flex-col gap-1\">${s.archivosUrls.map(url => `<a href=\"${url}\" target=\"_blank\" class=\"text-primary-700 underline dark:text-primary-600\">Ver archivo adjunto</a>`).join('')}</div>` : ''}
+            <div class="text-sm font-bold text-[#2d3748] dark:text-gray-100"><span class="font-semibold">Fecha:</span> ${s.fecha || ''}</div>
+            <div class="text-gray-900 dark:text-gray-200">${s.comentario || ''}</div>
+            ${s.notas ? `<div class="text-xs mt-2 text-[#4b5563] dark:text-gray-400"><span class="font-semibold">Notas:</span> ${s.notas}</div>` : ''}
+            ${s.archivosUrls && s.archivosUrls.length ? `<div class="mt-2 flex flex-col gap-1">${s.archivosUrls.map(url => `<a href="${url}" target="_blank" class="text-primary-700 underline dark:text-primary-600">Ver archivo adjunto</a>`).join('')}</div>` : ''}
         `;
         sesionesList.appendChild(div);
+        
+        if (s.archivosUrls && s.archivosUrls.length > 0) {
+            console.log(`📎 Sesión del ${s.fecha} tiene ${s.archivosUrls.length} archivo(s) adjunto(s)`);
+        }
     });
 }
 
@@ -281,24 +342,52 @@ addSesionForm.addEventListener('submit', async (e) => {
             showMessage('Solo puedes adjuntar hasta 5 archivos por sesión.');
             return;
         }
+        console.log(`🔄 Iniciando subida de ${archivoInput.files.length} archivo(s)...`);
+        
         for (let i = 0; i < archivoInput.files.length; i++) {
             const archivo = archivoInput.files[i];
-            if (archivo.size > 10 * 1024 * 1024) { // 10MB
-                showMessage('El archivo "' + archivo.name + '" supera el tamaño máximo de 10MB.');
+            if (archivo.size > 5 * 1024 * 1024) { // 5MB
+                showMessage('El archivo "' + archivo.name + '" supera el tamaño máximo de 5MB.');
                 return;
             }
         }
-        const storageRef = window.firebase.storage().ref();
+        const storageRef = window.firebaseStorage.ref();
         const sesionId = window.firebaseDB.collection('tmp').doc().id; // id único
         for (let i = 0; i < archivoInput.files.length; i++) {
             const archivo = archivoInput.files[i];
-            const fileRef = storageRef.child(`sesiones_adjuntos/${fichaPacienteId}/${sesionId}_${i}_${archivo.name}`);
-            await fileRef.put(archivo);
-            const url = await fileRef.getDownloadURL();
-            archivosUrls.push(url);
+            try {
+                console.log(`📤 Subiendo archivo ${i + 1}/${archivoInput.files.length}: ${archivo.name} (${(archivo.size / 1024 / 1024).toFixed(2)} MB)`);
+                const fileRef = storageRef.child(`sesiones_adjuntos/${fichaPacienteId}/${sesionId}_${i}_${archivo.name}`);
+                await fileRef.put(archivo);
+                const url = await fileRef.getDownloadURL();
+                archivosUrls.push(url);
+                console.log(`✅ Archivo subido exitosamente: ${archivo.name}`);
+            } catch (storageError) {
+                console.error('❌ Error al subir archivo:', storageError);
+                
+                // Detectar errores específicos de CORS
+                if (storageError.code === 'storage/unauthorized' || 
+                    storageError.message.includes('CORS') || 
+                    storageError.message.includes('preflight')) {
+                    showMessage(`Error de CORS: No se puede subir archivos desde localhost. 
+                    
+Para solucionarlo:
+1. Instala Google Cloud CLI
+2. Ejecuta: gcloud auth login
+3. Ejecuta: gcloud config set project monitor-entrenamiento-1fc15
+4. Ejecuta: gsutil cors set cors.json gs://monitor-entrenamiento-1fc15.firebasestorage.app
+
+O usa un servidor local diferente como Live Server en VS Code.`);
+                } else {
+                    showMessage(`Error al subir el archivo "${archivo.name}": ${storageError.message}`);
+                }
+                return;
+            }
         }
+        console.log(`🎉 Todos los archivos subidos exitosamente! URLs:`, archivosUrls);
     }
     try {
+        console.log(`💾 Guardando sesión en Firestore...`);
         await fichaPacienteRef.collection('sesiones').add({
             fecha,
             comentario,
@@ -306,34 +395,28 @@ addSesionForm.addEventListener('submit', async (e) => {
             archivosUrls,
             creado: new Date()
         });
+        console.log(`✅ Sesión guardada exitosamente con ${archivosUrls.length} archivo(s) adjunto(s)`);
         addSesionForm.reset();
         loadSesiones();
         disableFileInput();
     } catch (error) {
+        console.error('❌ Error al guardar sesión:', error);
         showMessage('Error al agregar sesión: ' + error.message);
     }
 });
 
-// Guardar cambios de 1era sesión en Firestore
-async function savePrimeraSesion(pacienteId) {
-    if (!pacienteId) return;
-    const fecha = primeraSesionFechaInput.value;
-    const estado = primeraSesionEstadoInput.value;
-    await window.firebaseDB.collection('pacientes').doc(pacienteId).update({
-        primeraSesionFecha: fecha,
-        primeraSesionEstado: estado
-    });
+// Funciones para habilitar/deshabilitar input de archivos
+function disableFileInput() {
+    const archivoInput = document.getElementById('sesionArchivo');
+    if (archivoInput) archivoInput.disabled = true;
 }
 
-if (primeraSesionFechaInput && primeraSesionEstadoInput) {
-    primeraSesionFechaInput.addEventListener('change', () => savePrimeraSesion(fichaPacienteId));
-    primeraSesionEstadoInput.addEventListener('change', () => savePrimeraSesion(fichaPacienteId));
+function enableFileInput() {
+    const archivoInput = document.getElementById('sesionArchivo');
+    if (archivoInput) archivoInput.disabled = false;
 }
 
 // Al abrir el modal de agregar sesión, habilitar input de archivos
 if (addSesionForm) {
     addSesionForm.addEventListener('reset', enableFileInput);
-}
-
-// TODO: Mostrar dashboard tras login, ocultar sección de auth
-// TODO: Lógica de logout, gestión de pacientes, etc. 
+} 

@@ -1,0 +1,33 @@
+# Reglas de Firebase Storage para Cocrearte
+# Copia estas reglas en Firebase Console > Storage > Rules
+
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Permitir acceso a archivos de sesiones solo a usuarios autenticados
+    match /sesiones_adjuntos/{pacienteId}/{fileName} {
+      allow read, write: if request.auth != null 
+        && request.auth.uid != null
+        && (request.auth.uid == resource.metadata.owner || 
+            request.auth.uid == pacienteId.split('_')[0]); // Verificar que el usuario es dueño del paciente
+    }
+    
+    // Regla más permisiva para desarrollo (cambiar en producción)
+    match /{allPaths=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+
+# Configuración adicional para CORS:
+# En Firebase Console > Storage > Settings > CORS configuration
+# Agregar esta configuración:
+
+[
+  {
+    "origin": ["http://localhost:5500", "http://127.0.0.1:5500", "https://tu-dominio.com"],
+    "method": ["GET", "POST", "PUT", "DELETE", "HEAD"],
+    "maxAgeSeconds": 3600,
+    "responseHeader": ["Content-Type", "Authorization", "Content-Length", "User-Agent", "x-goog-resumable"]
+  }
+] 
