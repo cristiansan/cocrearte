@@ -147,16 +147,30 @@ async function showDashboard(user) {
     // Detectar admin
     const userDoc = await window.firebaseDB.collection('usuarios').doc(user.uid).get();
     isAdmin = userDoc.exists && userDoc.data().isAdmin === true;
+    const dashboardSection = document.getElementById('dashboardPacientesSection');
     if (isAdmin) {
-        // Ocultar dashboard de pacientes propios
-        document.getElementById('dashboardPacientesSection').style.display = 'none';
-        // Seleccionar por defecto el propio usuario
+        // Ocultar la grilla de pacientes propia para evitar duplicación, pero mostrar el botón '+ Agregar Paciente'
+        if (dashboardSection) {
+            dashboardSection.style.display = 'none';
+        }
+        // Seleccionar por defecto el propio usuario en el panel admin
         adminPanelState.selectedUser = user.uid;
         await showAdminPanel();
-    } else if (adminPanel) {
-        adminPanel.remove();
-        adminPanel = null;
-        document.getElementById('dashboardPacientesSection').style.display = '';
+        // Cargar pacientes propios (como profesional, para poder agregarlos)
+        loadPatients(user.uid);
+    } else {
+        if (adminPanel) {
+            adminPanel.remove();
+            adminPanel = null;
+        }
+        if (dashboardSection) {
+            dashboardSection.style.display = '';
+        }
+        // Restaurar la lista de pacientes si se vuelve a modo profesional
+        const patientsList = document.getElementById('patientsList');
+        const noPatientsMsg = document.getElementById('noPatientsMsg');
+        if (patientsList) patientsList.style.display = '';
+        if (noPatientsMsg) noPatientsMsg.style.display = '';
     }
     if (!isAdmin) loadPatients(user.uid);
 }
@@ -252,9 +266,16 @@ addPatientForm.addEventListener('submit', async (e) => {
     const email = addPatientForm.patientEmail.value;
     const telefono = addPatientForm.patientTelefono.value;
     const motivo = addPatientForm.patientMotivo.value;
+
+    // Si eres admin y tienes seleccionado un profesional, asigna el paciente a ese profesional
+    let ownerUid = user.uid;
+    if (isAdmin && adminPanelState.selectedUser) {
+        ownerUid = adminPanelState.selectedUser;
+    }
+
     try {
         await window.firebaseDB.collection('pacientes').add({
-            owner: user.uid,
+            owner: ownerUid,
             nombre,
             email,
             telefono,
@@ -262,7 +283,7 @@ addPatientForm.addEventListener('submit', async (e) => {
             creado: new Date()
         });
         hideAddPatientModal();
-        loadPatients(user.uid);
+        loadPatients(ownerUid); // Recarga la lista del profesional correcto
     } catch (error) {
         showMessage('Error al agregar paciente: ' + error.message);
     }
@@ -503,6 +524,13 @@ async function showAdminPanel() {
       html += `<div class="text-gray-500 mt-8 md:mt-0">Selecciona un profesional para ver sus pacientes.</div>`;
     } else {
       const u = adminPanelState.profesionales.find(u => u.uid === adminPanelState.selectedUser);
+      // Mostrar título y botón '+ Agregar Paciente' SIEMPRE que el admin esté viendo cualquier profesional
+      if (isAdmin && u) {
+        html += `<div class='flex justify-between items-center mb-4'>
+          <h3 class='text-xl font-semibold text-[#2d3748] dark:text-gray-100'>Pacientes</h3>
+          <button id='showAddPatientBtnAdmin' class='bg-primary-700 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded border-2 border-primary-600 shadow-sm dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-darkbg'>+ Agregar Paciente</button>
+        </div>`;
+      }
       html += `<div class="mb-4 font-bold text-lg flex items-center gap-2">
          <span class="text-white">${u.displayName || u.email}</span>
         <span class="text-xs text-gray-400 dark:text-gray-300">(${u.email})</span>
@@ -528,6 +556,27 @@ async function showAdminPanel() {
       });
       // Ahora cargo los pacientes y reemplazo el loader
       const adminPacCol = adminPanel.querySelector('#adminPacientesCol');
+      let headerHtml = '';
+      if (isAdmin && u) {
+        headerHtml += `<div class='flex justify-between items-center mb-4'>
+          <h3 class='text-xl font-semibold text-[#2d3748] dark:text-gray-100'>Pacientes</h3>
+          <button id='showAddPatientBtnAdmin' class='bg-primary-700 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded border-2 border-primary-600 shadow-sm dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-darkbg'>+ Agregar Paciente</button>
+        </div>`;
+      }
+      headerHtml += `<div class="mb-4 font-bold text-lg flex items-center gap-2">👤 ${u.displayName || u.email} <span class="text-xs text-gray-400">(${u.email})</span> ${u.isAdmin ? '<span class=\"text-xs bg-green-100 text-green-700 rounded px-2 py-0.5 ml-2\">admin</span>' : ''}</div>`;
+      adminPacCol.innerHTML = `
+        <div id="adminPacHeader">${headerHtml}</div>
+        <div id="adminPacContent"></div>
+      `;
+      // Primero muestra el loader
+      adminPacCol.querySelector('#adminPacContent').innerHTML = `<div id="adminPacientesLoader" class="flex flex-col justify-center items-center py-8">
+        <svg class="animate-spin h-8 w-8 text-primary-600 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+        </svg>
+        <span class="text-primary-600 font-semibold">Cargando pacientes...</span>
+      </div>`;
+      // Luego, cuando termines de cargar los pacientes, reemplaza SOLO el contenido de #adminPacContent
       let pacientesHtml = '';
       const pacientesSnap = await window.firebaseDB.collection('pacientes').where('owner', '==', adminPanelState.selectedUser).orderBy('creado', 'desc').get();
       if (pacientesSnap.empty) {
@@ -556,8 +605,8 @@ async function showAdminPanel() {
         }
         pacientesHtml += '</div>';
       }
-      // Reemplazo el loader por la grilla de pacientes
-      adminPacCol.innerHTML = `<div class=\"mb-4 font-bold text-lg flex items-center gap-2\">👤 ${u.displayName || u.email} <span class=\"text-xs text-gray-400\">(${u.email})</span> ${u.isAdmin ? '<span class=\"text-xs bg-green-100 text-green-700 rounded px-2 py-0.5 ml-2\">admin</span>' : ''}</div>` + pacientesHtml;
+      // Reemplaza solo el contenido dinámico
+      adminPacCol.querySelector('#adminPacContent').innerHTML = pacientesHtml;
       // Listeners para abrir ficha clínica
       adminPacCol.querySelectorAll('[data-paciente-id]').forEach(div => {
         div.addEventListener('click', async (e) => {
@@ -578,6 +627,15 @@ async function showAdminPanel() {
           loadSesiones();
         });
       });
+      // Después de insertar el HTML, si existe el botón showAddPatientBtnAdmin, agregarle el mismo listener que al botón original
+      setTimeout(() => {
+        const btnAdmin = document.getElementById('showAddPatientBtnAdmin');
+        if (btnAdmin) {
+          btnAdmin.addEventListener('click', () => {
+            addPatientModal.classList.remove('hidden');
+          });
+        }
+      }, 0);
       return;
     }
     html += `</div></div>`;
