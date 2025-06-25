@@ -217,9 +217,11 @@ showAddPatientBtn.addEventListener('click', () => {
 
 // Cargar pacientes desde Firestore
 async function loadPatients(uid) {
+    pacientesLoader.classList.remove('hidden');
     patientsList.innerHTML = '';
     noPatientsMsg.classList.add('hidden');
     const snapshot = await window.firebaseDB.collection('pacientes').where('owner', '==', uid).get();
+    pacientesLoader.classList.add('hidden');
     if (snapshot.empty) {
         noPatientsMsg.classList.remove('hidden');
         return;
@@ -283,9 +285,16 @@ patientsList.addEventListener('click', async (e) => {
     if (!div) return;
     fichaPacienteId = div.getAttribute('data-paciente-id');
     fichaPacienteRef = window.firebaseDB.collection('pacientes').doc(fichaPacienteId);
+    fichaLoader.classList.remove('hidden');
+    fichaPacienteDatos.innerHTML = '';
+    sesionesList.innerHTML = '';
+    fichaPacienteModal.classList.remove('hidden');
     // Cargar datos paciente
     const doc = await fichaPacienteRef.get();
-    if (!doc.exists) return;
+    if (!doc.exists) {
+        fichaLoader.classList.add('hidden');
+        return;
+    }
     const p = doc.data();
     fichaPacienteDatos.innerHTML = `
         <div class="font-bold text-[#2d3748] dark:text-gray-100 text-lg">${p.nombre || ''}</div>
@@ -293,8 +302,8 @@ patientsList.addEventListener('click', async (e) => {
         <div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Teléfono:</span> ${p.telefono || ''}</div>
         <div class="text-[#4b5563] dark:text-gray-200 text-sm">${p.motivo || ''}</div>
     `;
-    fichaPacienteModal.classList.remove('hidden');
-    loadSesiones();
+    await loadSesiones();
+    fichaLoader.classList.add('hidden');
 });
 
 // Cargar sesiones de paciente
@@ -461,11 +470,16 @@ async function showAdminPanel() {
     adminPanel = document.createElement('div');
     adminPanel.id = 'adminPanel';
     adminPanel.className = 'w-full max-w-7xl mx-auto mb-8 bg-white dark:bg-darkcard rounded-lg shadow p-6 border dark:border-darkborder';
-    adminPanel.innerHTML = '<h3 class="text-xl font-bold mb-6 text-primary-700">Panel de Administración</h3>';
+    // Elimino el botón de tema propio del panel admin, solo muestro el themeToggle global
+    adminPanel.innerHTML = `
+      <div class='flex justify-between items-center mb-6'>
+        <h3 class="text-xl font-bold text-primary-700">Panel de Administración</h3>
+      </div>
+    `;
     // Layout responsive: grid-cols-1 en móvil, grid-cols-2 en md+
     let html = `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div id="adminProList">
-        <h4 class="font-semibold mb-2">Profesionales registrados</h4>
+        <h4 class="font-semibold mb-2 text-gray-700 dark:text-gray-200">Profesionales registrados</h4>
         <ul class="space-y-2">`;
     if (!adminPanelState.profesionales.length) {
       const usuariosSnap = await window.firebaseDB.collection('usuarios').get();
@@ -476,8 +490,8 @@ async function showAdminPanel() {
         <button class="w-full text-left flex items-center gap-2 px-3 py-2 rounded transition font-medium
           ${adminPanelState.selectedUser === u.uid ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300' : 'hover:bg-primary-50 dark:hover:bg-darkborder text-gray-700 dark:text-gray-200'}"
           data-uid="${u.uid}">
-          <span class="text-lg">👤</span> ${u.displayName || u.email}
-          <span class="text-xs text-gray-400">(${u.email})</span>
+          <span class="text-lg">👤</span> <span>${u.displayName || u.email}</span>
+          <span class="text-xs text-gray-500 dark:text-gray-300">(${u.email})</span>
           ${u.isAdmin ? '<span class=\"text-xs bg-green-100 text-green-700 rounded px-2 py-0.5 ml-2\">admin</span>' : ''}
         </button>
       </li>`;
@@ -489,34 +503,82 @@ async function showAdminPanel() {
       html += `<div class="text-gray-500 mt-8 md:mt-0">Selecciona un profesional para ver sus pacientes.</div>`;
     } else {
       const u = adminPanelState.profesionales.find(u => u.uid === adminPanelState.selectedUser);
-      html += `<div class="mb-4 font-bold text-lg flex items-center gap-2">👤 ${u.displayName || u.email} <span class="text-xs text-gray-400">(${u.email})</span> ${u.isAdmin ? '<span class=\"text-xs bg-green-100 text-green-700 rounded px-2 py-0.5 ml-2\">admin</span>' : ''}</div>`;
+      html += `<div class="mb-4 font-bold text-lg flex items-center gap-2">
+         <span class="text-white">${u.displayName || u.email}</span>
+        <span class="text-xs text-gray-400 dark:text-gray-300">(${u.email})</span>
+        ${u.isAdmin ? '<span class=\"text-xs bg-green-100 text-green-700 rounded px-2 py-0.5 ml-2\">admin</span>' : ''}
+      </div>`;
+      // Loader de pacientes
+      html += `<div id="adminPacientesLoader" class="flex flex-col justify-center items-center py-8">
+        <svg class="animate-spin h-8 w-8 text-primary-600 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+        </svg>
+        <span class="text-primary-600 font-semibold">Cargando pacientes...</span>
+      </div>`;
+      // Renderizo el loader primero, luego lo reemplazo por la grilla de pacientes tras la consulta
+      adminPanel.innerHTML += html + '</div></div>';
+      welcomeBlock.parentNode.insertBefore(adminPanel, welcomeBlock.nextSibling);
+      // Listeners para seleccionar profesional (no duplicar)
+      adminPanel.querySelectorAll('button[data-uid]').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          adminPanelState.selectedUser = btn.getAttribute('data-uid');
+          await showAdminPanel();
+        });
+      });
+      // Ahora cargo los pacientes y reemplazo el loader
+      const adminPacCol = adminPanel.querySelector('#adminPacientesCol');
+      let pacientesHtml = '';
       const pacientesSnap = await window.firebaseDB.collection('pacientes').where('owner', '==', adminPanelState.selectedUser).orderBy('creado', 'desc').get();
       if (pacientesSnap.empty) {
-        html += '<div class="text-gray-500">No hay pacientes registrados para este profesional.</div>';
+        pacientesHtml = '<div class="text-gray-500">No hay pacientes registrados para este profesional.</div>';
       } else {
-        html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+        pacientesHtml = '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
         for (const doc of pacientesSnap.docs) {
           const p = doc.data();
-          html += `<div class="border rounded p-3 bg-gray-50 dark:bg-darkbg cursor-pointer hover:bg-primary-50 dark:hover:bg-darkborder transition" data-paciente-id="${doc.id}">
-            <div class="font-bold text-[#2d3748] dark:text-gray-100">${p.nombre || '(sin nombre)'}</div>
-            <div class="text-[#4b5563] dark:text-gray-200 text-sm">${p.email || ''}</div>
-            <div class="text-[#4b5563] dark:text-gray-200 text-sm">${p.telefono || ''}</div>
-            <div class="text-[#4b5563] dark:text-gray-200 text-sm">${p.motivo || ''}</div>`;
+          pacientesHtml += `<div class=\"border rounded p-3 bg-gray-50 dark:bg-darkbg cursor-pointer hover:bg-primary-50 dark:hover:bg-darkborder transition\" data-paciente-id=\"${doc.id}\">\n` +
+            `<div class=\"font-bold text-[#2d3748] dark:text-gray-100\">${p.nombre || '(sin nombre)'}</div>\n` +
+            `<div class=\"text-[#4b5563] dark:text-gray-200 text-sm\">${p.email || ''}</div>\n` +
+            `<div class=\"text-[#4b5563] dark:text-gray-200 text-sm\">${p.telefono || ''}</div>\n` +
+            `<div class=\"text-[#4b5563] dark:text-gray-200 text-sm\">${p.motivo || ''}</div>`;
           const sesionesSnap = await window.firebaseDB.collection('pacientes').doc(doc.id).collection('sesiones').orderBy('fecha', 'desc').get();
           if (sesionesSnap.empty) {
-            html += '<div class="text-xs text-gray-400 mt-2">Sin sesiones</div>';
+            pacientesHtml += '<div class=\"text-xs text-gray-400 mt-2\">Sin sesiones</div>';
           } else {
-            html += '<ul class="ml-2 mt-2 text-xs">';
+            pacientesHtml += '<ul class=\"ml-2 mt-2 text-xs\">';
             sesionesSnap.forEach(sdoc => {
               const s = sdoc.data();
-              html += `<li>📅 ${s.fecha} - ${s.comentario || ''}</li>`;
+              pacientesHtml += `<li>📅 ${s.fecha} - ${s.comentario || ''}</li>`;
             });
-            html += '</ul>';
+            pacientesHtml += '</ul>';
           }
-          html += '</div>';
+          pacientesHtml += '</div>';
         }
-        html += '</div>';
+        pacientesHtml += '</div>';
       }
+      // Reemplazo el loader por la grilla de pacientes
+      adminPacCol.innerHTML = `<div class=\"mb-4 font-bold text-lg flex items-center gap-2\">👤 ${u.displayName || u.email} <span class=\"text-xs text-gray-400\">(${u.email})</span> ${u.isAdmin ? '<span class=\"text-xs bg-green-100 text-green-700 rounded px-2 py-0.5 ml-2\">admin</span>' : ''}</div>` + pacientesHtml;
+      // Listeners para abrir ficha clínica
+      adminPacCol.querySelectorAll('[data-paciente-id]').forEach(div => {
+        div.addEventListener('click', async (e) => {
+          const pacienteId = div.getAttribute('data-paciente-id');
+          fichaPacienteId = pacienteId;
+          fichaPacienteRef = window.firebaseDB.collection('pacientes').doc(pacienteId);
+          // Cargar datos paciente
+          const doc = await fichaPacienteRef.get();
+          if (!doc.exists) return;
+          const p = doc.data();
+          fichaPacienteDatos.innerHTML = `
+              <div class=\"font-bold text-[#2d3748] dark:text-gray-100 text-lg\">${p.nombre || ''}</div>
+              <div class=\"text-[#4b5563] dark:text-gray-200 text-sm\"><span class=\"font-semibold\">Email:</span> ${p.email || ''}</div>
+              <div class=\"text-[#4b5563] dark:text-gray-200 text-sm\"><span class=\"font-semibold\">Teléfono:</span> ${p.telefono || ''}</div>
+              <div class=\"text-[#4b5563] dark:text-gray-200 text-sm\">${p.motivo || ''}</div>
+          `;
+          fichaPacienteModal.classList.remove('hidden');
+          loadSesiones();
+        });
+      });
+      return;
     }
     html += `</div></div>`;
     adminPanel.innerHTML += html;
@@ -526,26 +588,6 @@ async function showAdminPanel() {
       btn.addEventListener('click', async (e) => {
         adminPanelState.selectedUser = btn.getAttribute('data-uid');
         await showAdminPanel();
-      });
-    });
-    // Después de insertar el HTML, agrego listeners para abrir ficha clínica
-    adminPanel.querySelectorAll('[data-paciente-id]').forEach(div => {
-      div.addEventListener('click', async (e) => {
-        const pacienteId = div.getAttribute('data-paciente-id');
-        fichaPacienteId = pacienteId;
-        fichaPacienteRef = window.firebaseDB.collection('pacientes').doc(pacienteId);
-        // Cargar datos paciente
-        const doc = await fichaPacienteRef.get();
-        if (!doc.exists) return;
-        const p = doc.data();
-        fichaPacienteDatos.innerHTML = `
-            <div class=\"font-bold text-[#2d3748] dark:text-gray-100 text-lg\">${p.nombre || ''}</div>
-            <div class=\"text-[#4b5563] dark:text-gray-200 text-sm\"><span class=\"font-semibold\">Email:</span> ${p.email || ''}</div>
-            <div class=\"text-[#4b5563] dark:text-gray-200 text-sm\"><span class=\"font-semibold\">Teléfono:</span> ${p.telefono || ''}</div>
-            <div class=\"text-[#4b5563] dark:text-gray-200 text-sm\">${p.motivo || ''}</div>
-        `;
-        fichaPacienteModal.classList.remove('hidden');
-        loadSesiones();
       });
     });
 } 

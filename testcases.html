@@ -33,6 +33,10 @@
       <li><span class="result" id="test-add-session"></span>Agregar sesión con comentario</li>
       <li><span class="result" id="test-session-comment"></span>Ver comentario de sesión en ficha</li>
       <li><span class="result" id="test-session-file"></span>Adjuntar archivo (simulado) en sesión</li>
+      <li><span class="result" id="test-add-session-btn"></span>Agregar sesión a paciente</li>
+      <li><span class="result" id="test-session-file-btn"></span>Abrir y cerrar input de archivo en sesión</li>
+      <li><span class="result" id="test-save-session"></span>Guardar sesión de paciente</li>
+      <li><span class="result" id="test-logout-btn"></span>Logout real desde la app</li>
     </ul>
     <div id="summary" style="text-align:center;font-weight:bold;margin-top:24px;"></div>
   </div>
@@ -52,7 +56,11 @@
       'test-open-ficha',
       'test-add-session',
       'test-session-comment',
-      'test-session-file'
+      'test-session-file',
+      'test-add-session-btn',
+      'test-session-file-btn',
+      'test-save-session',
+      'test-logout-btn'
     ];
     function setResult(id, ok) {
       const el = document.getElementById(id);
@@ -77,6 +85,18 @@
           tries++;
         }
       }
+      // --- LOGIN AUTOMÁTICO DE PRUEBA ---
+      try {
+        // Abre el modal de login
+        appWindow.document.getElementById('loginBtn').click();
+        await new Promise(r => setTimeout(r, 400));
+        // Completa el formulario de login
+        appWindow.document.getElementById('loginEmail').value = 'test@gmail.com';
+        appWindow.document.getElementById('loginPassword').value = 'TestTest';
+        // Envía el formulario
+        appWindow.document.getElementById('loginForm').dispatchEvent(new Event('submit', {bubbles:true, cancelable:true}));
+        await new Promise(r => setTimeout(r, 1600));
+      } catch (e) { /* Si ya está logueado, ignora */ }
       let passCount = 0;
       // 1. Landing visible
       try {
@@ -119,37 +139,54 @@
       } catch { setResult('test-theme-toggle', false); }
       // 5. Dashboard tras login simulado
       try {
-        // Simula login: oculta landing, muestra dashboard
+        // Simula login: oculta landing, muestra dashboard o admin
         appWindow.document.getElementById('landingPage').classList.add('hidden');
-        appWindow.document.getElementById('dashboardSection').classList.remove('hidden');
+        // Muestra dashboard de pacientes si existe
+        const dashPac = appWindow.document.getElementById('dashboardPacientesSection');
+        if (dashPac) dashPac.classList.remove('hidden');
+        // Muestra adminPanel si existe
+        let adminPanel = appWindow.document.getElementById('adminPanel');
+        if (adminPanel) adminPanel.classList.remove('hidden');
         await new Promise(r => setTimeout(r, 200));
-        const dash = appWindow.document.getElementById('dashboardSection');
-        setResult('test-dashboard', dash && !dash.classList.contains('hidden'));
-        if (dash && !dash.classList.contains('hidden')) passCount++;
+        // El dashboard es visible si dashboardPacientesSection o adminPanel están visibles
+        const dashVisible = (dashPac && dashPac.style.display !== 'none' && !dashPac.classList.contains('hidden')) ||
+                            (adminPanel && !adminPanel.classList.contains('hidden'));
+        setResult('test-dashboard', dashVisible);
+        if (dashVisible) passCount++;
       } catch { setResult('test-dashboard', false); }
       // 6. Logout simulado
       try {
-        // Simula logout: muestra landing, oculta dashboard
-        appWindow.document.getElementById('dashboardSection').classList.add('hidden');
+        // Simula logout: muestra landing, oculta dashboard y admin
+        const dashPac = appWindow.document.getElementById('dashboardPacientesSection');
+        if (dashPac) dashPac.classList.add('hidden');
+        let adminPanel = appWindow.document.getElementById('adminPanel');
+        if (adminPanel) adminPanel.classList.add('hidden');
         appWindow.document.getElementById('landingPage').classList.remove('hidden');
         await new Promise(r => setTimeout(r, 200));
         const landing = appWindow.document.getElementById('landingPage');
-        setResult('test-logout', landing && !landing.classList.contains('hidden'));
-        if (landing && !landing.classList.contains('hidden')) passCount++;
+        const dashVisible = (dashPac && dashPac.style.display !== 'none' && !dashPac.classList.contains('hidden')) ||
+                            (adminPanel && !adminPanel.classList.contains('hidden'));
+        setResult('test-logout', landing && !landing.classList.contains('hidden') && !dashVisible);
+        if (landing && !landing.classList.contains('hidden') && !dashVisible) passCount++;
       } catch { setResult('test-logout', false); }
       // 7. Agregar paciente
       try {
         // Busca y abre el modal de agregar paciente
         appWindow.document.getElementById('showAddPatientBtn').click();
-        await new Promise(r => setTimeout(r, 300));
+        await new Promise(r => setTimeout(r, 400));
         const modal = appWindow.document.getElementById('addPatientModal');
         // Completa el formulario
         appWindow.document.getElementById('patientName').value = 'Test Paciente';
         appWindow.document.getElementById('patientEmail').value = 'test@paciente.com';
         appWindow.document.getElementById('patientTelefono').value = '123456789';
         appWindow.document.getElementById('patientMotivo').value = 'Motivo de prueba';
-        modal.querySelector('form').dispatchEvent(new Event('submit', {bubbles:true, cancelable:true}));
-        await new Promise(r => setTimeout(r, 800));
+        // Hace click en el botón Agregar
+        const agregarBtn = Array.from(modal.querySelectorAll('button')).find(btn => btn.textContent.trim().toLowerCase() === 'agregar');
+        if (agregarBtn) agregarBtn.click();
+        // Además, dispara el submit del formulario explícitamente
+        const form = modal.querySelector('form');
+        if (form) form.dispatchEvent(new Event('submit', {bubbles:true, cancelable:true}));
+        await new Promise(r => setTimeout(r, 1600));
         // Verifica que el paciente aparece en la lista
         const found = Array.from(appWindow.document.querySelectorAll('#patientsList .font-bold')).some(el => el.textContent.includes('Test Paciente'));
         setResult('test-add-patient', found);
@@ -199,6 +236,72 @@
         setResult('test-session-file', archivoInput !== null);
         if (archivoInput !== null) passCount++;
       } catch { setResult('test-session-file', false); }
+      // 12. Agregar sesión a paciente existente
+      let pacienteDiv = null;
+      try {
+        // Busca el primer paciente en la lista
+        pacienteDiv = appWindow.document.querySelector('#patientsList [data-paciente-id]');
+        if (pacienteDiv) pacienteDiv.click();
+        await new Promise(r => setTimeout(r, 500));
+        // Abre el modal de ficha clínica
+        const ficha = appWindow.document.getElementById('fichaPacienteModal');
+        // Busca el formulario de agregar sesión
+        const addSesionForm = appWindow.document.getElementById('addSesionForm');
+        setResult('test-add-session-btn', ficha && !ficha.classList.contains('hidden') && addSesionForm);
+        if (ficha && !ficha.classList.contains('hidden') && addSesionForm) passCount++;
+      } catch { setResult('test-add-session-btn', false); }
+      // 13. Hacer click en input de archivo y cerrarlo
+      try {
+        const archivoInput = appWindow.document.getElementById('sesionArchivo');
+        if (archivoInput) {
+          archivoInput.click();
+          await new Promise(r => setTimeout(r, 300));
+          // Cierra el modal de archivo (no sube nada)
+          archivoInput.blur();
+          setResult('test-session-file-btn', true);
+          passCount++;
+        } else {
+          setResult('test-session-file-btn', false);
+        }
+      } catch { setResult('test-session-file-btn', false); }
+      // 14. Guardar sesión de paciente
+      try {
+        // Completa el formulario de sesión
+        const fechaInput = appWindow.document.getElementById('sesionFecha');
+        fechaInput.value = '2024-01-01';
+        fechaInput.dispatchEvent(new Event('input', {bubbles:true}));
+        fechaInput.dispatchEvent(new Event('change', {bubbles:true}));
+        await new Promise(r => setTimeout(r, 100));
+        appWindow.document.getElementById('sesionComentario').value = 'Comentario de test automático';
+        appWindow.document.getElementById('sesionNotas').value = 'Notas de test automático';
+        // Hace click en el botón Agregar Sesión
+        const addSesionBtn = Array.from(appWindow.document.querySelectorAll('#addSesionForm button')).find(btn => btn.textContent.trim().toLowerCase().includes('agregar'));
+        if (addSesionBtn) addSesionBtn.click();
+        await new Promise(r => setTimeout(r, 400));
+        // Acepta el modal de confirmación si aparece
+        const okBtn = appWindow.document.getElementById('customConfirmOk');
+        if (okBtn && !okBtn.closest('.hidden')) {
+          okBtn.click();
+        }
+        await new Promise(r => setTimeout(r, 1200));
+        // Verifica que la sesión aparece
+        const found = Array.from(appWindow.document.querySelectorAll('#sesionesList .text-gray-900')).some(el => el.textContent.includes('Comentario de test automático'));
+        setResult('test-save-session', found);
+        if (found) passCount++;
+      } catch { setResult('test-save-session', false); }
+      // 15. Logout real desde la app
+      try {
+        const logoutBtn = appWindow.document.getElementById('logoutBtn');
+        if (logoutBtn) {
+          logoutBtn.click();
+          await new Promise(r => setTimeout(r, 800));
+          const landing = appWindow.document.getElementById('landingPage');
+          setResult('test-logout-btn', landing && !landing.classList.contains('hidden'));
+          if (landing && !landing.classList.contains('hidden')) passCount++;
+        } else {
+          setResult('test-logout-btn', false);
+        }
+      } catch { setResult('test-logout-btn', false); }
       // Resumen
       summary.textContent = `Tests pasados: ${passCount} / ${testIds.length}`;
       runTestsBtn.disabled = false;

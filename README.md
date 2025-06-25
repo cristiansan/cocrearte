@@ -63,7 +63,7 @@ cocrearte/
 ```
 
 ## 👤 Autor
-- [Tu Nombre](https://github.com/cristiansan)
+- [Cristian](https://github.com/cristiansan)
 
 ## 📄 Licencia
 MIT 

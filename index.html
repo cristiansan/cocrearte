@@ -440,6 +440,13 @@
                 <h3 class="text-xl font-semibold text-[#2d3748] dark:text-gray-100">Pacientes</h3>
                 <button id="showAddPatientBtn" class="bg-primary-700 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded border-2 border-primary-600 shadow-sm dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-darkbg">+ Agregar Paciente</button>
             </div>
+            <div id="pacientesLoader" class="flex flex-col justify-center items-center py-8 hidden">
+                <svg class="animate-spin h-8 w-8 text-primary-600 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                </svg>
+                <span class="text-primary-600 font-semibold">Cargando pacientes...</span>
+            </div>
             <div id="patientsList" class="space-y-4">
                 <!-- Aquí se listarán los pacientes -->
             </div>
@@ -482,6 +489,13 @@
         <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg p-8 w-full max-w-2xl relative border dark:border-darkborder">
             <button onclick="hideFichaPacienteModal()" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">×</button>
             <h3 class="text-xl font-bold text-primary-600 mb-2">Ficha Clínica</h3>
+            <div id="fichaLoader" class="flex flex-col justify-center items-center py-8 hidden">
+                <svg class="animate-spin h-8 w-8 text-primary-600 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                </svg>
+                <span class="text-primary-600 font-semibold">Cargando...</span>
+            </div>
             <div id="fichaPacienteDatos" class="mb-4"></div>
             <h4 class="text-lg font-semibold mb-2">Sesiones</h4>
             <div id="sesionesList" class="space-y-3 mb-4 max-h-60 overflow-y-auto"></div>
