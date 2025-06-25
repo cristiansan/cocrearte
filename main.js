@@ -135,6 +135,7 @@ function showDashboard(user) {
     welcomeUser.textContent = `Bienvenido${user.displayName ? ', ' + user.displayName : ''}`;
     userEmail.textContent = user.email;
     dashboardSection.classList.remove('hidden');
+    document.getElementById('landingPage').classList.add('hidden');
     hideAuthModal();
     loadPatients(user.uid);
 }
@@ -180,7 +181,8 @@ window.firebaseAuth.onAuthStateChanged(user => {
 logoutBtn.addEventListener('click', async () => {
     await window.firebaseAuth.signOut();
     dashboardSection.classList.add('hidden');
-    location.reload(); // Recargar para mostrar la landing page
+    document.getElementById('landingPage').classList.remove('hidden');
+    location.hash = '';
 });
 
 // Mostrar/Ocultar modal de paciente

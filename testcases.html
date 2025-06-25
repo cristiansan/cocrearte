@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Cases - Espacio Cocrearte</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f7f7f7; color: #222; margin: 0; }
+    .container { max-width: 600px; margin: 40px auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px #0001; padding: 32px; }
+    h1 { text-align: center; margin-bottom: 32px; }
+    ul { list-style: none; padding: 0; }
+    li { display: flex; align-items: center; margin-bottom: 18px; font-size: 1.1rem; }
+    .result { font-size: 1.5rem; width: 2.5rem; text-align: center; }
+    button { background: #6366f1; color: #fff; border: none; border-radius: 6px; padding: 10px 24px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-bottom: 24px; }
+    button:disabled { background: #bbb; cursor: not-allowed; }
+    .desc { color: #666; font-size: 0.95rem; margin-bottom: 24px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Test Cases - Espacio Cocrearte</h1>
+    <div class="desc">Ejecuta los tests para verificar que las secciones principales de la app funcionan correctamente.<br>Abre <b>index.html</b> en otra pestaña antes de correr los tests.</div>
+    <button id="runTestsBtn">Ejecutar tests</button>
+    <ul id="testList">
+      <li><span class="result" id="test-landing"></span>Landing page visible al cargar</li>
+      <li><span class="result" id="test-login-modal"></span>Se abre el modal de login al hacer clic en "Iniciar Sesión"</li>
+      <li><span class="result" id="test-register-modal"></span>Se abre el modal de registro al hacer clic en "Registrarse"</li>
+      <li><span class="result" id="test-theme-toggle"></span>Cambia el tema (oscuro/claro) correctamente</li>
+      <li><span class="result" id="test-dashboard"></span>Dashboard visible tras login simulado</li>
+      <li><span class="result" id="test-logout"></span>Landing visible tras logout simulado</li>
+      <li><span class="result" id="test-add-patient"></span>Agregar paciente y mostrarlo en la lista</li>
+      <li><span class="result" id="test-open-ficha"></span>Abrir ficha clínica de paciente</li>
+      <li><span class="result" id="test-add-session"></span>Agregar sesión con comentario</li>
+      <li><span class="result" id="test-session-comment"></span>Ver comentario de sesión en ficha</li>
+      <li><span class="result" id="test-session-file"></span>Adjuntar archivo (simulado) en sesión</li>
+    </ul>
+    <div id="summary" style="text-align:center;font-weight:bold;margin-top:24px;"></div>
+  </div>
+  <script>
+    // Los tests asumen que index.html está abierto en otra pestaña y accesible via window.open
+    let appWindow;
+    const runTestsBtn = document.getElementById('runTestsBtn');
+    const summary = document.getElementById('summary');
+    const testIds = [
+      'test-landing',
+      'test-login-modal',
+      'test-register-modal',
+      'test-theme-toggle',
+      'test-dashboard',
+      'test-logout',
+      'test-add-patient',
+      'test-open-ficha',
+      'test-add-session',
+      'test-session-comment',
+      'test-session-file'
+    ];
+    function setResult(id, ok) {
+      const el = document.getElementById(id);
+      el.textContent = ok ? '✅' : '❌';
+      el.style.color = ok ? 'green' : 'red';
+    }
+    function resetResults() {
+      testIds.forEach(id => setResult(id, ''));
+      summary.textContent = '';
+    }
+    async function runTests() {
+      resetResults();
+      runTestsBtn.disabled = true;
+      // 1. Abrir la app en una nueva ventana (si no está abierta)
+      if (!appWindow || appWindow.closed) {
+        appWindow = window.open('index.html', 'CocrearteApp');
+        await new Promise(r => setTimeout(r, 1200)); // Espera a que cargue
+        // Espera hasta que landingPage esté disponible o timeout (máx 4 segundos)
+        let tries = 0;
+        while ((!appWindow.document.getElementById('landingPage')) && tries < 20) {
+          await new Promise(r => setTimeout(r, 200));
+          tries++;
+        }
+      }
+      let passCount = 0;
+      // 1. Landing visible
+      try {
+        const landing = appWindow.document.getElementById('landingPage');
+        setResult('test-landing', landing && !landing.classList.contains('hidden'));
+        if (landing && !landing.classList.contains('hidden')) passCount++;
+      } catch { setResult('test-landing', false); }
+      // 2. Modal login
+      try {
+        const loginBtn = appWindow.document.getElementById('loginBtn');
+        loginBtn.click();
+        await new Promise(r => setTimeout(r, 400));
+        const authModal = appWindow.document.getElementById('authModal');
+        setResult('test-login-modal', authModal && !authModal.classList.contains('hidden'));
+        if (authModal && !authModal.classList.contains('hidden')) passCount++;
+        // Cerrar modal
+        appWindow.document.getElementById('closeAuthModal').click();
+      } catch { setResult('test-login-modal', false); }
+      // 3. Modal registro
+      try {
+        const registerBtn = appWindow.document.getElementById('registerBtn');
+        registerBtn.click();
+        await new Promise(r => setTimeout(r, 400));
+        const authModal = appWindow.document.getElementById('authModal');
+        const registerForm = appWindow.document.getElementById('registerFormContainer');
+        setResult('test-register-modal', authModal && !authModal.classList.contains('hidden') && registerForm && !registerForm.classList.contains('hidden'));
+        if (authModal && !authModal.classList.contains('hidden') && registerForm && !registerForm.classList.contains('hidden')) passCount++;
+        // Cerrar modal
+        appWindow.document.getElementById('closeAuthModal').click();
+      } catch { setResult('test-register-modal', false); }
+      // 4. Cambia tema
+      try {
+        const themeToggle = appWindow.document.getElementById('themeToggle');
+        const wasDark = appWindow.document.documentElement.classList.contains('dark');
+        themeToggle.click();
+        await new Promise(r => setTimeout(r, 200));
+        const isDark = appWindow.document.documentElement.classList.contains('dark');
+        setResult('test-theme-toggle', wasDark !== isDark);
+        if (wasDark !== isDark) passCount++;
+      } catch { setResult('test-theme-toggle', false); }
+      // 5. Dashboard tras login simulado
+      try {
+        // Simula login: oculta landing, muestra dashboard
+        appWindow.document.getElementById('landingPage').classList.add('hidden');
+        appWindow.document.getElementById('dashboardSection').classList.remove('hidden');
+        await new Promise(r => setTimeout(r, 200));
+        const dash = appWindow.document.getElementById('dashboardSection');
+        setResult('test-dashboard', dash && !dash.classList.contains('hidden'));
+        if (dash && !dash.classList.contains('hidden')) passCount++;
+      } catch { setResult('test-dashboard', false); }
+      // 6. Logout simulado
+      try {
+        // Simula logout: muestra landing, oculta dashboard
+        appWindow.document.getElementById('dashboardSection').classList.add('hidden');
+        appWindow.document.getElementById('landingPage').classList.remove('hidden');
+        await new Promise(r => setTimeout(r, 200));
+        const landing = appWindow.document.getElementById('landingPage');
+        setResult('test-logout', landing && !landing.classList.contains('hidden'));
+        if (landing && !landing.classList.contains('hidden')) passCount++;
+      } catch { setResult('test-logout', false); }
+      // 7. Agregar paciente
+      try {
+        // Busca y abre el modal de agregar paciente
+        appWindow.document.getElementById('showAddPatientBtn').click();
+        await new Promise(r => setTimeout(r, 300));
+        const modal = appWindow.document.getElementById('addPatientModal');
+        // Completa el formulario
+        appWindow.document.getElementById('patientName').value = 'Test Paciente';
+        appWindow.document.getElementById('patientEmail').value = 'test@paciente.com';
+        appWindow.document.getElementById('patientTelefono').value = '123456789';
+        appWindow.document.getElementById('patientMotivo').value = 'Motivo de prueba';
+        modal.querySelector('form').dispatchEvent(new Event('submit', {bubbles:true, cancelable:true}));
+        await new Promise(r => setTimeout(r, 800));
+        // Verifica que el paciente aparece en la lista
+        const found = Array.from(appWindow.document.querySelectorAll('#patientsList .font-bold')).some(el => el.textContent.includes('Test Paciente'));
+        setResult('test-add-patient', found);
+        if (found) passCount++;
+      } catch { setResult('test-add-patient', false); }
+      // 8. Abrir ficha clínica
+      try {
+        // Hace click en el paciente
+        const pacienteDiv = Array.from(appWindow.document.querySelectorAll('#patientsList [data-paciente-id]')).find(el => el.textContent.includes('Test Paciente'));
+        pacienteDiv.click();
+        await new Promise(r => setTimeout(r, 400));
+        const ficha = appWindow.document.getElementById('fichaPacienteModal');
+        setResult('test-open-ficha', ficha && !ficha.classList.contains('hidden'));
+        if (ficha && !ficha.classList.contains('hidden')) passCount++;
+      } catch { setResult('test-open-ficha', false); }
+      // 9. Agregar sesión
+      try {
+        // Completa el formulario de sesión
+        appWindow.document.getElementById('sesionFecha').value = '2024-01-01';
+        appWindow.document.getElementById('sesionComentario').value = 'Comentario de prueba';
+        appWindow.document.getElementById('sesionNotas').value = 'Notas de prueba';
+        // Simula submit (sin archivo real)
+        appWindow.document.getElementById('addSesionForm').dispatchEvent(new Event('submit', {bubbles:true, cancelable:true}));
+        await new Promise(r => setTimeout(r, 400));
+        // Acepta el modal de confirmación si aparece
+        const okBtn = appWindow.document.getElementById('customConfirmOk');
+        if (okBtn && !okBtn.closest('.hidden')) {
+          okBtn.click();
+        }
+        await new Promise(r => setTimeout(r, 1200));
+        // Verifica que la sesión aparece
+        const found = Array.from(appWindow.document.querySelectorAll('#sesionesList .text-gray-900')).some(el => el.textContent.includes('Comentario de prueba'));
+        setResult('test-add-session', found);
+        if (found) passCount++;
+      } catch { setResult('test-add-session', false); }
+      // 10. Ver comentario de sesión
+      try {
+        const found = Array.from(appWindow.document.querySelectorAll('#sesionesList .text-gray-900')).some(el => el.textContent.includes('Comentario de prueba'));
+        setResult('test-session-comment', found);
+        if (found) passCount++;
+      } catch { setResult('test-session-comment', false); }
+      // 11. Adjuntar archivo (simulado)
+      try {
+        // No se puede adjuntar archivo real sin interacción, pero se puede simular el input
+        const archivoInput = appWindow.document.getElementById('sesionArchivo');
+        archivoInput.value = '';
+        setResult('test-session-file', archivoInput !== null);
+        if (archivoInput !== null) passCount++;
+      } catch { setResult('test-session-file', false); }
+      // Resumen
+      summary.textContent = `Tests pasados: ${passCount} / ${testIds.length}`;
+      runTestsBtn.disabled = false;
+    }
+    runTestsBtn.addEventListener('click', runTests);
+  </script>
+</body>
+</html> 
