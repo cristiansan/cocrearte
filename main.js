@@ -1,5 +1,17 @@
 // main.js - Espacio Cocrearte
 
+// Verificar qué objetos de FullCalendar están disponibles
+console.log('=== DEBUG FULLCALENDAR ===');
+console.log('window.FullCalendar:', window.FullCalendar);
+console.log('FullCalendar:', typeof FullCalendar);
+console.log('window.FullCalendarResourceTimeGrid:', window.FullCalendarResourceTimeGrid);
+console.log('window.FullCalendarResourceCommon:', window.FullCalendarResourceCommon);
+console.log('window.FullCalendarTimeGrid:', window.FullCalendarTimeGrid);
+console.log('window.FullCalendarDayGrid:', window.FullCalendarDayGrid);
+console.log('window.FullCalendarInteraction:', window.FullCalendarInteraction);
+console.log('Vistas disponibles:', window.FullCalendar && window.FullCalendar.views ? Object.keys(window.FullCalendar.views) : 'No disponible');
+console.log('========================');
+
 // Referencias a elementos de la landing page
 const loginBtn = document.getElementById('loginBtn');
 const registerBtn = document.getElementById('registerBtn');
@@ -51,6 +63,14 @@ let adminPanel = null;
 
 // Panel admin: muestra lista de profesionales y permite ver pacientes/sesiones de cada uno
 let adminPanelState = { selectedUser: null, profesionales: [], pacientes: [], sesiones: {} };
+
+// Referencias al modal de nueva sesión
+const modalNuevaSesion = document.getElementById('modalNuevaSesion');
+const formNuevaSesion = document.getElementById('formNuevaSesion');
+const selectPaciente = document.getElementById('selectPaciente');
+const inputFechaSesion = document.getElementById('inputFechaSesion');
+const inputNotasSesion = document.getElementById('inputNotasSesion');
+const cancelNuevaSesion = document.getElementById('cancelNuevaSesion');
 
 // Configuración del tema
 function setTheme(dark) {
@@ -137,7 +157,38 @@ function showMessage(msg, type = 'error') {
     alert(msg);
 }
 
-// Mostrar dashboard y ocultar landing page
+let calendarInstance = null;
+let calendarMultipleInstance = null; // Nueva instancia para agenda múltiple
+
+// Función para abrir el modal y prellenar datos
+function abrirModalNuevaSesion(info) {
+    console.log('ABRIR MODAL');
+    if (!modalNuevaSesion) return;
+    // Prellenar fecha/hora en formato datetime-local
+    const date = info.date || (info.dateStr ? new Date(info.dateStr) : new Date());
+    const pad = n => n.toString().padStart(2, '0');
+    const local = date.getFullYear() + '-' + pad(date.getMonth()+1) + '-' + pad(date.getDate()) + 'T' + pad(date.getHours()) + ':' + pad(date.getMinutes());
+    inputFechaSesion.value = local;
+    inputNotasSesion.value = '';
+    cargarPacientesParaSelect();
+    modalNuevaSesion.classList.remove('hidden');
+    modalNuevaSesion.dataset.start = local;
+    sesionEditando = null;
+    if (btnEliminarSesion) btnEliminarSesion.classList.add('hidden');
+}
+
+// Cargar pacientes del profesional en el select
+async function cargarPacientesParaSelect() {
+    selectPaciente.innerHTML = '<option value="">Selecciona un paciente</option>';
+    const user = window.firebaseAuth.currentUser;
+    if (!user) return;
+    const snapshot = await window.firebaseDB.collection('pacientes').where('owner', '==', user.uid).get();
+    snapshot.forEach(doc => {
+        const p = doc.data();
+        selectPaciente.innerHTML += `<option value="${doc.id}">${p.nombre || p.email}</option>`;
+    });
+}
+
 async function showDashboard(user) {
     welcomeUser.textContent = `Bienvenido${user.displayName ? ', ' + user.displayName : ''}`;
     userEmail.textContent = user.email;
@@ -173,6 +224,81 @@ async function showDashboard(user) {
         if (noPatientsMsg) noPatientsMsg.style.display = '';
     }
     if (!isAdmin) loadPatients(user.uid);
+    // Mostrar calendario y tabs tras login
+    const calendarTabs = document.getElementById('calendarTabs');
+    if (calendarTabs) calendarTabs.classList.remove('hidden');
+    // Inicializar FullCalendar solo una vez
+    if (!calendarInstance) {
+        const calendarEl = document.getElementById('calendar');
+        if (calendarEl) {
+            // Verificar que FullCalendar esté disponible
+            if (!window.FullCalendar) {
+                console.error('FullCalendar no está disponible');
+                return;
+            }
+            
+            calendarInstance = new window.FullCalendar.Calendar(calendarEl, {
+                initialView: 'timeGridWeek',
+                locale: 'es',
+                headerToolbar: false,
+                height: 600,
+                events: async function(info, successCallback, failureCallback) {
+                    try {
+                        const user = window.firebaseAuth.currentUser;
+                        if (!user) {
+                            successCallback([]);
+                            return;
+                        }
+                        
+                        // Cargar eventos del profesional actual
+                        const eventos = [];
+                        const pacientesSnap = await window.firebaseDB.collection('pacientes').where('owner', '==', user.uid).get();
+                        
+                        for (const pacDoc of pacientesSnap.docs) {
+                            const sesionesSnap = await window.firebaseDB.collection('pacientes').doc(pacDoc.id).collection('sesiones').get();
+                            sesionesSnap.forEach(sDoc => {
+                                const s = sDoc.data();
+                                eventos.push({
+                                    title: pacDoc.data().nombre || pacDoc.data().email,
+                                    start: s.fecha,
+                                    extendedProps: {
+                                        pacienteId: pacDoc.id,
+                                        notas: s.comentario,
+                                        sesionId: sDoc.id
+                                    }
+                                });
+                            });
+                        }
+                        
+                        successCallback(eventos);
+                    } catch (error) {
+                        console.error('Error al cargar eventos:', error);
+                        failureCallback(error);
+                    }
+                },
+                dateClick: function(info) {
+                    console.log('click', info);
+                    abrirModalNuevaSesion(info);
+                },
+                eventClick: function(info) {
+                    const event = info.event;
+                    inputFechaSesion.value = event.start ? event.start.toISOString().slice(0,16) : '';
+                    inputNotasSesion.value = event.extendedProps.notas || '';
+                    cargarPacientesParaSelect().then(() => {
+                        selectPaciente.value = event.extendedProps.pacienteId || '';
+                    });
+                    modalNuevaSesion.classList.remove('hidden');
+                    sesionEditando = {
+                        pacienteId: event.extendedProps.pacienteId,
+                        sesionId: event.extendedProps.sesionId,
+                        eventObj: event
+                    };
+                    if (btnEliminarSesion) btnEliminarSesion.classList.remove('hidden');
+                }
+            });
+            calendarInstance.render();
+        }
+    }
 }
 
 // Login
@@ -648,4 +774,181 @@ async function showAdminPanel() {
         await showAdminPanel();
       });
     });
-} 
+}
+
+// Función para inicializar la agenda múltiple
+async function mostrarAgendaMultiple() {
+    if (calendarMultipleInstance) {
+        calendarMultipleInstance.destroy();
+        calendarMultipleInstance = null;
+    }
+    const calendarEl = document.getElementById('calendar');
+    if (!calendarEl) return;
+    
+    // Verificar que FullCalendar esté disponible
+    if (!window.FullCalendar) {
+        console.error('FullCalendar no está disponible');
+        return;
+    }
+    
+    // Cargar profesionales
+    const usuariosSnap = await window.firebaseDB.collection('usuarios').get();
+    const profesionales = usuariosSnap.docs.map(doc => ({
+        id: doc.id,
+        title: doc.data().displayName || doc.data().email
+    }));
+    // Cargar sesiones de todos los profesionales
+    let eventos = [];
+    for (const pro of profesionales) {
+        const pacientesSnap = await window.firebaseDB.collection('pacientes').where('owner', '==', pro.id).get();
+        for (const pacDoc of pacientesSnap.docs) {
+            const sesionesSnap = await window.firebaseDB.collection('pacientes').doc(pacDoc.id).collection('sesiones').get();
+            sesionesSnap.forEach(sDoc => {
+                const s = sDoc.data();
+                eventos.push({
+                    title: `${pacDoc.data().nombre || pacDoc.data().email} (${pro.title})`,
+                    start: s.fecha,
+                    extendedProps: {
+                        pacienteId: pacDoc.id,
+                        profesionalId: pro.id,
+                        profesionalName: pro.title,
+                        notas: s.comentario,
+                        sesionId: sDoc.id
+                    }
+                });
+            });
+        }
+    }
+    
+    // Usar vista básica con todos los eventos
+    calendarMultipleInstance = new window.FullCalendar.Calendar(calendarEl, {
+        initialView: 'timeGridWeek',
+        locale: 'es',
+        headerToolbar: false,
+        height: 600,
+        events: eventos,
+        eventClick: function(info) {
+            const event = info.event;
+            inputFechaSesion.value = event.start ? event.start.toISOString().slice(0,16) : '';
+            inputNotasSesion.value = event.extendedProps.notas || '';
+            cargarPacientesParaSelect().then(() => {
+                selectPaciente.value = event.extendedProps.pacienteId || '';
+            });
+            modalNuevaSesion.classList.remove('hidden');
+            sesionEditando = {
+                pacienteId: event.extendedProps.pacienteId,
+                sesionId: event.extendedProps.sesionId,
+                eventObj: event
+            };
+            if (btnEliminarSesion) btnEliminarSesion.classList.remove('hidden');
+        }
+    });
+    calendarMultipleInstance.render();
+}
+
+// Función para volver a la agenda individual
+function mostrarAgendaIndividual() {
+    if (calendarMultipleInstance) {
+        calendarMultipleInstance.destroy();
+        calendarMultipleInstance = null;
+    }
+    // Siempre recrear la agenda individual
+    if (calendarInstance) {
+        calendarInstance.destroy();
+        calendarInstance = null;
+    }
+    showDashboard(window.firebaseAuth.currentUser);
+}
+
+// Event listeners para tabs del calendario
+const tabAgendaIndividual = document.getElementById('tabAgendaIndividual');
+const tabAgendaMultiple = document.getElementById('tabAgendaMultiple');
+if (tabAgendaIndividual && tabAgendaMultiple) {
+    tabAgendaIndividual.addEventListener('click', () => {
+        tabAgendaIndividual.classList.add('bg-primary-700', 'text-white');
+        tabAgendaIndividual.classList.remove('bg-gray-200', 'text-gray-800');
+        tabAgendaMultiple.classList.remove('bg-primary-700', 'text-white');
+        tabAgendaMultiple.classList.add('bg-gray-200', 'text-gray-800');
+        mostrarAgendaIndividual();
+    });
+    tabAgendaMultiple.addEventListener('click', () => {
+        tabAgendaMultiple.classList.add('bg-primary-700', 'text-white');
+        tabAgendaMultiple.classList.remove('bg-gray-200', 'text-gray-800');
+        tabAgendaIndividual.classList.remove('bg-primary-700', 'text-white');
+        tabAgendaIndividual.classList.add('bg-gray-200', 'text-gray-800');
+        mostrarAgendaMultiple();
+    });
+}
+
+// Cerrar modal
+if (cancelNuevaSesion) {
+    cancelNuevaSesion.addEventListener('click', () => {
+        modalNuevaSesion.classList.add('hidden');
+    });
+}
+
+// Guardar nueva sesión o editar
+if (formNuevaSesion) {
+    formNuevaSesion.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const pacienteId = selectPaciente.value;
+        const fecha = inputFechaSesion.value;
+        const notas = inputNotasSesion.value;
+        if (!pacienteId || !fecha) return;
+        try {
+            if (sesionEditando && sesionEditando.sesionId) {
+                // Editar sesión existente
+                await window.firebaseDB.collection('pacientes').doc(pacienteId).collection('sesiones').doc(sesionEditando.sesionId).update({
+                    fecha,
+                    comentario: notas
+                });
+                if (sesionEditando.eventObj) {
+                    sesionEditando.eventObj.setStart(fecha);
+                    sesionEditando.eventObj.setProp('title', selectPaciente.options[selectPaciente.selectedIndex].text);
+                    sesionEditando.eventObj.setExtendedProp('notas', notas);
+                    sesionEditando.eventObj.setExtendedProp('pacienteId', pacienteId);
+                }
+            } else {
+                // Crear nueva sesión
+                const docRef = await window.firebaseDB.collection('pacientes').doc(pacienteId).collection('sesiones').add({
+                    fecha,
+                    comentario: notas,
+                    creado: new Date()
+                });
+                // Agregar evento a la instancia activa
+                const activeCalendar = calendarMultipleInstance || calendarInstance;
+                if (activeCalendar) {
+                    activeCalendar.addEvent({
+                        title: selectPaciente.options[selectPaciente.selectedIndex].text,
+                        start: fecha,
+                        end: null,
+                        extendedProps: { pacienteId, notas, sesionId: docRef.id }
+                    });
+                }
+            }
+            modalNuevaSesion.classList.add('hidden');
+        } catch (error) {
+            alert('Error al guardar sesión: ' + error.message);
+        }
+    });
+}
+
+// Eliminar sesión
+const btnEliminarSesion = document.getElementById('btnEliminarSesion');
+let sesionEditando = null; // { pacienteId, sesionId, eventObj }
+if (btnEliminarSesion) {
+    btnEliminarSesion.addEventListener('click', async () => {
+        if (!sesionEditando || !sesionEditando.sesionId || !sesionEditando.pacienteId) return;
+        if (!confirm('¿Seguro que deseas eliminar la sesión?')) return;
+        try {
+            await window.firebaseDB.collection('pacientes').doc(sesionEditando.pacienteId).collection('sesiones').doc(sesionEditando.sesionId).delete();
+            if (sesionEditando.eventObj) sesionEditando.eventObj.remove();
+            modalNuevaSesion.classList.add('hidden');
+        } catch (error) {
+            alert('Error al eliminar sesión: ' + error.message);
+        }
+    });
+}
+
+// console.log(window.FullCalendar, window.FullCalendarPlugins);
+// console.log(window.ResourceTimeGrid, window.ResourceCommon); 

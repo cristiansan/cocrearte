@@ -538,12 +538,55 @@
         </div>
     </div>
 
+    <!-- Calendario de sesiones -->
+    <div id="calendarTabs" class="w-full max-w-4xl mx-auto mt-8 hidden">
+        <div class="flex gap-2 mb-4">
+            <button id="tabAgendaIndividual" class="tab-calendar bg-primary-700 text-white font-semibold py-2 px-4 rounded-t">Agenda individual</button>
+            <button id="tabAgendaMultiple" class="tab-calendar bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-t">Agenda múltiple</button>
+        </div>
+        <div id="calendar" class="bg-white dark:bg-darkcard rounded-b-lg shadow p-4 border dark:border-darkborder"></div>
+    </div>
+
+    <!-- Modal Nueva Sesión Calendario -->
+    <div id="modalNuevaSesion" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+      <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg p-8 w-full max-w-md relative">
+        <h2 class="text-2xl font-bold mb-4">Nueva sesión</h2>
+        <form id="formNuevaSesion">
+          <div class="mb-4">
+            <label for="selectPaciente" class="block text-sm font-medium mb-1">Paciente</label>
+            <select id="selectPaciente" name="paciente" required class="w-full px-3 py-2 border rounded-lg">
+              <option value="">Selecciona un paciente</option>
+            </select>
+          </div>
+          <div class="mb-4">
+            <label for="inputFechaSesion" class="block text-sm font-medium mb-1">Fecha y hora</label>
+            <input id="inputFechaSesion" name="fecha" type="datetime-local" class="w-full px-3 py-2 border rounded-lg">
+          </div>
+          <div class="mb-4">
+            <label for="inputNotasSesion" class="block text-sm font-medium mb-1">Notas</label>
+            <textarea id="inputNotasSesion" name="notas" rows="3" class="w-full px-3 py-2 border rounded-lg"></textarea>
+          </div>
+          <div class="flex justify-end gap-2">
+            <button type="button" id="btnEliminarSesion" class="px-4 py-2 rounded bg-red-600 text-white font-semibold hidden">Eliminar</button>
+            <button type="button" id="cancelNuevaSesion" class="px-4 py-2 rounded bg-gray-200 text-gray-800">Cancelar</button>
+            <button type="submit" class="px-4 py-2 rounded bg-primary-700 text-white font-semibold">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <!-- FullCalendar CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/main.min.css" rel="stylesheet">
+    <!-- FullCalendar JS -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/main.min.js"></script>
+    <!-- FullCalendar Scheduler para agenda múltiple -->
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/scheduler@5.11.5/index.global.min.js"></script>
     <!-- Firebase SDKs para HTML puro -->
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
     <script src="firebase-config.js"></script>
+    <!-- Mover main.js aquí -->
     <script src="main.js"></script>
 </body>
 </html> 
