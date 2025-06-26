@@ -432,8 +432,24 @@
             <button id="logoutBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded transition">Cerrar sesión</button>
         </div>
     </div>
+    <!-- Botones de agenda y calendario (ahora arriba del panel admin) -->
+    <div id="calendarToggleBlock" class="w-full max-w-4xl mx-auto mt-2">
+        <div class="flex gap-2 mb-4">
+            <button id="tabAgendaIndividual" class="tab-calendar bg-primary-700 text-white font-semibold py-2 px-4 rounded-t">Agenda individual</button>
+            <button id="tabAgendaMultiple" class="tab-calendar bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-t">Agenda múltiple</button>
+        </div>
+        <div id="calendarTabs" class="hidden">
+            <div id="calendarViewButtons" class="flex items-center gap-2 mb-4">
+              <button id="btnPrev" class="px-2 py-1 rounded bg-gray-200 text-xl font-bold">&lt;</button>
+              <span id="calendarCurrentLabel" class="mx-2 font-semibold"></span>
+              <button id="btnNext" class="px-2 py-1 rounded bg-gray-200 text-xl font-bold">&gt;</button>
+              <button id="btnVistaDia" class="bg-gray-200 px-3 py-1 rounded">Día</button>
+              <button id="btnVistaSemana" class="bg-primary-700 text-white px-3 py-1 rounded">Semana</button>
+            </div>
+            <div id="calendar" class="bg-white dark:bg-darkcard rounded-b-lg shadow p-4 border dark:border-darkborder"></div>
+        </div>
+    </div>
     <!-- Aquí va el panel admin y luego el dashboard de pacientes -->
-    <!-- El panel admin se inserta dinámicamente por JS justo después de #welcomeBlock -->
     <section id="dashboardPacientesSection" class="w-full max-w-3xl mt-0 mx-auto">
         <div class="bg-white dark:bg-darkcard rounded-lg shadow p-6 border dark:border-darkborder">
             <div class="flex justify-between items-center mb-4">
@@ -538,15 +554,6 @@
         </div>
     </div>
 
-    <!-- Calendario de sesiones -->
-    <div id="calendarTabs" class="w-full max-w-4xl mx-auto mt-8 hidden">
-        <div class="flex gap-2 mb-4">
-            <button id="tabAgendaIndividual" class="tab-calendar bg-primary-700 text-white font-semibold py-2 px-4 rounded-t">Agenda individual</button>
-            <button id="tabAgendaMultiple" class="tab-calendar bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-t">Agenda múltiple</button>
-        </div>
-        <div id="calendar" class="bg-white dark:bg-darkcard rounded-b-lg shadow p-4 border dark:border-darkborder"></div>
-    </div>
-
     <!-- Modal Nueva Sesión Calendario -->
     <div id="modalNuevaSesion" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
       <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg p-8 w-full max-w-md relative">
@@ -572,6 +579,16 @@
             <button type="submit" class="px-4 py-2 rounded bg-primary-700 text-white font-semibold">Guardar</button>
           </div>
         </form>
+      </div>
+    </div>
+    <!-- Modal solo lectura para agenda múltiple -->
+    <div id="modalDetalleSesionMultiple" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+      <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg p-8 w-full max-w-md relative border dark:border-darkborder">
+        <button id="cerrarDetalleSesionMultiple" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">×</button>
+        <h2 class="text-2xl font-bold mb-4">Detalle de sesión</h2>
+        <div id="detalleSesionMultipleContent" class="space-y-2">
+          <!-- Aquí se insertan los detalles por JS -->
+        </div>
       </div>
     </div>
     <!-- FullCalendar CSS -->

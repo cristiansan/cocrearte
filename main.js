@@ -9,7 +9,6 @@ console.log('window.FullCalendarResourceCommon:', window.FullCalendarResourceCom
 console.log('window.FullCalendarTimeGrid:', window.FullCalendarTimeGrid);
 console.log('window.FullCalendarDayGrid:', window.FullCalendarDayGrid);
 console.log('window.FullCalendarInteraction:', window.FullCalendarInteraction);
-console.log('Vistas disponibles:', window.FullCalendar && window.FullCalendar.views ? Object.keys(window.FullCalendar.views) : 'No disponible');
 console.log('========================');
 
 // Referencias a elementos de la landing page
@@ -71,6 +70,11 @@ const selectPaciente = document.getElementById('selectPaciente');
 const inputFechaSesion = document.getElementById('inputFechaSesion');
 const inputNotasSesion = document.getElementById('inputNotasSesion');
 const cancelNuevaSesion = document.getElementById('cancelNuevaSesion');
+
+// Referencias al modal de solo lectura para agenda múltiple
+const modalDetalleSesionMultiple = document.getElementById('modalDetalleSesionMultiple');
+const cerrarDetalleSesionMultiple = document.getElementById('cerrarDetalleSesionMultiple');
+const detalleSesionMultipleContent = document.getElementById('detalleSesionMultipleContent');
 
 // Configuración del tema
 function setTheme(dark) {
@@ -224,81 +228,11 @@ async function showDashboard(user) {
         if (noPatientsMsg) noPatientsMsg.style.display = '';
     }
     if (!isAdmin) loadPatients(user.uid);
-    // Mostrar calendario y tabs tras login
+    // Ocultar calendario al iniciar sesión
     const calendarTabs = document.getElementById('calendarTabs');
-    if (calendarTabs) calendarTabs.classList.remove('hidden');
-    // Inicializar FullCalendar solo una vez
-    if (!calendarInstance) {
-        const calendarEl = document.getElementById('calendar');
-        if (calendarEl) {
-            // Verificar que FullCalendar esté disponible
-            if (!window.FullCalendar) {
-                console.error('FullCalendar no está disponible');
-                return;
-            }
-            
-            calendarInstance = new window.FullCalendar.Calendar(calendarEl, {
-                initialView: 'timeGridWeek',
-                locale: 'es',
-                headerToolbar: false,
-                height: 600,
-                events: async function(info, successCallback, failureCallback) {
-                    try {
-                        const user = window.firebaseAuth.currentUser;
-                        if (!user) {
-                            successCallback([]);
-                            return;
-                        }
-                        
-                        // Cargar eventos del profesional actual
-                        const eventos = [];
-                        const pacientesSnap = await window.firebaseDB.collection('pacientes').where('owner', '==', user.uid).get();
-                        
-                        for (const pacDoc of pacientesSnap.docs) {
-                            const sesionesSnap = await window.firebaseDB.collection('pacientes').doc(pacDoc.id).collection('sesiones').get();
-                            sesionesSnap.forEach(sDoc => {
-                                const s = sDoc.data();
-                                eventos.push({
-                                    title: pacDoc.data().nombre || pacDoc.data().email,
-                                    start: s.fecha,
-                                    extendedProps: {
-                                        pacienteId: pacDoc.id,
-                                        notas: s.comentario,
-                                        sesionId: sDoc.id
-                                    }
-                                });
-                            });
-                        }
-                        
-                        successCallback(eventos);
-                    } catch (error) {
-                        console.error('Error al cargar eventos:', error);
-                        failureCallback(error);
-                    }
-                },
-                dateClick: function(info) {
-                    console.log('click', info);
-                    abrirModalNuevaSesion(info);
-                },
-                eventClick: function(info) {
-                    const event = info.event;
-                    inputFechaSesion.value = event.start ? event.start.toISOString().slice(0,16) : '';
-                    inputNotasSesion.value = event.extendedProps.notas || '';
-                    cargarPacientesParaSelect().then(() => {
-                        selectPaciente.value = event.extendedProps.pacienteId || '';
-                    });
-                    modalNuevaSesion.classList.remove('hidden');
-                    sesionEditando = {
-                        pacienteId: event.extendedProps.pacienteId,
-                        sesionId: event.extendedProps.sesionId,
-                        eventObj: event
-                    };
-                    if (btnEliminarSesion) btnEliminarSesion.classList.remove('hidden');
-                }
-            });
-            calendarInstance.render();
-        }
-    }
+    if (calendarTabs) calendarTabs.classList.add('hidden');
+    // Mostrar agenda individual
+    mostrarAgendaIndividual();
 }
 
 // Login
@@ -638,7 +572,6 @@ async function showAdminPanel() {
           ${adminPanelState.selectedUser === u.uid ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300' : 'hover:bg-primary-50 dark:hover:bg-darkborder text-gray-700 dark:text-gray-200'}"
           data-uid="${u.uid}">
           <span class="text-lg">👤</span> <span>${u.displayName || u.email}</span>
-          <span class="text-xs text-gray-500 dark:text-gray-300">(${u.email})</span>
           ${u.isAdmin ? '<span class=\"text-xs bg-green-100 text-green-700 rounded px-2 py-0.5 ml-2\">admin</span>' : ''}
         </button>
       </li>`;
@@ -659,7 +592,6 @@ async function showAdminPanel() {
       }
       html += `<div class="mb-4 font-bold text-lg flex items-center gap-2">
          <span class="text-white">${u.displayName || u.email}</span>
-        <span class="text-xs text-gray-400 dark:text-gray-300">(${u.email})</span>
         ${u.isAdmin ? '<span class=\"text-xs bg-green-100 text-green-700 rounded px-2 py-0.5 ml-2\">admin</span>' : ''}
       </div>`;
       // Loader de pacientes
@@ -672,7 +604,12 @@ async function showAdminPanel() {
       </div>`;
       // Renderizo el loader primero, luego lo reemplazo por la grilla de pacientes tras la consulta
       adminPanel.innerHTML += html + '</div></div>';
-      welcomeBlock.parentNode.insertBefore(adminPanel, welcomeBlock.nextSibling);
+      const calendarToggleBlock = document.getElementById('calendarToggleBlock');
+      if (calendarToggleBlock) {
+        calendarToggleBlock.parentNode.insertBefore(adminPanel, calendarToggleBlock.nextSibling);
+      } else {
+        welcomeBlock.parentNode.insertBefore(adminPanel, welcomeBlock.nextSibling);
+      }
       // Listeners para seleccionar profesional (no duplicar)
       adminPanel.querySelectorAll('button[data-uid]').forEach(btn => {
         btn.addEventListener('click', async (e) => {
@@ -689,7 +626,7 @@ async function showAdminPanel() {
           <button id='showAddPatientBtnAdmin' class='bg-primary-700 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded border-2 border-primary-600 shadow-sm dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-darkbg'>+ Agregar Paciente</button>
         </div>`;
       }
-      headerHtml += `<div class="mb-4 font-bold text-lg flex items-center gap-2">👤 ${u.displayName || u.email} <span class="text-xs text-gray-400">(${u.email})</span> ${u.isAdmin ? '<span class=\"text-xs bg-green-100 text-green-700 rounded px-2 py-0.5 ml-2\">admin</span>' : ''}</div>`;
+      headerHtml += `<div class="mb-4 font-bold text-lg flex items-center gap-2">👤 ${u.displayName || u.email} ${u.isAdmin ? '<span class=\"text-xs bg-green-100 text-green-700 rounded px-2 py-0.5 ml-2\">admin</span>' : ''}</div>`;
       adminPacCol.innerHTML = `
         <div id="adminPacHeader">${headerHtml}</div>
         <div id="adminPacContent"></div>
@@ -766,7 +703,12 @@ async function showAdminPanel() {
     }
     html += `</div></div>`;
     adminPanel.innerHTML += html;
-    welcomeBlock.parentNode.insertBefore(adminPanel, welcomeBlock.nextSibling);
+    const calendarToggleBlock = document.getElementById('calendarToggleBlock');
+    if (calendarToggleBlock) {
+        calendarToggleBlock.parentNode.insertBefore(adminPanel, calendarToggleBlock.nextSibling);
+    } else {
+        welcomeBlock.parentNode.insertBefore(adminPanel, welcomeBlock.nextSibling);
+    }
     // Listeners para seleccionar profesional
     adminPanel.querySelectorAll('button[data-uid]').forEach(btn => {
       btn.addEventListener('click', async (e) => {
@@ -774,6 +716,153 @@ async function showAdminPanel() {
         await showAdminPanel();
       });
     });
+}
+
+// === BOTONES DE CAMBIO DE VISTA (DÍA/SEMANA) ===
+function actualizarLabelCalendario() {
+    const label = document.getElementById('calendarCurrentLabel');
+    let calendar = calendarInstance || calendarMultipleInstance;
+    if (!label || !calendar) return;
+    const view = calendar.view;
+    if (view.type === 'timeGridDay') {
+        label.textContent = view.currentStart.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'short' });
+    } else if (view.type === 'timeGridWeek') {
+        const start = view.currentStart;
+        const end = new Date(view.currentEnd.getTime() - 1);
+        label.textContent = `${start.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })} - ${end.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}`;
+    }
+}
+
+function agregarListenersVistaCalendario() {
+    console.log('=== AGREGANDO LISTENERS VISTA CALENDARIO ===');
+    const btnDia = document.getElementById('btnVistaDia');
+    const btnSemana = document.getElementById('btnVistaSemana');
+    const btnPrev = document.getElementById('btnPrev');
+    const btnNext = document.getElementById('btnNext');
+    console.log('Botones encontrados:', { btnDia, btnSemana, btnPrev, btnNext });
+    if (!btnDia || !btnSemana || !btnPrev || !btnNext) {
+        console.error('FALTAN BOTONES! No se pueden agregar listeners');
+        return;
+    }
+
+    // REMOVER LISTENERS EXISTENTES ANTES DE AGREGAR NUEVOS
+    const newBtnDia = btnDia.cloneNode(true);
+    const newBtnSemana = btnSemana.cloneNode(true);
+    const newBtnPrev = btnPrev.cloneNode(true);
+    const newBtnNext = btnNext.cloneNode(true);
+    
+    btnDia.parentNode.replaceChild(newBtnDia, btnDia);
+    btnSemana.parentNode.replaceChild(newBtnSemana, btnSemana);
+    btnPrev.parentNode.replaceChild(newBtnPrev, btnPrev);
+    btnNext.parentNode.replaceChild(newBtnNext, btnNext);
+
+    // Variable para controlar debounce
+    let navegacionEnProceso = false;
+
+    newBtnDia.addEventListener('click', () => {
+        let calendar = calendarInstance || calendarMultipleInstance;
+        if (calendar) {
+            const currentDate = calendar.getDate();
+            calendar.changeView('timeGridDay');
+            calendar.gotoDate(currentDate);
+        }
+        activarBotonVista('day');
+        actualizarLabelCalendario();
+    });
+    newBtnSemana.addEventListener('click', () => {
+        let calendar = calendarInstance || calendarMultipleInstance;
+        if (calendar) {
+            const currentDate = calendar.getDate();
+            calendar.changeView('timeGridWeek');
+            calendar.gotoDate(currentDate);
+        }
+        activarBotonVista('week');
+        actualizarLabelCalendario();
+    });
+    newBtnPrev.addEventListener('click', () => {
+        if (navegacionEnProceso) {
+            console.log('PREV - Navegación en proceso, ignorando clic');
+            return;
+        }
+        navegacionEnProceso = true;
+        
+        let calendar = calendarInstance || calendarMultipleInstance;
+        if (calendar) {
+            const view = calendar.view;
+            console.log('PREV - Vista actual:', view.type);
+            console.log('PREV - Fecha actual:', calendar.getDate());
+            
+            if (view.type === 'timeGridDay') {
+                // Usar método más directo para día anterior
+                const currentDate = new Date(calendar.getDate());
+                currentDate.setUTCDate(currentDate.getUTCDate() - 1);
+                console.log('PREV - Nueva fecha (día):', currentDate);
+                calendar.gotoDate(currentDate);
+            } else if (view.type === 'timeGridWeek') {
+                // Usar método más directo para semana anterior
+                const currentDate = new Date(calendar.getDate());
+                currentDate.setUTCDate(currentDate.getUTCDate() - 7);
+                console.log('PREV - Nueva fecha (semana):', currentDate);
+                calendar.gotoDate(currentDate);
+            }
+        }
+        
+        setTimeout(() => {
+            actualizarLabelCalendario();
+            navegacionEnProceso = false;
+        }, 800);
+    });
+    newBtnNext.addEventListener('click', () => {
+        if (navegacionEnProceso) {
+            console.log('NEXT - Navegación en proceso, ignorando clic');
+            return;
+        }
+        navegacionEnProceso = true;
+        
+        let calendar = calendarInstance || calendarMultipleInstance;
+        if (calendar) {
+            const view = calendar.view;
+            console.log('NEXT - Vista actual:', view.type);
+            console.log('NEXT - Fecha actual:', calendar.getDate());
+            
+            if (view.type === 'timeGridDay') {
+                // Usar método más directo para día siguiente
+                const currentDate = new Date(calendar.getDate());
+                currentDate.setUTCDate(currentDate.getUTCDate() + 1);
+                console.log('NEXT - Nueva fecha (día):', currentDate);
+                calendar.gotoDate(currentDate);
+            } else if (view.type === 'timeGridWeek') {
+                // Usar método más directo para semana siguiente
+                const currentDate = new Date(calendar.getDate());
+                currentDate.setUTCDate(currentDate.getUTCDate() + 7);
+                console.log('NEXT - Nueva fecha (semana):', currentDate);
+                calendar.gotoDate(currentDate);
+            }
+        }
+        
+        setTimeout(() => {
+            actualizarLabelCalendario();
+            navegacionEnProceso = false;
+        }, 800);
+    });
+}
+
+function activarBotonVista(tipo) {
+    const btnDia = document.getElementById('btnVistaDia');
+    const btnSemana = document.getElementById('btnVistaSemana');
+    if (!btnDia || !btnSemana) return;
+    if (tipo === 'day') {
+        btnDia.classList.add('bg-primary-700', 'text-white');
+        btnDia.classList.remove('bg-gray-200');
+        btnSemana.classList.remove('bg-primary-700', 'text-white');
+        btnSemana.classList.add('bg-gray-200');
+    } else {
+        btnSemana.classList.add('bg-primary-700', 'text-white');
+        btnSemana.classList.remove('bg-gray-200');
+        btnDia.classList.remove('bg-primary-700', 'text-white');
+        btnDia.classList.add('bg-gray-200');
+    }
+    actualizarLabelCalendario();
 }
 
 // Función para inicializar la agenda múltiple
@@ -784,20 +873,15 @@ async function mostrarAgendaMultiple() {
     }
     const calendarEl = document.getElementById('calendar');
     if (!calendarEl) return;
-    
-    // Verificar que FullCalendar esté disponible
     if (!window.FullCalendar) {
         console.error('FullCalendar no está disponible');
         return;
     }
-    
-    // Cargar profesionales
     const usuariosSnap = await window.firebaseDB.collection('usuarios').get();
     const profesionales = usuariosSnap.docs.map(doc => ({
         id: doc.id,
         title: doc.data().displayName || doc.data().email
     }));
-    // Cargar sesiones de todos los profesionales
     let eventos = [];
     for (const pro of profesionales) {
         const pacientesSnap = await window.firebaseDB.collection('pacientes').where('owner', '==', pro.id).get();
@@ -812,38 +896,49 @@ async function mostrarAgendaMultiple() {
                         pacienteId: pacDoc.id,
                         profesionalId: pro.id,
                         profesionalName: pro.title,
+                        pacienteNombre: pacDoc.data().nombre || pacDoc.data().email,
                         notas: s.comentario,
-                        sesionId: sDoc.id
+                        sesionId: sDoc.id,
+                        fecha: s.fecha
                     }
                 });
             });
         }
     }
-    
-    // Usar vista básica con todos los eventos
     calendarMultipleInstance = new window.FullCalendar.Calendar(calendarEl, {
         initialView: 'timeGridWeek',
+        views: {
+            timeGridWeek: { type: 'timeGridWeek', buttonText: 'Semana', dateIncrement: { weeks: 1 } },
+            timeGridDay: { type: 'timeGridDay', buttonText: 'Día', dateIncrement: { days: 1 }, dateAlignment: 'day' }
+        },
         locale: 'es',
         headerToolbar: false,
         height: 600,
+        slotMinTime: '08:00:00',
+        slotMaxTime: '19:00:00',
+        allDaySlot: false,
         events: eventos,
+        editable: false,
+        selectable: false,
         eventClick: function(info) {
             const event = info.event;
-            inputFechaSesion.value = event.start ? event.start.toISOString().slice(0,16) : '';
-            inputNotasSesion.value = event.extendedProps.notas || '';
-            cargarPacientesParaSelect().then(() => {
-                selectPaciente.value = event.extendedProps.pacienteId || '';
-            });
-            modalNuevaSesion.classList.remove('hidden');
-            sesionEditando = {
-                pacienteId: event.extendedProps.pacienteId,
-                sesionId: event.extendedProps.sesionId,
-                eventObj: event
-            };
-            if (btnEliminarSesion) btnEliminarSesion.classList.remove('hidden');
-        }
+            if (modalDetalleSesionMultiple && detalleSesionMultipleContent) {
+                const props = event.extendedProps;
+                detalleSesionMultipleContent.innerHTML = `
+                  <div><span class='font-semibold'>Paciente:</span> ${props.pacienteNombre || ''}</div>
+                  <div><span class='font-semibold'>Profesional:</span> ${props.profesionalName || ''}</div>
+                  <div><span class='font-semibold'>Fecha y hora:</span> ${event.start ? event.start.toLocaleString('es-AR') : ''}</div>
+                  <div><span class='font-semibold'>Notas:</span> ${props.notas || ''}</div>
+                `;
+                modalDetalleSesionMultiple.classList.remove('hidden');
+            }
+        },
+        dateClick: null
     });
-    calendarMultipleInstance.render();
+            calendarMultipleInstance.render();
+        console.log('=== CALENDARIO MÚLTIPLE RENDERIZADO ===');
+        agregarListenersVistaCalendario();
+        activarBotonVista('week');
 }
 
 // Función para volver a la agenda individual
@@ -852,31 +947,129 @@ function mostrarAgendaIndividual() {
         calendarMultipleInstance.destroy();
         calendarMultipleInstance = null;
     }
-    // Siempre recrear la agenda individual
     if (calendarInstance) {
         calendarInstance.destroy();
         calendarInstance = null;
     }
-    showDashboard(window.firebaseAuth.currentUser);
+    const calendarEl = document.getElementById('calendar');
+    if (calendarEl) {
+        if (!window.FullCalendar) {
+            console.error('FullCalendar no está disponible');
+            return;
+        }
+        calendarInstance = new window.FullCalendar.Calendar(calendarEl, {
+            initialView: 'timeGridWeek',
+            views: {
+                timeGridWeek: { 
+                    type: 'timeGridWeek', 
+                    buttonText: 'Semana'
+                },
+                timeGridDay: { 
+                    type: 'timeGridDay', 
+                    buttonText: 'Día'
+                }
+            },
+            locale: 'es',
+            headerToolbar: false,
+            height: 600,
+            slotMinTime: '08:00:00',
+            slotMaxTime: '19:00:00',
+            allDaySlot: false,
+            events: async function(info, successCallback, failureCallback) {
+                try {
+                    const user = window.firebaseAuth.currentUser;
+                    if (!user) {
+                        successCallback([]);
+                        return;
+                    }
+                    // Cargar eventos del profesional actual
+                    const eventos = [];
+                    const pacientesSnap = await window.firebaseDB.collection('pacientes').where('owner', '==', user.uid).get();
+                    for (const pacDoc of pacientesSnap.docs) {
+                        const sesionesSnap = await window.firebaseDB.collection('pacientes').doc(pacDoc.id).collection('sesiones').get();
+                        sesionesSnap.forEach(sDoc => {
+                            const s = sDoc.data();
+                            eventos.push({
+                                title: pacDoc.data().nombre || pacDoc.data().email,
+                                start: s.fecha,
+                                extendedProps: {
+                                    pacienteId: pacDoc.id,
+                                    notas: s.comentario,
+                                    sesionId: sDoc.id
+                                }
+                            });
+                        });
+                    }
+                    successCallback(eventos);
+                } catch (error) {
+                    console.error('Error al cargar eventos:', error);
+                    failureCallback(error);
+                }
+            },
+            dateClick: function(info) {
+                abrirModalNuevaSesion(info);
+            },
+            eventClick: function(info) {
+                const event = info.event;
+                inputFechaSesion.value = event.start ? event.start.toISOString().slice(0,16) : '';
+                inputNotasSesion.value = event.extendedProps.notas || '';
+                cargarPacientesParaSelect().then(() => {
+                    selectPaciente.value = event.extendedProps.pacienteId || '';
+                });
+                modalNuevaSesion.classList.remove('hidden');
+                sesionEditando = {
+                    pacienteId: event.extendedProps.pacienteId,
+                    sesionId: event.extendedProps.sesionId,
+                    eventObj: event
+                };
+                if (btnEliminarSesion) btnEliminarSesion.classList.remove('hidden');
+            }
+        });
+        calendarInstance.render();
+        console.log('=== CALENDARIO INDIVIDUAL RENDERIZADO ===');
+        agregarListenersVistaCalendario();
+        activarBotonVista('week');
+    }
 }
 
-// Event listeners para tabs del calendario
+// Estado de visibilidad del calendario
+let calendarVisible = false;
+let activeTab = null; // 'individual', 'multiple' o null
+
+// Event listeners para tabs del calendario (toggle)
 const tabAgendaIndividual = document.getElementById('tabAgendaIndividual');
 const tabAgendaMultiple = document.getElementById('tabAgendaMultiple');
-if (tabAgendaIndividual && tabAgendaMultiple) {
+const calendarTabs = document.getElementById('calendarTabs');
+if (tabAgendaIndividual && tabAgendaMultiple && calendarTabs) {
     tabAgendaIndividual.addEventListener('click', () => {
-        tabAgendaIndividual.classList.add('bg-primary-700', 'text-white');
-        tabAgendaIndividual.classList.remove('bg-gray-200', 'text-gray-800');
-        tabAgendaMultiple.classList.remove('bg-primary-700', 'text-white');
-        tabAgendaMultiple.classList.add('bg-gray-200', 'text-gray-800');
-        mostrarAgendaIndividual();
+        if (calendarVisible && activeTab === 'individual') {
+            calendarTabs.classList.add('hidden');
+            calendarVisible = false;
+        } else {
+            tabAgendaIndividual.classList.add('bg-primary-700', 'text-white');
+            tabAgendaIndividual.classList.remove('bg-gray-200', 'text-gray-800');
+            tabAgendaMultiple.classList.remove('bg-primary-700', 'text-white');
+            tabAgendaMultiple.classList.add('bg-gray-200', 'text-gray-800');
+            calendarTabs.classList.remove('hidden');
+            calendarVisible = true;
+            activeTab = 'individual';
+            mostrarAgendaIndividual();
+        }
     });
     tabAgendaMultiple.addEventListener('click', () => {
-        tabAgendaMultiple.classList.add('bg-primary-700', 'text-white');
-        tabAgendaMultiple.classList.remove('bg-gray-200', 'text-gray-800');
-        tabAgendaIndividual.classList.remove('bg-primary-700', 'text-white');
-        tabAgendaIndividual.classList.add('bg-gray-200', 'text-gray-800');
-        mostrarAgendaMultiple();
+        if (calendarVisible && activeTab === 'multiple') {
+            calendarTabs.classList.add('hidden');
+            calendarVisible = false;
+        } else {
+            tabAgendaMultiple.classList.add('bg-primary-700', 'text-white');
+            tabAgendaMultiple.classList.remove('bg-gray-200', 'text-gray-800');
+            tabAgendaIndividual.classList.remove('bg-primary-700', 'text-white');
+            tabAgendaIndividual.classList.add('bg-gray-200', 'text-gray-800');
+            calendarTabs.classList.remove('hidden');
+            calendarVisible = true;
+            activeTab = 'multiple';
+            mostrarAgendaMultiple();
+        }
     });
 }
 
@@ -952,3 +1145,103 @@ if (btnEliminarSesion) {
 
 // console.log(window.FullCalendar, window.FullCalendarPlugins);
 // console.log(window.ResourceTimeGrid, window.ResourceCommon); 
+
+if (cerrarDetalleSesionMultiple) {
+    cerrarDetalleSesionMultiple.addEventListener('click', () => {
+        modalDetalleSesionMultiple.classList.add('hidden');
+        detalleSesionMultipleContent.innerHTML = '';
+    });
+} 
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Referencias al modal de solo lectura para agenda múltiple
+    const modalDetalleSesionMultiple = document.getElementById('modalDetalleSesionMultiple');
+    const cerrarDetalleSesionMultiple = document.getElementById('cerrarDetalleSesionMultiple');
+    const detalleSesionMultipleContent = document.getElementById('detalleSesionMultipleContent');
+    if (cerrarDetalleSesionMultiple) {
+        cerrarDetalleSesionMultiple.addEventListener('click', () => {
+            modalDetalleSesionMultiple.classList.add('hidden');
+            detalleSesionMultipleContent.innerHTML = '';
+        });
+    }
+    // Sobrescribir mostrarAgendaMultiple para usar estas referencias
+    window.mostrarAgendaMultiple = async function() {
+        if (calendarMultipleInstance) {
+            calendarMultipleInstance.destroy();
+            calendarMultipleInstance = null;
+        }
+        const calendarEl = document.getElementById('calendar');
+        if (!calendarEl) return;
+        if (!window.FullCalendar) {
+            console.error('FullCalendar no está disponible');
+            return;
+        }
+        const usuariosSnap = await window.firebaseDB.collection('usuarios').get();
+        const profesionales = usuariosSnap.docs.map(doc => ({
+            id: doc.id,
+            title: doc.data().displayName || doc.data().email
+        }));
+        let eventos = [];
+        for (const pro of profesionales) {
+            const pacientesSnap = await window.firebaseDB.collection('pacientes').where('owner', '==', pro.id).get();
+            for (const pacDoc of pacientesSnap.docs) {
+                const sesionesSnap = await window.firebaseDB.collection('pacientes').doc(pacDoc.id).collection('sesiones').get();
+                sesionesSnap.forEach(sDoc => {
+                    const s = sDoc.data();
+                    eventos.push({
+                        title: `${pacDoc.data().nombre || pacDoc.data().email} (${pro.title})`,
+                        start: s.fecha,
+                        extendedProps: {
+                            pacienteId: pacDoc.id,
+                            profesionalId: pro.id,
+                            profesionalName: pro.title,
+                            pacienteNombre: pacDoc.data().nombre || pacDoc.data().email,
+                            notas: s.comentario,
+                            sesionId: sDoc.id,
+                            fecha: s.fecha
+                        }
+                    });
+                });
+            }
+        }
+        calendarMultipleInstance = new window.FullCalendar.Calendar(calendarEl, {
+            initialView: 'timeGridWeek',
+            views: {
+                timeGridWeek: { 
+                    type: 'timeGridWeek', 
+                    buttonText: 'Semana'
+                },
+                timeGridDay: { 
+                    type: 'timeGridDay', 
+                    buttonText: 'Día'
+                }
+            },
+            locale: 'es',
+            headerToolbar: false,
+            height: 600,
+            slotMinTime: '08:00:00',
+            slotMaxTime: '19:00:00',
+            allDaySlot: false,
+            events: eventos,
+            editable: false,
+            selectable: false,
+            eventClick: function(info) {
+                const event = info.event;
+                if (modalDetalleSesionMultiple && detalleSesionMultipleContent) {
+                    const props = event.extendedProps;
+                    detalleSesionMultipleContent.innerHTML = `
+                      <div><span class='font-semibold'>Paciente:</span> ${props.pacienteNombre || ''}</div>
+                      <div><span class='font-semibold'>Profesional:</span> ${props.profesionalName || ''}</div>
+                      <div><span class='font-semibold'>Fecha y hora:</span> ${event.start ? event.start.toLocaleString('es-AR') : ''}</div>
+                      <div><span class='font-semibold'>Notas:</span> ${props.notas || ''}</div>
+                    `;
+                    modalDetalleSesionMultiple.classList.remove('hidden');
+                }
+            },
+            dateClick: null
+        });
+        calendarMultipleInstance.render();
+        agregarListenersVistaCalendario();
+        activarBotonVista('week');
+    }
+}); 
