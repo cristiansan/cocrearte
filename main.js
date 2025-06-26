@@ -11,6 +11,413 @@ console.log('window.FullCalendarDayGrid:', window.FullCalendarDayGrid);
 console.log('window.FullCalendarInteraction:', window.FullCalendarInteraction);
 console.log('========================');
 
+// Función de debug para probar el filtro de profesionales
+window.debugFiltro = async function() {
+    console.log('🔍 === DEBUG FILTRO DE PROFESIONALES ===');
+    console.log('🔍 Firebase DB:', !!window.firebaseDB);
+    console.log('🔍 Firebase Auth:', !!window.firebaseAuth);
+    console.log('🔍 Usuario actual:', window.firebaseAuth.currentUser?.email);
+    
+    const profesionalesFilter = document.getElementById('profesionalesFilter');
+    const checkboxesContainer = document.getElementById('profesionalesCheckboxes');
+    
+    console.log('🔍 Filtro encontrado:', !!profesionalesFilter);
+    console.log('🔍 Container encontrado:', !!checkboxesContainer);
+    
+    if (profesionalesFilter) {
+        console.log('🔍 Clases del filtro:', profesionalesFilter.classList.toString());
+        console.log('🔍 Estilos del filtro:', profesionalesFilter.style.cssText);
+    }
+    
+    try {
+        const usuariosSnap = await window.firebaseDB.collection('usuarios').get();
+        console.log('🔍 Usuarios en Firebase:', usuariosSnap.size);
+        usuariosSnap.docs.forEach(doc => {
+            console.log('🔍 Usuario:', doc.id, doc.data());
+        });
+    } catch (error) {
+        console.error('🔍 Error al consultar Firebase:', error);
+    }
+    
+    console.log('🔍 profesionalesDisponibles:', profesionalesDisponibles);
+    console.log('🔍 profesionalesSeleccionados:', profesionalesSeleccionados);
+};
+
+// Función para forzar la carga del filtro (para debug)
+window.forzarFiltro = async function() {
+    console.log('🚀 FORZANDO CARGA DEL FILTRO...');
+    await mostrarAgendaMultiple();
+};
+
+// Función de debug completa para probar todo el flujo
+window.testCompleto = async function() {
+    console.log('🧪 === TEST COMPLETO DEL FILTRO ===');
+    
+    // 1. Verificar elementos HTML
+    const profesionalesFilter = document.getElementById('profesionalesFilter');
+    const checkboxesContainer = document.getElementById('profesionalesCheckboxes');
+    console.log('1️⃣ Elementos HTML:', { 
+        filtro: !!profesionalesFilter, 
+        container: !!checkboxesContainer 
+    });
+    
+    // 2. Activar agenda múltiple
+    console.log('2️⃣ Activando agenda múltiple...');
+    const tabMultiple = document.getElementById('tabAgendaMultiple');
+    if (tabMultiple) {
+        tabMultiple.click();
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Esperar 1 segundo
+    }
+    
+    // 3. Verificar visibilidad después de activar
+    console.log('3️⃣ Verificando visibilidad...');
+    window.verificarFiltro();
+    
+    // 4. Intentar cargar desde Firebase
+    console.log('4️⃣ Intentando cargar desde Firebase...');
+    const profesionales = await window.cargarProfesionalesFirebase();
+    
+    // 5. Si no funcionó Firebase, crear select de prueba
+    if (!profesionales || profesionales.length === 0) {
+        console.log('5️⃣ Firebase falló, creando select de prueba...');
+        window.crearSelectPrueba();
+    }
+    
+    console.log('🎉 TEST COMPLETO FINALIZADO');
+};
+
+// Función para forzar la creación inmediata del filtro
+window.forzarFiltroInmediato = function() {
+    console.log('⚡ === FORZANDO FILTRO INMEDIATO ===');
+    
+    // 1. Asegurar que el filtro sea visible
+    const profesionalesFilter = document.getElementById('profesionalesFilter');
+    if (profesionalesFilter) {
+        profesionalesFilter.classList.remove('hidden');
+        profesionalesFilter.style.display = 'flex';
+        profesionalesFilter.style.visibility = 'visible';
+        profesionalesFilter.style.opacity = '1';
+        console.log('✅ Filtro forzado a ser visible');
+    }
+    
+    // 2. Crear select inmediatamente
+    window.crearSelectPrueba();
+    
+    // 3. Verificar resultado
+    const profesionalesSelect = document.getElementById('profesionalesSelect');
+    if (profesionalesSelect) {
+        console.log('📊 Resultado final:');
+        console.log('  - Número de opciones:', profesionalesSelect.options.length);
+        console.log('  - Valor seleccionado:', profesionalesSelect.value);
+        console.log('  - Opciones disponibles:', Array.from(profesionalesSelect.options).map(opt => opt.text));
+    }
+    
+    console.log('⚡ FILTRO INMEDIATO COMPLETADO');
+};
+
+// Función de debug para verificar el filtrado
+window.debugFiltrado = async function() {
+    console.log('🔍 === DEBUG FILTRADO DE PROFESIONALES ===');
+    
+    // 1. Estado de las variables globales
+    console.log('📋 profesionalesDisponibles:', profesionalesDisponibles.map(p => ({ id: p.id, title: p.title })));
+    console.log('📋 profesionalesSeleccionados:', profesionalesSeleccionados);
+    
+    // 2. Estado del select
+    const select = document.getElementById('profesionalesSelect');
+    if (select) {
+        console.log('🎯 Valor actual del select:', select.value);
+        console.log('🎯 Opciones disponibles:', Array.from(select.options).map(opt => ({ value: opt.value, text: opt.text })));
+        
+        // 3. Verificar coincidencia
+        const valorSeleccionado = select.value;
+        const profesionalEncontrado = profesionalesDisponibles.find(p => p.id === valorSeleccionado);
+        console.log('🔍 Profesional encontrado para valor seleccionado:', profesionalEncontrado);
+        
+        // 4. Verificar filtrado
+        const deberiaEstarSeleccionado = valorSeleccionado === 'todos' 
+            ? profesionalesDisponibles.map(p => p.id)
+            : [valorSeleccionado];
+        console.log('🎯 Debería estar seleccionado:', deberiaEstarSeleccionado);
+        console.log('🎯 Actualmente seleccionado:', profesionalesSeleccionados);
+        console.log('🎯 ¿Coincide?:', JSON.stringify(deberiaEstarSeleccionado.sort()) === JSON.stringify(profesionalesSeleccionados.sort()));
+    }
+    
+    // 5. Estado del calendario
+    const calendar = calendarMultipleInstance;
+    if (calendar) {
+        const events = calendar.getEvents();
+        console.log('📅 Eventos en el calendario:', events.length);
+        console.log('📅 Vista actual:', calendar.view.type);
+        
+        if (events.length > 0) {
+            console.log('📌 Eventos detallados:');
+            events.forEach((event, index) => {
+                console.log(`  ${index + 1}. "${event.title}" - Profesional ID: "${event.extendedProps.profesionalId}" - Profesional: "${event.extendedProps.profesionalName}"`);
+            });
+            
+            // 6. Verificar si los eventos mostrados coinciden con la selección
+            const eventosProfesionalIds = [...new Set(events.map(e => e.extendedProps.profesionalId))];
+            console.log('🎯 IDs de profesionales en eventos:', eventosProfesionalIds);
+            console.log('🎯 IDs seleccionados:', profesionalesSeleccionados);
+            
+            const eventosCorrectos = eventosProfesionalIds.every(id => profesionalesSeleccionados.includes(id));
+            console.log('🎯 ¿Eventos correctos?:', eventosCorrectos);
+            
+            if (!eventosCorrectos) {
+                console.error('❌ HAY EVENTOS DE PROFESIONALES NO SELECCIONADOS!');
+                eventosProfesionalIds.forEach(id => {
+                    if (!profesionalesSeleccionados.includes(id)) {
+                        const prof = profesionalesDisponibles.find(p => p.id === id);
+                        console.error(`❌ Evento incorrecto de: ${prof?.title || 'Desconocido'} (${id})`);
+                    }
+                });
+            }
+        }
+    }
+    
+    // 7. Probar la nueva función de carga filtrada
+    console.log('🧪 === PROBANDO NUEVA FUNCIÓN DE CARGA FILTRADA ===');
+    try {
+        const eventosFiltrados = await cargarEventosFiltrados();
+        console.log('🧪 Eventos que debería cargar la función:', eventosFiltrados.length);
+        
+        if (eventosFiltrados.length > 0) {
+            console.log('🧪 Eventos de la función filtrada:');
+            eventosFiltrados.forEach((evento, index) => {
+                console.log(`  ${index + 1}. "${evento.title}" - Profesional ID: "${evento.extendedProps.profesionalId}"`);
+            });
+            
+            // Comparar con los eventos actuales del calendario
+            if (calendar && calendar.getEvents().length > 0) {
+                const eventosCalendario = calendar.getEvents();
+                const idsCalendario = eventosCalendario.map(e => e.extendedProps.profesionalId).sort();
+                const idsFuncion = eventosFiltrados.map(e => e.extendedProps.profesionalId).sort();
+                
+                console.log('🧪 Comparación:');
+                console.log('  - IDs en calendario actual:', idsCalendario);
+                console.log('  - IDs en función filtrada:', idsFuncion);
+                console.log('  - ¿Son iguales?:', JSON.stringify(idsCalendario) === JSON.stringify(idsFuncion));
+            }
+        }
+    } catch (error) {
+        console.error('🧪 Error al probar función filtrada:', error);
+    }
+    
+    console.log('🔍 === FIN DEBUG FILTRADO ===');
+};
+
+// Función para probar el filtrado paso a paso
+window.probarFiltrado = async function(profesionalId = null) {
+    console.log('🧪 === INICIANDO PRUEBA DE FILTRADO ===');
+    
+    // Si no se especifica profesional, usar el seleccionado en el select
+    if (!profesionalId) {
+        const select = document.getElementById('profesionalesSelect');
+        if (select) {
+            profesionalId = select.value;
+        }
+    }
+    
+    console.log('🎯 Probando filtrado para:', profesionalId);
+    
+    // Simular cambio de selección
+    if (profesionalId === 'todos') {
+        profesionalesSeleccionados = profesionalesDisponibles.map(p => p.id);
+        console.log('📋 Seleccionando todos los profesionales:', profesionalesSeleccionados);
+    } else {
+        profesionalesSeleccionados = [profesionalId];
+        console.log('📋 Seleccionando solo:', profesionalId);
+        
+        // Encontrar el nombre del profesional
+        const profesional = profesionalesDisponibles.find(p => p.id === profesionalId);
+        if (profesional) {
+            console.log('👤 Profesional seleccionado:', profesional.title);
+        } else {
+            console.error('❌ Profesional no encontrado en profesionalesDisponibles');
+            return;
+        }
+    }
+    
+    // Probar la función de carga filtrada
+    console.log('🔄 Probando carga filtrada...');
+    const eventosFiltrados = await cargarEventosFiltrados();
+    
+    console.log('📊 Resultado de la prueba:');
+    console.log('  - Eventos cargados:', eventosFiltrados.length);
+    console.log('  - Profesionales en eventos:', [...new Set(eventosFiltrados.map(e => e.extendedProps.profesionalId))]);
+    console.log('  - Profesionales seleccionados:', profesionalesSeleccionados);
+    
+    // Verificar que el filtrado sea correcto
+    const eventsProfessionalIds = [...new Set(eventosFiltrados.map(e => e.extendedProps.profesionalId))];
+    const filtradoCorrecto = eventsProfessionalIds.every(id => profesionalesSeleccionados.includes(id));
+    
+    if (filtradoCorrecto) {
+        console.log('✅ FILTRADO CORRECTO: Todos los eventos pertenecen a profesionales seleccionados');
+    } else {
+        console.error('❌ FILTRADO INCORRECTO: Hay eventos de profesionales no seleccionados');
+        eventsProfessionalIds.forEach(id => {
+            if (!profesionalesSeleccionados.includes(id)) {
+                const prof = profesionalesDisponibles.find(p => p.id === id);
+                console.error(`❌ Evento incorrecto de: ${prof?.title || 'Desconocido'} (${id})`);
+            }
+        });
+    }
+    
+    console.log('🧪 === FIN PRUEBA DE FILTRADO ===');
+    return eventosFiltrados;
+};
+
+// Función para cargar profesionales desde Firebase directamente
+window.cargarProfesionalesFirebase = async function() {
+    console.log('🔥 === CARGANDO PROFESIONALES DESDE FIREBASE ===');
+    
+    try {
+        if (!window.firebaseDB) {
+            console.error('❌ Firebase DB no está disponible');
+            return;
+        }
+        
+        console.log('📡 Consultando colección usuarios...');
+        const usuariosSnap = await window.firebaseDB.collection('usuarios').get();
+        console.log('📊 Usuarios encontrados:', usuariosSnap.size);
+        
+        if (usuariosSnap.empty) {
+            console.warn('⚠️ No hay usuarios en Firebase');
+            return;
+        }
+        
+        // Procesar usuarios
+        const profesionales = [];
+        usuariosSnap.forEach(doc => {
+            const data = doc.data();
+            console.log('👤 Usuario:', { id: doc.id, data: data });
+            profesionales.push({
+                id: doc.id,
+                title: data.displayName || data.email || 'Usuario sin nombre'
+            });
+        });
+        
+        // Actualizar variables globales
+        profesionalesDisponibles = profesionales;
+        profesionalesSeleccionados = profesionales.map(p => p.id);
+        
+        console.log('✅ Profesionales cargados:', profesionales);
+        
+        // Cargar en el select
+        cargarFiltrosProfesionales();
+        
+        console.log('🔥 CARGA COMPLETA DESDE FIREBASE');
+        return profesionales;
+        
+    } catch (error) {
+        console.error('❌ Error al cargar desde Firebase:', error);
+        return null;
+    }
+};
+
+// Función para crear select de prueba
+window.crearSelectPrueba = function() {
+    console.log('🧪 CREANDO SELECT DE PRUEBA...');
+    const profesionalesSelect = document.getElementById('profesionalesSelect');
+    
+    if (!profesionalesSelect) {
+        console.error('❌ No se encontró el select profesionalesSelect');
+        return;
+    }
+    
+    console.log('✅ Select encontrado:', profesionalesSelect);
+    
+    // Usar profesionalesDisponibles si existen, sino crear de prueba
+    let profesionalesParaSelect = profesionalesDisponibles;
+    if (!profesionalesParaSelect || profesionalesParaSelect.length === 0) {
+        profesionalesParaSelect = [
+            { id: 'test1', title: 'Dr. Juan Pérez' },
+            { id: 'test2', title: 'Dra. María García' },
+            { id: 'test3', title: 'Lic. Carlos López' }
+        ];
+        // Actualizar variables globales
+        profesionalesDisponibles = profesionalesParaSelect;
+        profesionalesSeleccionados = profesionalesParaSelect.map(p => p.id);
+    }
+    
+    console.log('📋 Creando opciones para:', profesionalesParaSelect);
+    
+    // Limpiar y recrear opciones
+    profesionalesSelect.innerHTML = '<option value="todos">Todos los profesionales</option>';
+    
+    profesionalesParaSelect.forEach((prof, index) => {
+        const option = document.createElement('option');
+        option.value = prof.id;
+        option.textContent = prof.title;
+        profesionalesSelect.appendChild(option);
+        console.log(`✅ Opción ${index + 1}/${profesionalesParaSelect.length} creada para:`, prof.title);
+    });
+    
+    // Seleccionar "Todos" por defecto
+    profesionalesSelect.value = 'todos';
+    
+    console.log('🎉 Select de prueba creado exitosamente');
+    console.log('📊 Total de opciones:', profesionalesParaSelect.length + 1); // +1 por "Todos"
+    console.log('📊 Valor seleccionado:', profesionalesSelect.value);
+};
+
+// Mantener la función anterior para compatibilidad
+window.crearCheckboxesPrueba = window.crearSelectPrueba;
+
+// Función para verificar visibilidad del filtro
+window.verificarFiltro = function() {
+    console.log('🔍 === VERIFICANDO VISIBILIDAD DEL FILTRO ===');
+    
+    const profesionalesFilter = document.getElementById('profesionalesFilter');
+    const checkboxesContainer = document.getElementById('profesionalesCheckboxes');
+    
+    if (profesionalesFilter) {
+        console.log('✅ profesionalesFilter encontrado');
+        console.log('📊 Clases:', profesionalesFilter.classList.toString());
+        console.log('📊 Display:', getComputedStyle(profesionalesFilter).display);
+        console.log('📊 Visibility:', getComputedStyle(profesionalesFilter).visibility);
+        console.log('📊 Opacity:', getComputedStyle(profesionalesFilter).opacity);
+        console.log('📊 Estilos inline:', profesionalesFilter.style.cssText);
+        
+        // Forzar que sea visible
+        profesionalesFilter.classList.remove('hidden');
+        profesionalesFilter.style.display = 'flex';
+        profesionalesFilter.style.visibility = 'visible';
+        profesionalesFilter.style.opacity = '1';
+        
+        console.log('🔧 Filtro forzado a ser visible');
+        console.log('🔧 Estado después del forzado:', {
+            display: getComputedStyle(profesionalesFilter).display,
+            visibility: getComputedStyle(profesionalesFilter).visibility,
+            opacity: getComputedStyle(profesionalesFilter).opacity
+        });
+    } else {
+        console.error('❌ profesionalesFilter NO encontrado');
+    }
+    
+    const profesionalesSelect = document.getElementById('profesionalesSelect');
+    if (profesionalesSelect) {
+        console.log('✅ profesionalesSelect encontrado');
+        console.log('📊 Número de opciones:', profesionalesSelect.options.length);
+        console.log('📊 Valor seleccionado:', profesionalesSelect.value);
+        if (profesionalesSelect.options.length > 0) {
+            console.log('📊 Primera opción:', profesionalesSelect.options[0].text);
+            console.log('📊 Última opción:', profesionalesSelect.options[profesionalesSelect.options.length - 1].text);
+        }
+    } else {
+        console.error('❌ profesionalesSelect NO encontrado');
+    }
+    
+    // Verificar estado global
+    console.log('📊 Estado global:', {
+        profesionalesDisponibles: profesionalesDisponibles.length,
+        profesionalesSeleccionados: profesionalesSeleccionados.length,
+        calendarVisible: calendarVisible,
+        activeTab: activeTab
+    });
+};
+
 // Referencias a elementos de la landing page
 const loginBtn = document.getElementById('loginBtn');
 const registerBtn = document.getElementById('registerBtn');
@@ -158,7 +565,23 @@ contactBtn.addEventListener('click', () => {
 
 // Mostrar mensajes
 function showMessage(msg, type = 'error') {
-    alert(msg);
+    if (type === 'success') {
+        // Crear un toast de éxito temporal
+        const toast = document.createElement('div');
+        toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-opacity duration-300';
+        toast.textContent = msg;
+        document.body.appendChild(toast);
+        
+        // Remover el toast después de 3 segundos
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => {
+                document.body.removeChild(toast);
+            }, 300);
+        }, 3000);
+    } else {
+        alert(msg);
+    }
 }
 
 let calendarInstance = null;
@@ -322,9 +745,18 @@ addPatientForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const user = window.firebaseAuth.currentUser;
     if (!user) return;
+    
+    // Obtener todos los valores del formulario
     const nombre = addPatientForm.patientName.value;
+    const dni = addPatientForm.patientDni.value;
+    const fechaNacimiento = addPatientForm.patientFechaNacimiento.value;
+    const sexo = addPatientForm.patientSexo.value;
+    const lugarNacimiento = addPatientForm.patientLugarNacimiento.value;
     const email = addPatientForm.patientEmail.value;
     const telefono = addPatientForm.patientTelefono.value;
+    const contacto = addPatientForm.patientContacto.value;
+    const educacion = addPatientForm.patientEducacion.value;
+    const instituto = addPatientForm.patientInstituto.value;
     const motivo = addPatientForm.patientMotivo.value;
 
     // Si eres admin y tienes seleccionado un profesional, asigna el paciente a ese profesional
@@ -336,14 +768,28 @@ addPatientForm.addEventListener('submit', async (e) => {
     try {
         await window.firebaseDB.collection('pacientes').add({
             owner: ownerUid,
+            // Información personal
             nombre,
+            dni,
+            fechaNacimiento,
+            sexo,
+            lugarNacimiento,
+            // Información de contacto
             email,
             telefono,
+            contacto,
+            // Información educativa
+            educacion,
+            instituto,
+            // Motivo de consulta
             motivo,
-            creado: new Date()
+            // Metadatos
+            creado: new Date(),
+            actualizado: new Date()
         });
         hideAddPatientModal();
         loadPatients(ownerUid); // Recarga la lista del profesional correcto
+        showMessage('Paciente agregado exitosamente', 'success');
     } catch (error) {
         showMessage('Error al agregar paciente: ' + error.message);
     }
@@ -377,11 +823,51 @@ patientsList.addEventListener('click', async (e) => {
         return;
     }
     const p = doc.data();
+    
+    // Calcular edad si hay fecha de nacimiento
+    let edadTexto = '';
+    if (p.fechaNacimiento) {
+        const hoy = new Date();
+        const fechaNac = new Date(p.fechaNacimiento);
+        const edad = Math.floor((hoy - fechaNac) / (365.25 * 24 * 60 * 60 * 1000));
+        edadTexto = ` (${edad} años)`;
+    }
+    
     fichaPacienteDatos.innerHTML = `
-        <div class="font-bold text-[#2d3748] dark:text-gray-100 text-lg">${p.nombre || ''}</div>
-        <div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Email:</span> ${p.email || ''}</div>
-        <div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Teléfono:</span> ${p.telefono || ''}</div>
-        <div class="text-[#4b5563] dark:text-gray-200 text-sm">${p.motivo || ''}</div>
+        <div class="flex justify-between items-start mb-2">
+            <div class="flex-1">
+                <div class="font-bold text-[#2d3748] dark:text-gray-100 text-lg mb-2">${p.nombre || ''}${edadTexto}</div>
+                
+                <!-- Información Personal -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
+                    ${p.dni ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">DNI:</span> ${p.dni}</div>` : ''}
+                    ${p.fechaNacimiento ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Fecha Nac.:</span> ${new Date(p.fechaNacimiento).toLocaleDateString('es-AR')}</div>` : ''}
+                    ${p.sexo ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Sexo:</span> ${p.sexo.charAt(0).toUpperCase() + p.sexo.slice(1)}</div>` : ''}
+                    ${p.lugarNacimiento ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Lugar Nac.:</span> ${p.lugarNacimiento}</div>` : ''}
+                </div>
+                
+                <!-- Información de Contacto -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
+                    ${p.email ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Email:</span> ${p.email}</div>` : ''}
+                    ${p.telefono ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Teléfono:</span> ${p.telefono}</div>` : ''}
+                    ${p.contacto ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm md:col-span-2"><span class="font-semibold">Contacto Emerg.:</span> ${p.contacto}</div>` : ''}
+                </div>
+                
+                <!-- Información Educativa -->
+                ${p.educacion || p.instituto ? `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
+                    ${p.educacion ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Educación:</span> ${p.educacion.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>` : ''}
+                    ${p.instituto ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Instituto:</span> ${p.instituto}</div>` : ''}
+                </div>
+                ` : ''}
+                
+                <!-- Motivo de Consulta -->
+                ${p.motivo ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded"><span class="font-semibold">Motivo:</span> ${p.motivo}</div>` : ''}
+            </div>
+            <button onclick="showEditPatientModal('${fichaPacienteId}', ${JSON.stringify(p).replace(/"/g, '&quot;')})" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
+                ✏️ Editar
+            </button>
+        </div>
     `;
     await loadSesiones();
     fichaLoader.classList.add('hidden');
@@ -406,12 +892,36 @@ async function loadSesiones() {
         const s = doc.data();
         const div = document.createElement('div');
         div.className = 'border rounded p-3 bg-gray-50 dark:bg-darkbg';
-        div.innerHTML = `
+        
+        // Construir HTML básico
+        let htmlContent = `
             <div class="text-sm font-bold text-[#2d3748] dark:text-gray-100"><span class="font-semibold">Fecha:</span> ${s.fecha || ''}</div>
             <div class="text-gray-900 dark:text-gray-200">${s.comentario || ''}</div>
             ${s.notas ? `<div class="text-xs mt-2 text-[#4b5563] dark:text-gray-400"><span class="font-semibold">Notas:</span> ${s.notas}</div>` : ''}
-            ${s.archivosUrls && s.archivosUrls.length ? `<div class="mt-2 flex flex-col gap-1">${s.archivosUrls.map(url => `<a href="${url}" target="_blank" class="text-primary-700 underline dark:text-primary-600">Ver archivo adjunto</a>`).join('')}</div>` : ''}
         `;
+        
+        // Agregar información del nomenclador CIE-10 si existe
+        if (s.nomencladorCIE10) {
+            const cie10 = s.nomencladorCIE10;
+            htmlContent += `
+                <div class="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded border-l-4 border-blue-400">
+                    <div class="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-1">📋 Clasificación CIE-10</div>
+                    <div class="text-xs text-blue-600 dark:text-blue-400">
+                        <div><strong>Código:</strong> ${cie10.codigo}</div>
+                        <div><strong>Categoría:</strong> ${cie10.categoriaNombre}</div>
+                        <div class="mt-1 text-blue-500 dark:text-blue-300">${cie10.descripcion}</div>
+                    </div>
+                </div>
+            `;
+            console.log(`📋 Sesión del ${s.fecha} tiene clasificación CIE-10: ${cie10.codigo} - ${cie10.descripcion}`);
+        }
+        
+        // Agregar archivos adjuntos
+        if (s.archivosUrls && s.archivosUrls.length) {
+            htmlContent += `<div class="mt-2 flex flex-col gap-1">${s.archivosUrls.map(url => `<a href="${url}" target="_blank" class="text-primary-700 underline dark:text-primary-600">Ver archivo adjunto</a>`).join('')}</div>`;
+        }
+        
+        div.innerHTML = htmlContent;
         sesionesList.appendChild(div);
         
         if (s.archivosUrls && s.archivosUrls.length > 0) {
@@ -500,15 +1010,30 @@ O usa un servidor local diferente como Live Server en VS Code.`);
     }
     try {
         console.log(`💾 Guardando sesión en Firestore...`);
-        await fichaPacienteRef.collection('sesiones').add({
+        
+        // Obtener datos del nomenclador CIE-10
+        const datosCIE10 = obtenerDatosCIE10('ficha');
+        console.log('📋 Datos CIE-10 para guardar:', datosCIE10);
+        
+        const datosSession = {
             fecha,
             comentario,
             notas,
             archivosUrls,
             creado: new Date()
-        });
+        };
+        
+        // Agregar datos CIE-10 si están disponibles
+        if (datosCIE10) {
+            datosSession.nomencladorCIE10 = datosCIE10;
+            console.log('✅ Datos CIE-10 incluidos en la sesión');
+        }
+        
+        await fichaPacienteRef.collection('sesiones').add(datosSession);
         console.log(`✅ Sesión guardada exitosamente con ${archivosUrls.length} archivo(s) adjunto(s)`);
+        
         addSesionForm.reset();
+        limpiarCamposCIE10(); // Limpiar campos del nomenclador
         loadSesiones();
         disableFileInput();
     } catch (error) {
@@ -680,11 +1205,50 @@ async function showAdminPanel() {
           const doc = await fichaPacienteRef.get();
           if (!doc.exists) return;
           const p = doc.data();
-          fichaPacienteDatos.innerHTML = `
-              <div class=\"font-bold text-[#2d3748] dark:text-gray-100 text-lg\">${p.nombre || ''}</div>
-              <div class=\"text-[#4b5563] dark:text-gray-200 text-sm\"><span class=\"font-semibold\">Email:</span> ${p.email || ''}</div>
-              <div class=\"text-[#4b5563] dark:text-gray-200 text-sm\"><span class=\"font-semibold\">Teléfono:</span> ${p.telefono || ''}</div>
-              <div class=\"text-[#4b5563] dark:text-gray-200 text-sm\">${p.motivo || ''}</div>
+                            // Calcular edad si hay fecha de nacimiento
+                  let edadTexto = '';
+                  if (p.fechaNacimiento) {
+                      const hoy = new Date();
+                      const fechaNac = new Date(p.fechaNacimiento);
+                      const edad = Math.floor((hoy - fechaNac) / (365.25 * 24 * 60 * 60 * 1000));
+                      edadTexto = ` (${edad} años)`;
+                  }
+                  
+                  fichaPacienteDatos.innerHTML = `
+              <div class="flex justify-between items-start mb-2">
+                  <div class="flex-1">
+                      <div class="font-bold text-[#2d3748] dark:text-gray-100 text-lg mb-2">${p.nombre || ''}${edadTexto}</div>
+                      
+                      <!-- Información Personal -->
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
+                          ${p.dni ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">DNI:</span> ${p.dni}</div>` : ''}
+                          ${p.fechaNacimiento ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Fecha Nac.:</span> ${new Date(p.fechaNacimiento).toLocaleDateString('es-AR')}</div>` : ''}
+                          ${p.sexo ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Sexo:</span> ${p.sexo.charAt(0).toUpperCase() + p.sexo.slice(1)}</div>` : ''}
+                          ${p.lugarNacimiento ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Lugar Nac.:</span> ${p.lugarNacimiento}</div>` : ''}
+                      </div>
+                      
+                      <!-- Información de Contacto -->
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
+                          ${p.email ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Email:</span> ${p.email}</div>` : ''}
+                          ${p.telefono ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Teléfono:</span> ${p.telefono}</div>` : ''}
+                          ${p.contacto ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm md:col-span-2"><span class="font-semibold">Contacto Emerg.:</span> ${p.contacto}</div>` : ''}
+                      </div>
+                      
+                      <!-- Información Educativa -->
+                      ${p.educacion || p.instituto ? `
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
+                          ${p.educacion ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Educación:</span> ${p.educacion.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>` : ''}
+                          ${p.instituto ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Instituto:</span> ${p.instituto}</div>` : ''}
+                      </div>
+                      ` : ''}
+                      
+                      <!-- Motivo de Consulta -->
+                      ${p.motivo ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded"><span class="font-semibold">Motivo:</span> ${p.motivo}</div>` : ''}
+                  </div>
+                  <button onclick="showEditPatientModal('${pacienteId}', ${JSON.stringify(p).replace(/"/g, '&quot;')})" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
+                      ✏️ Editar
+                  </button>
+              </div>
           `;
           fichaPacienteModal.classList.remove('hidden');
           loadSesiones();
@@ -763,7 +1327,17 @@ function agregarListenersVistaCalendario() {
         let calendar = calendarInstance || calendarMultipleInstance;
         if (calendar) {
             const currentDate = calendar.getDate();
-            calendar.changeView('timeGridDay');
+            // Intentar vista de recursos primero, luego vista normal
+            try {
+                if (calendarMultipleInstance && calendar === calendarMultipleInstance) {
+                    calendar.changeView('resourceTimeGridDay');
+                } else {
+                    calendar.changeView('timeGridDay');
+                }
+            } catch (e) {
+                console.log('Vista de recursos no disponible, usando vista normal');
+                calendar.changeView('timeGridDay');
+            }
             calendar.gotoDate(currentDate);
         }
         activarBotonVista('day');
@@ -773,7 +1347,17 @@ function agregarListenersVistaCalendario() {
         let calendar = calendarInstance || calendarMultipleInstance;
         if (calendar) {
             const currentDate = calendar.getDate();
-            calendar.changeView('timeGridWeek');
+            // Intentar vista de recursos primero, luego vista normal
+            try {
+                if (calendarMultipleInstance && calendar === calendarMultipleInstance) {
+                    calendar.changeView('resourceTimeGridWeek');
+                } else {
+                    calendar.changeView('timeGridWeek');
+                }
+            } catch (e) {
+                console.log('Vista de recursos no disponible, usando vista normal');
+                calendar.changeView('timeGridWeek');
+            }
             calendar.gotoDate(currentDate);
         }
         activarBotonVista('week');
@@ -865,52 +1449,506 @@ function activarBotonVista(tipo) {
     actualizarLabelCalendario();
 }
 
+// Variables para el filtro de profesionales
+let profesionalesDisponibles = [];
+let profesionalesSeleccionados = [];
+
+// Función para asignar colores únicos a cada profesional
+function getColorForProfessional(profesionalId) {
+    const colors = [
+        '#3b82f6', // blue
+        '#ef4444', // red
+        '#10b981', // emerald
+        '#f59e0b', // amber
+        '#8b5cf6', // violet
+        '#ec4899', // pink
+        '#06b6d4', // cyan
+        '#84cc16', // lime
+        '#f97316', // orange
+        '#6366f1'  // indigo
+    ];
+    
+    const index = profesionalesDisponibles.findIndex(p => p.id === profesionalId);
+    return colors[index % colors.length];
+}
+
+// Función para cargar select de profesionales
+function cargarFiltrosProfesionales() {
+    console.log('🎯 === INICIANDO cargarFiltrosProfesionales ===');
+    console.log('📋 profesionalesDisponibles:', profesionalesDisponibles);
+    
+    const profesionalesSelect = document.getElementById('profesionalesSelect');
+    console.log('🎯 profesionalesSelect encontrado:', !!profesionalesSelect);
+    
+    if (!profesionalesSelect) {
+        console.error('❌ No se encontró profesionalesSelect');
+        return;
+    }
+    
+    // Verificar que el contenedor padre también sea visible
+    const profesionalesFilter = document.getElementById('profesionalesFilter');
+    if (profesionalesFilter) {
+        // Forzar visibilidad del filtro
+        profesionalesFilter.classList.remove('hidden');
+        profesionalesFilter.style.display = 'flex';
+        profesionalesFilter.style.visibility = 'visible';
+        profesionalesFilter.style.opacity = '1';
+        
+        console.log('📊 Estado del filtro padre después de forzar visibilidad:', {
+            classList: profesionalesFilter.classList.toString(),
+            display: getComputedStyle(profesionalesFilter).display,
+            visibility: getComputedStyle(profesionalesFilter).visibility
+        });
+    }
+    
+    console.log('✅ Cargando opciones para', profesionalesDisponibles.length, 'profesionales');
+    
+    // Limpiar opciones existentes (excepto "Todos")
+    profesionalesSelect.innerHTML = '<option value="todos">Todos los profesionales</option>';
+    
+    if (profesionalesDisponibles.length === 0) {
+        console.warn('⚠️ No hay profesionales disponibles para mostrar');
+        profesionalesSelect.innerHTML = '<option value="todos">No hay profesionales</option>';
+        return;
+    }
+    
+    // Agregar opción para cada profesional
+    profesionalesDisponibles.forEach((profesional, index) => {
+        const option = document.createElement('option');
+        option.value = profesional.id;
+        option.textContent = profesional.title;
+        profesionalesSelect.appendChild(option);
+        console.log(`✅ Opción ${index + 1}/${profesionalesDisponibles.length} creada para:`, profesional.title);
+    });
+    
+    // Seleccionar "Todos" por defecto
+    profesionalesSelect.value = 'todos';
+    profesionalesSeleccionados = profesionalesDisponibles.map(p => p.id);
+    
+    // Agregar event listener para cambios (solo si no existe)
+    if (!profesionalesSelect.hasAttribute('data-listener-added')) {
+        profesionalesSelect.addEventListener('change', async (e) => {
+            const selectedValue = e.target.value;
+            console.log('🔄 === CAMBIO DE FILTRO DETECTADO ===');
+            console.log('🔄 Profesional seleccionado:', selectedValue);
+            
+            // Actualizar la selección global
+            if (selectedValue === 'todos') {
+                profesionalesSeleccionados = profesionalesDisponibles.map(p => p.id);
+                console.log('📋 Seleccionando todos los profesionales:', profesionalesSeleccionados.length);
+            } else {
+                profesionalesSeleccionados = [selectedValue];
+                const profesional = profesionalesDisponibles.find(p => p.id === selectedValue);
+                console.log('📋 Seleccionando solo:', profesional?.title, `(${selectedValue})`);
+            }
+            
+            console.log('📊 profesionalesSeleccionados actualizado:', profesionalesSeleccionados);
+            
+            // DESTRUIR completamente el calendario actual
+            if (calendarMultipleInstance) {
+                console.log('🗑️ Destruyendo calendario existente...');
+                calendarMultipleInstance.destroy();
+                calendarMultipleInstance = null;
+            }
+            
+            // Limpiar el contenedor del calendario
+            const calendarEl = document.getElementById('calendar');
+            if (calendarEl) {
+                calendarEl.innerHTML = '';
+                console.log('🧹 Contenedor del calendario limpiado');
+            }
+            
+            // Esperar un momento antes de recrear
+            setTimeout(async () => {
+                console.log('🔄 === RECREANDO CALENDARIO CON FILTRO ===');
+                
+                // Cargar eventos filtrados usando la nueva función
+                const eventosFiltrados = await cargarEventosFiltrados();
+                console.log('📊 Eventos filtrados cargados:', eventosFiltrados.length);
+                
+                if (eventosFiltrados.length === 0) {
+                    console.warn('⚠️ No se encontraron eventos para la selección actual');
+                }
+                
+                // Determinar vista inicial basada en la selección
+                const vistaInicial = profesionalesSeleccionados.length === 1 ? 'timeGridDay' : 'timeGridWeek';
+                console.log(`📅 Vista inicial: ${vistaInicial}`);
+                
+                // Crear nuevo calendario con eventos filtrados
+                calendarMultipleInstance = new window.FullCalendar.Calendar(calendarEl, {
+                    initialView: vistaInicial,
+                    locale: 'es',
+                    headerToolbar: false,
+                    height: 600,
+                    slotMinTime: '08:00:00',
+                    slotMaxTime: '19:00:00',
+                    allDaySlot: false,
+                    events: eventosFiltrados,
+                    editable: false,
+                    selectable: false,
+                    eventClick: function(info) {
+                        const event = info.event;
+                        if (modalDetalleSesionMultiple && detalleSesionMultipleContent) {
+                            const props = event.extendedProps;
+                            let contenido = `
+                              <div><span class='font-semibold'>Paciente:</span> ${props.pacienteNombre || ''}</div>
+                              <div><span class='font-semibold'>Profesional:</span> ${props.profesionalName || ''}</div>
+                              <div><span class='font-semibold'>Fecha y hora:</span> ${event.start ? event.start.toLocaleString('es-AR') : ''}</div>
+                              <div><span class='font-semibold'>Notas:</span> ${props.notas || ''}</div>
+                            `;
+                            
+                            // Agregar información CIE-10 si existe
+                            if (props.nomencladorCIE10) {
+                                const cie10 = props.nomencladorCIE10;
+                                contenido += `
+                                    <div class="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded border-l-4 border-blue-400">
+                                        <div class="text-sm font-semibold text-blue-700 dark:text-blue-300 mb-1">📋 Clasificación CIE-10</div>
+                                        <div class="text-sm text-blue-600 dark:text-blue-400">
+                                            <div><strong>Código:</strong> ${cie10.codigo}</div>
+                                            <div><strong>Categoría:</strong> ${cie10.categoriaNombre}</div>
+                                            <div class="mt-1 text-blue-500 dark:text-blue-300">${cie10.descripcion}</div>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                            
+                            detalleSesionMultipleContent.innerHTML = contenido;
+                            modalDetalleSesionMultiple.classList.remove('hidden');
+                        }
+                    },
+                    dateClick: null,
+                    eventDidMount: function(info) {
+                        console.log('📌 Evento montado:', info.event.title);
+                    }
+                });
+                
+                calendarMultipleInstance.render();
+                console.log('✅ Calendario recreado con eventos filtrados');
+                
+                // Configurar listeners de vista
+                agregarListenersVistaCalendario();
+                
+                // Activar botón de vista correcto
+                if (vistaInicial === 'timeGridDay') {
+                    activarBotonVista('day');
+                } else {
+                    activarBotonVista('week');
+                }
+                
+                // Actualizar label del calendario
+                setTimeout(() => {
+                    actualizarLabelCalendario();
+                }, 100);
+                
+                // Verificación final
+                setTimeout(() => {
+                    const renderedEvents = calendarMultipleInstance.getEvents();
+                    console.log('🔍 === VERIFICACIÓN FINAL DEL FILTRADO ===');
+                    console.log('📊 Eventos finales en calendario:', renderedEvents.length);
+                    console.log('📋 Profesionales seleccionados:', profesionalesSeleccionados);
+                    
+                    const eventsProfessionalIds = [...new Set(renderedEvents.map(e => e.extendedProps.profesionalId))];
+                    console.log('📋 Profesionales en eventos:', eventsProfessionalIds);
+                    
+                    const correctos = eventsProfessionalIds.every(id => profesionalesSeleccionados.includes(id));
+                    if (correctos) {
+                        console.log('✅ FILTRADO CORRECTO: Todos los eventos pertenecen a profesionales seleccionados');
+                    } else {
+                        console.error('❌ FILTRADO INCORRECTO: Hay eventos de profesionales no seleccionados');
+                        eventsProfessionalIds.forEach(id => {
+                            if (!profesionalesSeleccionados.includes(id)) {
+                                const prof = profesionalesDisponibles.find(p => p.id === id);
+                                console.error(`❌ Evento incorrecto de: ${prof?.title || 'Desconocido'} (${id})`);
+                            }
+                        });
+                    }
+                }, 200);
+                
+                console.log('✅ === RECARGA DEL CALENDARIO COMPLETADA ===');
+            }, 150);
+        });
+        profesionalesSelect.setAttribute('data-listener-added', 'true');
+        console.log('✅ Event listener actualizado agregado al select');
+    }
+    
+    console.log('🎉 === FILTRO SELECT CARGADO EXITOSAMENTE ===');
+    console.log('📊 Total de opciones creadas:', profesionalesDisponibles.length + 1); // +1 por "Todos"
+    console.log('📊 Valor seleccionado:', profesionalesSelect.value);
+    
+    // Verificación final después de un breve delay
+    setTimeout(() => {
+        console.log('🔍 === VERIFICACIÓN FINAL DEL FILTRO ===');
+        console.log('🔍 Opciones finales en select:', profesionalesSelect.options.length);
+        console.log('🔍 Filtro visible:', getComputedStyle(profesionalesFilter).display !== 'none');
+        
+        if (profesionalesSelect.options.length > 1) {
+            console.log('✅ === FILTRO COMPLETAMENTE FUNCIONAL ===');
+        } else {
+            console.warn('⚠️ === PROBLEMA CON EL FILTRO ===');
+        }
+    }, 50);
+}
+
+
+
+// Función para cargar eventos filtrados desde Firebase
+async function cargarEventosFiltrados() {
+    console.log('🔍 === INICIANDO CARGA DE EVENTOS FILTRADOS ===');
+    console.log('📋 profesionalesSeleccionados:', profesionalesSeleccionados);
+    console.log('📋 profesionalesDisponibles:', profesionalesDisponibles.map(p => ({ id: p.id, title: p.title })));
+    
+    let eventos = [];
+    
+    // Filtrar solo los profesionales seleccionados
+    const profesionalesFiltrados = profesionalesDisponibles.filter(p => {
+        const incluido = profesionalesSeleccionados.includes(p.id);
+        console.log(`🔍 Profesional "${p.title}" (${p.id}) - ¿Incluido?: ${incluido}`);
+        return incluido;
+    });
+    
+    console.log('👥 Profesionales que se procesarán:', profesionalesFiltrados.map(p => ({ id: p.id, title: p.title })));
+    
+    if (profesionalesFiltrados.length === 0) {
+        console.error('❌ No hay profesionales filtrados! Verificar lógica de filtrado');
+        console.log('🔍 Comparación detallada:');
+        console.log('  profesionalesDisponibles:', profesionalesDisponibles);
+        console.log('  profesionalesSeleccionados:', profesionalesSeleccionados);
+        return [];
+    }
+    
+    // Cargar eventos solo de los profesionales filtrados
+    for (const profesional of profesionalesFiltrados) {
+        console.log(`🔍 === PROCESANDO ${profesional.title.toUpperCase()} (${profesional.id}) ===`);
+        
+        try {
+            // Buscar pacientes de este profesional específico
+            const pacientesSnap = await window.firebaseDB
+                .collection('pacientes')
+                .where('owner', '==', profesional.id)
+                .get();
+            
+            console.log(`📋 Pacientes encontrados para ${profesional.title}:`, pacientesSnap.size);
+            
+            if (pacientesSnap.empty) {
+                console.log(`ℹ️ No hay pacientes para ${profesional.title}`);
+                continue;
+            }
+            
+            // Procesar cada paciente
+            for (const pacDoc of pacientesSnap.docs) {
+                const pacienteData = pacDoc.data();
+                console.log(`👤 Procesando paciente: ${pacienteData.nombre || pacienteData.email} (owner: ${pacienteData.owner})`);
+                
+                // Verificar que el owner coincida exactamente
+                if (pacienteData.owner !== profesional.id) {
+                    console.warn(`⚠️ INCONSISTENCIA: Paciente ${pacienteData.nombre} tiene owner ${pacienteData.owner} pero se encontró bajo profesional ${profesional.id}`);
+                    continue;
+                }
+                
+                // Cargar sesiones de este paciente
+                const sesionesSnap = await window.firebaseDB
+                    .collection('pacientes')
+                    .doc(pacDoc.id)
+                    .collection('sesiones')
+                    .get();
+                
+                console.log(`📝 Sesiones para paciente ${pacienteData.nombre}:`, sesionesSnap.size);
+                
+                // Crear eventos para cada sesión
+                sesionesSnap.forEach(sesionDoc => {
+                    const sesionData = sesionDoc.data();
+                    
+                    const extendedProps = {
+                        pacienteId: pacDoc.id,
+                        profesionalId: profesional.id,
+                        profesionalName: profesional.title,
+                        pacienteNombre: pacienteData.nombre || pacienteData.email,
+                        notas: sesionData.comentario,
+                        sesionId: sesionDoc.id,
+                        fecha: sesionData.fecha
+                    };
+                    
+                    // Agregar información CIE-10 si existe
+                    if (sesionData.nomencladorCIE10) {
+                        extendedProps.nomencladorCIE10 = sesionData.nomencladorCIE10;
+                        console.log(`📋 Sesión tiene clasificación CIE-10: ${sesionData.nomencladorCIE10.codigo}`);
+                    }
+                    
+                    const evento = {
+                        title: `${pacienteData.nombre || pacienteData.email} (${profesional.title})`,
+                        start: sesionData.fecha,
+                        backgroundColor: getColorForProfessional(profesional.id),
+                        borderColor: getColorForProfessional(profesional.id),
+                        extendedProps: extendedProps
+                    };
+                    
+                    eventos.push(evento);
+                    console.log(`✅ Evento creado: "${evento.title}" - Profesional: ${profesional.title} (${profesional.id})`);
+                });
+            }
+            
+        } catch (error) {
+            console.error(`❌ Error cargando datos para ${profesional.title}:`, error);
+        }
+    }
+    
+    console.log(`🎯 === RESUMEN DE CARGA FILTRADA ===`);
+    console.log(`📊 Total de eventos cargados: ${eventos.length}`);
+    console.log(`👥 Profesionales procesados: ${profesionalesFiltrados.length}`);
+    
+    // Verificar que todos los eventos pertenecen a profesionales seleccionados
+    const eventsProfessionalIds = [...new Set(eventos.map(e => e.extendedProps.profesionalId))];
+    console.log('📋 IDs de profesionales en eventos:', eventsProfessionalIds);
+    console.log('📋 IDs de profesionales seleccionados:', profesionalesSeleccionados);
+    
+    const eventosCorrectos = eventsProfessionalIds.every(id => profesionalesSeleccionados.includes(id));
+    if (eventosCorrectos) {
+        console.log('✅ VERIFICACIÓN: Todos los eventos pertenecen a profesionales seleccionados');
+    } else {
+        console.error('❌ VERIFICACIÓN FALLIDA: Hay eventos de profesionales no seleccionados');
+        eventsProfessionalIds.forEach(id => {
+            if (!profesionalesSeleccionados.includes(id)) {
+                const prof = profesionalesDisponibles.find(p => p.id === id);
+                console.error(`❌ Evento incorrecto de: ${prof?.title || 'Desconocido'} (${id})`);
+            }
+        });
+    }
+    
+    eventos.forEach(evento => {
+        console.log(`📌 "${evento.title}" - ID Profesional: ${evento.extendedProps.profesionalId}`);
+    });
+    
+    return eventos;
+}
+
 // Función para inicializar la agenda múltiple
 async function mostrarAgendaMultiple() {
+    console.log('=== INICIANDO AGENDA MÚLTIPLE ===');
+    console.log('📋 profesionalesSeleccionados al inicio:', profesionalesSeleccionados);
+    
+    // SIEMPRE destruir el calendario anterior
     if (calendarMultipleInstance) {
+        console.log('🗑️ Destruyendo calendario múltiple existente...');
         calendarMultipleInstance.destroy();
         calendarMultipleInstance = null;
     }
+    
+    // Limpiar el contenedor del calendario
     const calendarEl = document.getElementById('calendar');
-    if (!calendarEl) return;
+    if (calendarEl) {
+        calendarEl.innerHTML = '';
+        console.log('🧹 Contenedor del calendario limpiado');
+    }
+    const profesionalesFilter = document.getElementById('profesionalesFilter');
+    
+    console.log('Elementos encontrados:', { calendarEl, profesionalesFilter });
+    
+    if (!calendarEl) {
+        console.error('No se encontró el elemento calendar');
+        return;
+    }
     if (!window.FullCalendar) {
         console.error('FullCalendar no está disponible');
         return;
     }
-    const usuariosSnap = await window.firebaseDB.collection('usuarios').get();
-    const profesionales = usuariosSnap.docs.map(doc => ({
-        id: doc.id,
-        title: doc.data().displayName || doc.data().email
-    }));
-    let eventos = [];
-    for (const pro of profesionales) {
-        const pacientesSnap = await window.firebaseDB.collection('pacientes').where('owner', '==', pro.id).get();
-        for (const pacDoc of pacientesSnap.docs) {
-            const sesionesSnap = await window.firebaseDB.collection('pacientes').doc(pacDoc.id).collection('sesiones').get();
-            sesionesSnap.forEach(sDoc => {
-                const s = sDoc.data();
-                eventos.push({
-                    title: `${pacDoc.data().nombre || pacDoc.data().email} (${pro.title})`,
-                    start: s.fecha,
-                    extendedProps: {
-                        pacienteId: pacDoc.id,
-                        profesionalId: pro.id,
-                        profesionalName: pro.title,
-                        pacienteNombre: pacDoc.data().nombre || pacDoc.data().email,
-                        notas: s.comentario,
-                        sesionId: sDoc.id,
-                        fecha: s.fecha
-                    }
-                });
-            });
-        }
+    
+    // Mostrar filtro de profesionales SIEMPRE para agenda múltiple
+    if (profesionalesFilter) {
+        console.log('✅ Filtro de profesionales encontrado, mostrándolo...');
+        // Forzar que el filtro sea visible removiendo todas las clases que lo ocultan
+        profesionalesFilter.classList.remove('hidden');
+        profesionalesFilter.style.display = 'flex';
+        profesionalesFilter.style.visibility = 'visible';
+        profesionalesFilter.style.opacity = '1';
+        
+        console.log('📊 Estilos del filtro aplicados:', {
+            display: profesionalesFilter.style.display,
+            visibility: profesionalesFilter.style.visibility,
+            opacity: profesionalesFilter.style.opacity,
+            classList: profesionalesFilter.classList.toString()
+        });
+    } else {
+        console.error('No se encontró el elemento profesionalesFilter');
     }
+    
+    // Usar la función que sabemos que funciona
+    console.log('🔄 Cargando profesionales usando cargarProfesionalesFirebase...');
+    
+    try {
+        const profesionales = await window.cargarProfesionalesFirebase();
+        
+        if (profesionales && profesionales.length > 0) {
+            console.log('✅ Profesionales cargados exitosamente desde Firebase:', profesionales.length);
+        } else {
+            console.warn('⚠️ No se pudieron cargar profesionales desde Firebase, usando fallback...');
+            // Crear profesionales de prueba en caso de error
+            profesionalesDisponibles = [
+                { id: 'fallback1', title: 'Profesional 1 (Prueba)' },
+                { id: 'fallback2', title: 'Profesional 2 (Prueba)' },
+                { id: 'fallback3', title: 'Profesional 3 (Prueba)' }
+            ];
+            profesionalesSeleccionados = profesionalesDisponibles.map(p => p.id);
+            
+            console.log('🛠️ Usando profesionales de fallback:', profesionalesDisponibles);
+            cargarFiltrosProfesionales();
+        }
+        
+        // Verificar que el filtro se muestre después de cargar
+        setTimeout(() => {
+            const profesionalesFilter = document.getElementById('profesionalesFilter');
+            const profesionalesSelect = document.getElementById('profesionalesSelect');
+            
+            if (profesionalesFilter) {
+                const isVisible = getComputedStyle(profesionalesFilter).display !== 'none';
+                console.log('🔍 Filtro visible después de cargar:', isVisible);
+                
+                if (!isVisible) {
+                    console.warn('⚠️ El filtro sigue oculto, forzando visibilidad...');
+                    profesionalesFilter.classList.remove('hidden');
+                    profesionalesFilter.style.display = 'flex';
+                    profesionalesFilter.style.visibility = 'visible';
+                    profesionalesFilter.style.opacity = '1';
+                }
+                
+                // Verificar que el select tenga opciones
+                if (profesionalesSelect) {
+                    console.log('🔍 Opciones en select:', profesionalesSelect.options.length);
+                    if (profesionalesSelect.options.length <= 1) {
+                        console.warn('⚠️ No hay opciones en el select, forzando carga...');
+                        window.crearSelectPrueba();
+                    }
+                }
+            }
+        }, 100);
+        
+    } catch (error) {
+        console.error('❌ Error en la carga de profesionales:', error);
+        
+        // Fallback completo
+        profesionalesDisponibles = [
+            { id: 'error1', title: 'Error - Profesional 1' },
+            { id: 'error2', title: 'Error - Profesional 2' }
+        ];
+        profesionalesSeleccionados = profesionalesDisponibles.map(p => p.id);
+        cargarFiltrosProfesionales();
+    }
+    
+    console.log('Iniciando calendario múltiple simple (sin recursos)');
+    
+    // Usar la nueva función de carga filtrada
+    const eventos = await cargarEventosFiltrados();
+    
+    if (eventos.length === 0) {
+        console.warn('⚠️ No se encontraron eventos para mostrar');
+    }
+    
+    // Determinar vista inicial basada en la selección
+    const vistaInicial = profesionalesSeleccionados.length === 1 ? 'timeGridDay' : 'timeGridWeek';
+    console.log(`📅 Vista inicial del calendario: ${vistaInicial}`);
+    
+    // Crear calendario simple
     calendarMultipleInstance = new window.FullCalendar.Calendar(calendarEl, {
-        initialView: 'timeGridWeek',
-        views: {
-            timeGridWeek: { type: 'timeGridWeek', buttonText: 'Semana', dateIncrement: { weeks: 1 } },
-            timeGridDay: { type: 'timeGridDay', buttonText: 'Día', dateIncrement: { days: 1 }, dateAlignment: 'day' }
-        },
+        initialView: vistaInicial,
         locale: 'es',
         headerToolbar: false,
         height: 600,
@@ -933,12 +1971,49 @@ async function mostrarAgendaMultiple() {
                 modalDetalleSesionMultiple.classList.remove('hidden');
             }
         },
-        dateClick: null
+        dateClick: null,
+        // Agregar callback para cuando el calendario esté listo
+        eventDidMount: function(info) {
+            console.log('📌 Evento montado:', info.event.title);
+        }
     });
-            calendarMultipleInstance.render();
-        console.log('=== CALENDARIO MÚLTIPLE RENDERIZADO ===');
-        agregarListenersVistaCalendario();
+    
+    calendarMultipleInstance.render();
+    console.log('=== CALENDARIO MÚLTIPLE SIMPLE RENDERIZADO ===');
+    console.log(`📊 Eventos renderizados en el calendario: ${eventos.length}`);
+    
+    // Verificación final de que los eventos son correctos
+    setTimeout(() => {
+        const renderedEvents = calendarMultipleInstance.getEvents();
+        console.log('🔍 === VERIFICACIÓN FINAL DE EVENTOS ===');
+        console.log('📊 Eventos finales en calendario:', renderedEvents.length);
+        console.log('📋 Profesionales que deberían estar:', profesionalesSeleccionados);
+        
+        const eventsProfessionalIds = [...new Set(renderedEvents.map(e => e.extendedProps.profesionalId))];
+        console.log('📋 Profesionales en eventos:', eventsProfessionalIds);
+        
+        const correctos = eventsProfessionalIds.every(id => profesionalesSeleccionados.includes(id));
+        if (correctos) {
+            console.log('✅ FILTRADO CORRECTO: Todos los eventos pertenecen a profesionales seleccionados');
+        } else {
+            console.error('❌ FILTRADO INCORRECTO: Hay eventos de profesionales no seleccionados');
+            eventsProfessionalIds.forEach(id => {
+                if (!profesionalesSeleccionados.includes(id)) {
+                    const prof = profesionalesDisponibles.find(p => p.id === id);
+                    console.error(`❌ Evento incorrecto de: ${prof?.title || 'Desconocido'} (${id})`);
+                }
+            });
+        }
+    }, 200);
+    
+    agregarListenersVistaCalendario();
+    
+    // Activar el botón correcto según la vista inicial
+    if (vistaInicial === 'timeGridDay') {
+        activarBotonVista('day');
+    } else {
         activarBotonVista('week');
+    }
 }
 
 // Función para volver a la agenda individual
@@ -951,6 +2026,16 @@ function mostrarAgendaIndividual() {
         calendarInstance.destroy();
         calendarInstance = null;
     }
+    
+    // Ocultar filtro de profesionales
+    const profesionalesFilter = document.getElementById('profesionalesFilter');
+    if (profesionalesFilter) {
+        profesionalesFilter.classList.add('hidden');
+        profesionalesFilter.style.display = 'none';
+        profesionalesFilter.style.visibility = 'hidden';
+        profesionalesFilter.style.opacity = '0';
+    }
+    
     const calendarEl = document.getElementById('calendar');
     if (calendarEl) {
         if (!window.FullCalendar) {
@@ -1056,11 +2141,20 @@ if (tabAgendaIndividual && tabAgendaMultiple && calendarTabs) {
             mostrarAgendaIndividual();
         }
     });
-    tabAgendaMultiple.addEventListener('click', () => {
+    tabAgendaMultiple.addEventListener('click', async () => {
+        console.log('🎯 CLICK EN AGENDA MÚLTIPLE');
         if (calendarVisible && activeTab === 'multiple') {
+            console.log('🔄 Ocultando calendario múltiple');
             calendarTabs.classList.add('hidden');
             calendarVisible = false;
+            // Ocultar filtro cuando se oculta el calendario
+            const profesionalesFilter = document.getElementById('profesionalesFilter');
+            if (profesionalesFilter) {
+                profesionalesFilter.classList.add('hidden');
+                profesionalesFilter.style.display = 'none';
+            }
         } else {
+            console.log('🔄 Mostrando calendario múltiple');
             tabAgendaMultiple.classList.add('bg-primary-700', 'text-white');
             tabAgendaMultiple.classList.remove('bg-gray-200', 'text-gray-800');
             tabAgendaIndividual.classList.remove('bg-primary-700', 'text-white');
@@ -1068,6 +2162,34 @@ if (tabAgendaIndividual && tabAgendaMultiple && calendarTabs) {
             calendarTabs.classList.remove('hidden');
             calendarVisible = true;
             activeTab = 'multiple';
+            
+            // Asegurar que el filtro se muestre inmediatamente ANTES de cargar la agenda
+            const profesionalesFilter = document.getElementById('profesionalesFilter');
+            if (profesionalesFilter) {
+                console.log('🎯 Mostrando filtro inmediatamente');
+                profesionalesFilter.classList.remove('hidden');
+                profesionalesFilter.style.display = 'flex';
+                profesionalesFilter.style.visibility = 'visible';
+                profesionalesFilter.style.opacity = '1';
+                console.log('✅ Filtro visible antes de cargar agenda');
+            }
+            
+            // Verificar si ya tenemos profesionales cargados
+            if (profesionalesDisponibles.length === 0) {
+                console.log('🔄 No hay profesionales cargados, cargando automáticamente...');
+                try {
+                    await window.cargarProfesionalesFirebase();
+                    console.log('✅ Profesionales cargados automáticamente');
+                } catch (error) {
+                    console.error('❌ Error al cargar profesionales automáticamente:', error);
+                }
+            } else {
+                console.log('✅ Profesionales ya disponibles:', profesionalesDisponibles.length);
+                // Asegurar que el filtro esté cargado
+                cargarFiltrosProfesionales();
+            }
+            
+            console.log('🚀 Llamando a mostrarAgendaMultiple()');
             mostrarAgendaMultiple();
         }
     });
@@ -1089,37 +2211,68 @@ if (formNuevaSesion) {
         const notas = inputNotasSesion.value;
         if (!pacienteId || !fecha) return;
         try {
+            // Obtener datos del nomenclador CIE-10
+            const datosCIE10 = obtenerDatosCIE10('calendar');
+            console.log('📋 Datos CIE-10 para sesión de calendario:', datosCIE10);
+            
             if (sesionEditando && sesionEditando.sesionId) {
                 // Editar sesión existente
-                await window.firebaseDB.collection('pacientes').doc(pacienteId).collection('sesiones').doc(sesionEditando.sesionId).update({
+                const datosActualizacion = {
                     fecha,
                     comentario: notas
-                });
+                };
+                
+                // Agregar datos CIE-10 si están disponibles
+                if (datosCIE10) {
+                    datosActualizacion.nomencladorCIE10 = datosCIE10;
+                    console.log('✅ Datos CIE-10 incluidos en actualización');
+                }
+                
+                await window.firebaseDB.collection('pacientes').doc(pacienteId).collection('sesiones').doc(sesionEditando.sesionId).update(datosActualizacion);
+                
                 if (sesionEditando.eventObj) {
                     sesionEditando.eventObj.setStart(fecha);
                     sesionEditando.eventObj.setProp('title', selectPaciente.options[selectPaciente.selectedIndex].text);
                     sesionEditando.eventObj.setExtendedProp('notas', notas);
                     sesionEditando.eventObj.setExtendedProp('pacienteId', pacienteId);
+                    if (datosCIE10) {
+                        sesionEditando.eventObj.setExtendedProp('nomencladorCIE10', datosCIE10);
+                    }
                 }
             } else {
                 // Crear nueva sesión
-                const docRef = await window.firebaseDB.collection('pacientes').doc(pacienteId).collection('sesiones').add({
+                const datosSession = {
                     fecha,
                     comentario: notas,
                     creado: new Date()
-                });
+                };
+                
+                // Agregar datos CIE-10 si están disponibles
+                if (datosCIE10) {
+                    datosSession.nomencladorCIE10 = datosCIE10;
+                    console.log('✅ Datos CIE-10 incluidos en nueva sesión');
+                }
+                
+                const docRef = await window.firebaseDB.collection('pacientes').doc(pacienteId).collection('sesiones').add(datosSession);
+                
                 // Agregar evento a la instancia activa
                 const activeCalendar = calendarMultipleInstance || calendarInstance;
                 if (activeCalendar) {
+                    const eventProps = { pacienteId, notas, sesionId: docRef.id };
+                    if (datosCIE10) {
+                        eventProps.nomencladorCIE10 = datosCIE10;
+                    }
+                    
                     activeCalendar.addEvent({
                         title: selectPaciente.options[selectPaciente.selectedIndex].text,
                         start: fecha,
                         end: null,
-                        extendedProps: { pacienteId, notas, sesionId: docRef.id }
+                        extendedProps: eventProps
                     });
                 }
             }
             modalNuevaSesion.classList.add('hidden');
+            limpiarCamposCIE10(); // Limpiar campos del nomenclador
         } catch (error) {
             alert('Error al guardar sesión: ' + error.message);
         }
@@ -1245,3 +2398,1134 @@ document.addEventListener('DOMContentLoaded', function() {
         activarBotonVista('week');
     }
 }); 
+
+// === FUNCIONES DEL NOMENCLADOR CIE-10 ===
+
+// Función para mostrar todas las categorías disponibles
+window.mostrarCategorias = function() {
+    console.log('=== CATEGORÍAS CIE-10 DISPONIBLES ===');
+    const categorias = obtenerCategorias();
+    categorias.forEach(cat => {
+        console.log(`${cat.id}. ${cat.categoria} (${cat.totalSubcategorias} diagnósticos)`);
+    });
+    return categorias;
+};
+
+// Función para buscar diagnósticos por término
+window.buscarDiagnostico = function(termino) {
+    console.log(`🔍 Buscando: "${termino}"`);
+    const resultados = buscarPorDescripcion(termino);
+    
+    if (resultados.length > 0) {
+        console.log(`✅ Encontrados ${resultados.length} resultado(s):`);
+        resultados.forEach((resultado, index) => {
+            console.log(`${index + 1}. ${resultado.codigo}: ${resultado.descripcion}`);
+            console.log(`   Categoría: ${resultado.categoria}`);
+        });
+    } else {
+        console.log('❌ No se encontraron resultados');
+    }
+    
+    return resultados;
+};
+
+// Función para obtener información de un código específico
+window.obtenerDiagnostico = function(codigo) {
+    console.log(`🔍 Buscando código: ${codigo}`);
+    const resultado = buscarPorCodigo(codigo);
+    
+    if (resultado) {
+        console.log(`✅ Encontrado:`);
+        console.log(`   Código: ${resultado.codigo}`);
+        console.log(`   Descripción: ${resultado.descripcion}`);
+        console.log(`   Categoría: ${resultado.categoria}`);
+    } else {
+        console.log(`❌ Código ${codigo} no encontrado`);
+    }
+    
+    return resultado;
+};
+
+// Función para agregar campo de nomenclador a las sesiones
+window.agregarCampoNomenclador = function() {
+    console.log('💡 Para agregar el nomenclador a las sesiones:');
+    console.log('1. Agregar un campo "codigo_cie10" en el formulario de sesiones');
+    console.log('2. Usar buscarDiagnostico("ansiedad") para buscar códigos');
+    console.log('3. Usar obtenerDiagnostico("F41.1") para validar códigos');
+    console.log('4. Guardar el código junto con la sesión en Firebase');
+    
+    console.log('\n📋 Ejemplos de uso:');
+    console.log('- buscarDiagnostico("depresión")');
+    console.log('- buscarDiagnostico("ansiedad")');
+    console.log('- obtenerDiagnostico("F32.1")');
+    console.log('- mostrarCategorias()');
+};
+
+// Función de ejemplo para mostrar cómo integrar con sesiones
+window.ejemploIntegracionSesion = function() {
+    console.log('📝 === EJEMPLO DE INTEGRACIÓN CON SESIONES ===');
+    
+    // Ejemplo de cómo podrías agregar el nomenclador al formulario de sesiones
+    const ejemploSesion = {
+        pacienteId: 'ejemplo123',
+        fecha: '2024-01-15T10:00',
+        comentario: 'Sesión inicial de evaluación',
+        notas: 'Paciente presenta síntomas de ansiedad generalizada',
+        codigo_cie10: 'F41.1', // Código del nomenclador
+        diagnostico_descripcion: 'Trastorno de ansiedad generalizada'
+    };
+    
+    console.log('Ejemplo de sesión con nomenclador:', ejemploSesion);
+    
+    // Validar el código
+    const diagnostico = buscarPorCodigo(ejemploSesion.codigo_cie10);
+    if (diagnostico) {
+        console.log('✅ Código válido:', diagnostico.descripcion);
+    } else {
+        console.log('❌ Código inválido');
+    }
+    
+    return ejemploSesion;
+};
+
+// Mostrar información del nomenclador al cargar
+console.log('📋 Nomenclador CIE-10 cargado exitosamente!');
+console.log('💡 Funciones disponibles:');
+console.log('  - mostrarCategorias(): Ver todas las categorías');
+console.log('  - buscarDiagnostico("término"): Buscar por descripción');
+console.log('  - obtenerDiagnostico("código"): Buscar por código CIE-10');
+console.log('  - ejemploIntegracionSesion(): Ver ejemplo de uso');
+
+// Agregar al objeto window para fácil acceso
+window.nomenclador = {
+    mostrarCategorias,
+    buscarDiagnostico,
+    obtenerDiagnostico,
+    agregarCampoNomenclador,
+    ejemploIntegracionSesion
+};
+
+// === FUNCIONES PARA DROPDOWNS DEL NOMENCLADOR CIE-10 ===
+
+// Función para cargar las categorías en los dropdowns
+function cargarCategoriasCIE10() {
+    console.log('📋 Cargando categorías CIE-10 en dropdowns...');
+    
+    // Verificar que el nomenclador esté disponible
+    if (typeof obtenerCategorias !== 'function') {
+        console.error('❌ Nomenclador CIE-10 no está disponible');
+        return;
+    }
+    
+    const categorias = obtenerCategorias();
+    console.log('✅ Categorías obtenidas:', categorias.length);
+    
+    // Cargar en dropdown de ficha clínica
+    const selectCategoria = document.getElementById('sesionCategoriaCIE10');
+    if (selectCategoria) {
+        selectCategoria.innerHTML = '<option value="">Seleccionar categoría...</option>';
+        categorias.forEach(categoria => {
+            const option = document.createElement('option');
+            option.value = categoria.id;
+            option.textContent = `${categoria.categoria} (${categoria.totalSubcategorias} códigos)`;
+            selectCategoria.appendChild(option);
+        });
+        console.log('✅ Categorías cargadas en ficha clínica:', categorias.length);
+    }
+    
+    // Cargar en dropdown de calendario
+    const selectCategoriaCalendar = document.getElementById('inputCategoriaCIE10');
+    if (selectCategoriaCalendar) {
+        selectCategoriaCalendar.innerHTML = '<option value="">Seleccionar categoría...</option>';
+        categorias.forEach(categoria => {
+            const option = document.createElement('option');
+            option.value = categoria.id;
+            option.textContent = `${categoria.categoria} (${categoria.totalSubcategorias} códigos)`;
+            selectCategoriaCalendar.appendChild(option);
+        });
+        console.log('✅ Categorías cargadas en calendario:', categorias.length);
+    }
+}
+
+// Función para cargar subcategorías (códigos específicos) basado en la categoría seleccionada
+function cargarSubcategoriasCIE10(categoriaId, selectCodigoId, descripcionId) {
+    console.log('🔍 Cargando subcategorías para categoría:', categoriaId);
+    
+    const selectCodigo = document.getElementById(selectCodigoId);
+    const descripcionDiv = document.getElementById(descripcionId);
+    
+    if (!selectCodigo) {
+        console.error('❌ No se encontró el select de códigos:', selectCodigoId);
+        return;
+    }
+    
+    // Limpiar opciones anteriores
+    selectCodigo.innerHTML = '<option value="">Seleccionar código...</option>';
+    
+    if (descripcionDiv) {
+        descripcionDiv.classList.add('hidden');
+        descripcionDiv.innerHTML = '';
+    }
+    
+    if (!categoriaId) {
+        selectCodigo.disabled = true;
+        return;
+    }
+    
+    // Verificar que la función esté disponible
+    if (typeof obtenerSubcategoriasPorCategoria !== 'function') {
+        console.error('❌ Función obtenerSubcategoriasPorCategoria no está disponible');
+        return;
+    }
+    
+    const subcategorias = obtenerSubcategoriasPorCategoria(parseInt(categoriaId));
+    console.log('✅ Subcategorías obtenidas:', subcategorias.length);
+    
+    if (subcategorias.length > 0) {
+        selectCodigo.disabled = false;
+        subcategorias.forEach(subcategoria => {
+            const option = document.createElement('option');
+            option.value = subcategoria.codigo;
+            option.textContent = `${subcategoria.codigo}: ${subcategoria.descripcion}`;
+            option.setAttribute('data-descripcion', subcategoria.descripcion);
+            selectCodigo.appendChild(option);
+        });
+        console.log('✅ Subcategorías cargadas:', subcategorias.length);
+    } else {
+        selectCodigo.disabled = true;
+        console.warn('⚠️ No se encontraron subcategorías para la categoría:', categoriaId);
+    }
+}
+
+// Función para mostrar la descripción del código seleccionado
+function mostrarDescripcionCIE10(codigo, descripcionId) {
+    const descripcionDiv = document.getElementById(descripcionId);
+    if (!descripcionDiv) return;
+    
+    if (!codigo) {
+        descripcionDiv.classList.add('hidden');
+        descripcionDiv.innerHTML = '';
+        return;
+    }
+    
+    // Buscar información completa del código
+    const diagnostico = buscarPorCodigo(codigo);
+    if (diagnostico) {
+        descripcionDiv.innerHTML = `
+            <strong>Código:</strong> ${diagnostico.codigo}<br>
+            <strong>Descripción:</strong> ${diagnostico.descripcion}<br>
+            <strong>Categoría:</strong> ${diagnostico.categoria}
+        `;
+        descripcionDiv.classList.remove('hidden');
+        console.log('✅ Descripción mostrada para código:', codigo);
+    } else {
+        descripcionDiv.classList.add('hidden');
+        console.warn('⚠️ No se encontró información para el código:', codigo);
+    }
+}
+
+// Función para configurar los event listeners de los dropdowns
+function configurarDropdownsCIE10() {
+    console.log('🔧 Configurando event listeners para dropdowns CIE-10...');
+    
+    // Event listener para categoría en ficha clínica
+    const selectCategoria = document.getElementById('sesionCategoriaCIE10');
+    if (selectCategoria) {
+        selectCategoria.addEventListener('change', (e) => {
+            const categoriaId = e.target.value;
+            cargarSubcategoriasCIE10(categoriaId, 'sesionCodigoCIE10', 'descripcionCIE10');
+        });
+        console.log('✅ Listener configurado para categoría en ficha clínica');
+    }
+    
+    // Event listener para código en ficha clínica
+    const selectCodigo = document.getElementById('sesionCodigoCIE10');
+    if (selectCodigo) {
+        selectCodigo.addEventListener('change', (e) => {
+            const codigo = e.target.value;
+            mostrarDescripcionCIE10(codigo, 'descripcionCIE10');
+        });
+        console.log('✅ Listener configurado para código en ficha clínica');
+    }
+    
+    // Event listener para categoría en calendario
+    const selectCategoriaCalendar = document.getElementById('inputCategoriaCIE10');
+    if (selectCategoriaCalendar) {
+        selectCategoriaCalendar.addEventListener('change', (e) => {
+            const categoriaId = e.target.value;
+            cargarSubcategoriasCIE10(categoriaId, 'inputCodigoCIE10', 'descripcionCIE10Calendar');
+        });
+        console.log('✅ Listener configurado para categoría en calendario');
+    }
+    
+    // Event listener para código en calendario
+    const selectCodigoCalendar = document.getElementById('inputCodigoCIE10');
+    if (selectCodigoCalendar) {
+        selectCodigoCalendar.addEventListener('change', (e) => {
+            const codigo = e.target.value;
+            mostrarDescripcionCIE10(codigo, 'descripcionCIE10Calendar');
+        });
+        console.log('✅ Listener configurado para código en calendario');
+    }
+}
+
+// Función para limpiar los campos del nomenclador
+function limpiarCamposCIE10() {
+    // Limpiar campos de ficha clínica
+    const selectCategoria = document.getElementById('sesionCategoriaCIE10');
+    const selectCodigo = document.getElementById('sesionCodigoCIE10');
+    const descripcion = document.getElementById('descripcionCIE10');
+    
+    if (selectCategoria) selectCategoria.value = '';
+    if (selectCodigo) {
+        selectCodigo.value = '';
+        selectCodigo.disabled = true;
+        selectCodigo.innerHTML = '<option value="">Seleccionar código...</option>';
+    }
+    if (descripcion) {
+        descripcion.classList.add('hidden');
+        descripcion.innerHTML = '';
+    }
+    
+    // Limpiar campos de calendario
+    const selectCategoriaCalendar = document.getElementById('inputCategoriaCIE10');
+    const selectCodigoCalendar = document.getElementById('inputCodigoCIE10');
+    const descripcionCalendar = document.getElementById('descripcionCIE10Calendar');
+    
+    if (selectCategoriaCalendar) selectCategoriaCalendar.value = '';
+    if (selectCodigoCalendar) {
+        selectCodigoCalendar.value = '';
+        selectCodigoCalendar.disabled = true;
+        selectCodigoCalendar.innerHTML = '<option value="">Seleccionar código...</option>';
+    }
+    if (descripcionCalendar) {
+        descripcionCalendar.classList.add('hidden');
+        descripcionCalendar.innerHTML = '';
+    }
+}
+
+// Función para inicializar el sistema de nomenclador
+function inicializarNomencladorCIE10() {
+    console.log('🚀 Inicializando sistema de nomenclador CIE-10...');
+    
+    // Esperar a que el DOM esté listo
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                cargarCategoriasCIE10();
+                configurarDropdownsCIE10();
+                console.log('✅ Sistema de nomenclador CIE-10 inicializado');
+            }, 500); // Pequeño delay para asegurar que todo esté cargado
+        });
+    } else {
+        setTimeout(() => {
+            cargarCategoriasCIE10();
+            configurarDropdownsCIE10();
+            console.log('✅ Sistema de nomenclador CIE-10 inicializado');
+        }, 500);
+    }
+}
+
+// Función para obtener los datos CIE-10 del formulario
+function obtenerDatosCIE10(formType = 'ficha') {
+    let categoriaId, codigo;
+    
+    if (formType === 'ficha') {
+        const selectCategoria = document.getElementById('sesionCategoriaCIE10');
+        const selectCodigo = document.getElementById('sesionCodigoCIE10');
+        categoriaId = selectCategoria ? selectCategoria.value : '';
+        codigo = selectCodigo ? selectCodigo.value : '';
+    } else {
+        const selectCategoria = document.getElementById('inputCategoriaCIE10');
+        const selectCodigo = document.getElementById('inputCodigoCIE10');
+        categoriaId = selectCategoria ? selectCategoria.value : '';
+        codigo = selectCodigo ? selectCodigo.value : '';
+    }
+    
+    if (!categoriaId || !codigo) {
+        return null;
+    }
+    
+    // Obtener información completa
+    const diagnostico = buscarPorCodigo(codigo);
+    const categorias = obtenerCategorias();
+    const categoria = categorias.find(cat => cat.id == categoriaId);
+    
+    return {
+        categoriaId: parseInt(categoriaId),
+        categoriaNombre: categoria ? categoria.categoria : '',
+        codigo: codigo,
+        descripcion: diagnostico ? diagnostico.descripcion : '',
+        diagnosticoCompleto: diagnostico
+    };
+}
+
+// Inicializar el sistema
+inicializarNomencladorCIE10();
+
+// Función de debug para probar el sistema de nomenclador
+window.debugNomenclador = function() {
+    console.log('🧪 === DEBUG SISTEMA NOMENCLADOR CIE-10 ===');
+    
+    // 1. Verificar disponibilidad de funciones
+    console.log('📋 Funciones disponibles:');
+    console.log('  - obtenerCategorias:', typeof obtenerCategorias);
+    console.log('  - obtenerSubcategoriasPorCategoria:', typeof obtenerSubcategoriasPorCategoria);
+    console.log('  - buscarPorCodigo:', typeof buscarPorCodigo);
+    
+    // 2. Verificar elementos HTML
+    console.log('🔍 Elementos HTML encontrados:');
+    console.log('  - sesionCategoriaCIE10:', !!document.getElementById('sesionCategoriaCIE10'));
+    console.log('  - sesionCodigoCIE10:', !!document.getElementById('sesionCodigoCIE10'));
+    console.log('  - inputCategoriaCIE10:', !!document.getElementById('inputCategoriaCIE10'));
+    console.log('  - inputCodigoCIE10:', !!document.getElementById('inputCodigoCIE10'));
+    
+    // 3. Verificar datos cargados
+    if (typeof obtenerCategorias === 'function') {
+        const categorias = obtenerCategorias();
+        console.log('📊 Total de categorías:', categorias.length);
+        if (categorias.length > 0) {
+            console.log('📋 Primera categoría:', categorias[0]);
+            console.log('📋 Última categoría:', categorias[categorias.length - 1]);
+        }
+    }
+    
+    // 4. Verificar opciones en selects
+    const selectCategoria = document.getElementById('sesionCategoriaCIE10');
+    if (selectCategoria) {
+        console.log('🎯 Opciones en select de categorías:', selectCategoria.options.length);
+    }
+    
+    // 5. Ejemplo de uso
+    console.log('💡 === EJEMPLOS DE USO ===');
+    console.log('Para probar manualmente:');
+    console.log('1. cargarCategoriasCIE10() - Recargar categorías');
+    console.log('2. cargarSubcategoriasCIE10(1, "sesionCodigoCIE10", "descripcionCIE10") - Cargar subcategorías');
+    console.log('3. obtenerDatosCIE10("ficha") - Obtener datos seleccionados');
+    console.log('4. buscarDiagnostico("ansiedad") - Buscar por término');
+    console.log('5. obtenerDiagnostico("F41.1") - Buscar por código');
+    
+    console.log('🧪 === FIN DEBUG NOMENCLADOR ===');
+};
+
+// Función para probar una sesión completa con nomenclador
+window.probarSesionConNomenclador = function() {
+    console.log('🧪 === PRUEBA SESIÓN CON NOMENCLADOR ===');
+    
+    // Simular datos de una sesión con nomenclador
+    const ejemploSesion = {
+        fecha: '2024-01-15T10:00',
+        comentario: 'Sesión inicial de evaluación',
+        notas: 'Paciente presenta síntomas de ansiedad generalizada',
+        nomencladorCIE10: {
+            categoriaId: 12,
+            categoriaNombre: 'Trastornos de ansiedad',
+            codigo: 'F41.1',
+            descripcion: 'Trastorno de ansiedad generalizada',
+            diagnosticoCompleto: {
+                categoria: 'Trastornos de ansiedad',
+                codigo: 'F41.1',
+                descripcion: 'Trastorno de ansiedad generalizada'
+            }
+        }
+    };
+    
+    console.log('📋 Ejemplo de sesión con nomenclador:', ejemploSesion);
+    
+    // Simular cómo se vería en la interfaz
+    console.log('🎨 Cómo se mostraría en la interfaz:');
+    console.log(`Fecha: ${ejemploSesion.fecha}`);
+    console.log(`Comentario: ${ejemploSesion.comentario}`);
+    console.log(`Notas: ${ejemploSesion.notas}`);
+    console.log(`📋 CIE-10: ${ejemploSesion.nomencladorCIE10.codigo} - ${ejemploSesion.nomencladorCIE10.descripcion}`);
+    console.log(`Categoría: ${ejemploSesion.nomencladorCIE10.categoriaNombre}`);
+    
+    return ejemploSesion;
+};
+
+// Hacer disponibles las funciones globalmente para debugging
+window.cargarCategoriasCIE10 = cargarCategoriasCIE10;
+window.cargarSubcategoriasCIE10 = cargarSubcategoriasCIE10;
+window.mostrarDescripcionCIE10 = mostrarDescripcionCIE10;
+window.limpiarCamposCIE10 = limpiarCamposCIE10;
+window.obtenerDatosCIE10 = obtenerDatosCIE10;
+
+// === FUNCIONES PARA EL MODAL DEL NOMENCLADOR CIE-10 ===
+
+// Variables globales para el modal
+let modalNomencladorAbiertoPor = null; // 'ficha' o 'calendar'
+let datosNomencladorSeleccionados = {
+    ficha: null,
+    calendar: null
+};
+
+// Función para abrir el modal del nomenclador
+function abrirModalNomenclador(origen) {
+    console.log('📋 Abriendo modal del nomenclador desde:', origen);
+    modalNomencladorAbiertoPor = origen;
+    
+    const modal = document.getElementById('modalNomencladorCIE10');
+    if (!modal) {
+        console.error('❌ No se encontró el modal del nomenclador');
+        return;
+    }
+    
+    // Cargar categorías en el modal si no están cargadas
+    cargarCategoriasEnModal();
+    
+    // Cargar datos existentes si los hay
+    const datosExistentes = datosNomencladorSeleccionados[origen];
+    if (datosExistentes) {
+        precargarDatosEnModal(datosExistentes);
+    } else {
+        limpiarModal();
+    }
+    
+    modal.classList.remove('hidden');
+}
+
+// Función para cerrar el modal del nomenclador
+function cerrarModalNomenclador() {
+    const modal = document.getElementById('modalNomencladorCIE10');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+    modalNomencladorAbiertoPor = null;
+}
+
+// Función para cargar categorías en el modal
+function cargarCategoriasEnModal() {
+    const selectCategoria = document.getElementById('modalCategoriaCIE10');
+    if (!selectCategoria) return;
+    
+    if (typeof obtenerCategorias !== 'function') {
+        console.error('❌ Función obtenerCategorias no disponible');
+        return;
+    }
+    
+    const categorias = obtenerCategorias();
+    selectCategoria.innerHTML = '<option value="">Seleccionar categoría...</option>';
+    
+    categorias.forEach(categoria => {
+        const option = document.createElement('option');
+        option.value = categoria.id;
+        option.textContent = `${categoria.categoria} (${categoria.totalSubcategorias} códigos)`;
+        selectCategoria.appendChild(option);
+    });
+    
+    console.log('✅ Categorías cargadas en modal:', categorias.length);
+}
+
+// Función para cargar subcategorías en el modal
+function cargarSubcategoriasEnModal(categoriaId) {
+    const selectCodigo = document.getElementById('modalCodigoCIE10');
+    const descripcionDiv = document.getElementById('modalDescripcionCIE10');
+    
+    if (!selectCodigo) return;
+    
+    // Limpiar opciones anteriores
+    selectCodigo.innerHTML = '<option value="">Seleccionar código...</option>';
+    
+    if (descripcionDiv) {
+        descripcionDiv.classList.add('hidden');
+        descripcionDiv.innerHTML = '';
+    }
+    
+    if (!categoriaId) {
+        selectCodigo.disabled = true;
+        return;
+    }
+    
+    if (typeof obtenerSubcategoriasPorCategoria !== 'function') {
+        console.error('❌ Función obtenerSubcategoriasPorCategoria no disponible');
+        return;
+    }
+    
+    const subcategorias = obtenerSubcategoriasPorCategoria(parseInt(categoriaId));
+    
+    if (subcategorias.length > 0) {
+        selectCodigo.disabled = false;
+        subcategorias.forEach(subcategoria => {
+            const option = document.createElement('option');
+            option.value = subcategoria.codigo;
+            option.textContent = `${subcategoria.codigo}: ${subcategoria.descripcion}`;
+            selectCodigo.appendChild(option);
+        });
+        console.log('✅ Subcategorías cargadas en modal:', subcategorias.length);
+    } else {
+        selectCodigo.disabled = true;
+        console.warn('⚠️ No se encontraron subcategorías para la categoría:', categoriaId);
+    }
+}
+
+// Función para mostrar descripción en el modal
+function mostrarDescripcionEnModal(codigo) {
+    const descripcionDiv = document.getElementById('modalDescripcionCIE10');
+    if (!descripcionDiv) return;
+    
+    if (!codigo) {
+        descripcionDiv.classList.add('hidden');
+        descripcionDiv.innerHTML = '';
+        return;
+    }
+    
+    const diagnostico = buscarPorCodigo(codigo);
+    if (diagnostico) {
+        descripcionDiv.innerHTML = `
+            <div class="font-semibold text-blue-700 dark:text-blue-300 mb-2">📋 Información del Diagnóstico</div>
+            <div><strong>Código:</strong> ${diagnostico.codigo}</div>
+            <div><strong>Descripción:</strong> ${diagnostico.descripcion}</div>
+            <div><strong>Categoría:</strong> ${diagnostico.categoria}</div>
+        `;
+        descripcionDiv.classList.remove('hidden');
+        console.log('✅ Descripción mostrada en modal para código:', codigo);
+    } else {
+        descripcionDiv.classList.add('hidden');
+        console.warn('⚠️ No se encontró información para el código:', codigo);
+    }
+}
+
+// Función para precargar datos en el modal
+function precargarDatosEnModal(datos) {
+    const selectCategoria = document.getElementById('modalCategoriaCIE10');
+    const selectCodigo = document.getElementById('modalCodigoCIE10');
+    
+    if (selectCategoria && datos.categoriaId) {
+        selectCategoria.value = datos.categoriaId;
+        // Cargar subcategorías
+        cargarSubcategoriasEnModal(datos.categoriaId);
+        
+        // Esperar un poco y luego seleccionar el código
+        setTimeout(() => {
+            if (selectCodigo && datos.codigo) {
+                selectCodigo.value = datos.codigo;
+                mostrarDescripcionEnModal(datos.codigo);
+            }
+        }, 100);
+    }
+}
+
+// Función para limpiar el modal
+function limpiarModal() {
+    const selectCategoria = document.getElementById('modalCategoriaCIE10');
+    const selectCodigo = document.getElementById('modalCodigoCIE10');
+    const descripcionDiv = document.getElementById('modalDescripcionCIE10');
+    
+    if (selectCategoria) selectCategoria.value = '';
+    if (selectCodigo) {
+        selectCodigo.value = '';
+        selectCodigo.disabled = true;
+        selectCodigo.innerHTML = '<option value="">Seleccionar código...</option>';
+    }
+    if (descripcionDiv) {
+        descripcionDiv.classList.add('hidden');
+        descripcionDiv.innerHTML = '';
+    }
+}
+
+// Función para aceptar la selección del modal
+function aceptarSeleccionModal() {
+    const selectCategoria = document.getElementById('modalCategoriaCIE10');
+    const selectCodigo = document.getElementById('modalCodigoCIE10');
+    
+    if (!selectCategoria || !selectCodigo) return;
+    
+    const categoriaId = selectCategoria.value;
+    const codigo = selectCodigo.value;
+    
+    if (!categoriaId || !codigo) {
+        alert('Por favor selecciona una categoría y un código específico.');
+        return;
+    }
+    
+    // Obtener información completa
+    const diagnostico = buscarPorCodigo(codigo);
+    const categorias = obtenerCategorias();
+    const categoria = categorias.find(cat => cat.id == categoriaId);
+    
+    const datosCompletos = {
+        categoriaId: parseInt(categoriaId),
+        categoriaNombre: categoria ? categoria.categoria : '',
+        codigo: codigo,
+        descripcion: diagnostico ? diagnostico.descripcion : '',
+        diagnosticoCompleto: diagnostico
+    };
+    
+    // Guardar los datos según el origen
+    datosNomencladorSeleccionados[modalNomencladorAbiertoPor] = datosCompletos;
+    
+    // Actualizar el botón correspondiente
+    actualizarBotonNomenclador(modalNomencladorAbiertoPor, datosCompletos);
+    
+    console.log('✅ Datos del nomenclador guardados:', datosCompletos);
+    
+    // Cerrar modal
+    cerrarModalNomenclador();
+}
+
+// Función para actualizar el botón del nomenclador
+function actualizarBotonNomenclador(origen, datos) {
+    let spanId;
+    if (origen === 'ficha') {
+        spanId = 'nomencladorSeleccionadoFicha';
+    } else {
+        spanId = 'nomencladorSeleccionadoCalendar';
+    }
+    
+    const span = document.getElementById(spanId);
+    if (span && datos) {
+        span.textContent = datos.codigo;
+        span.classList.remove('hidden');
+        span.title = `${datos.codigo}: ${datos.descripcion}`;
+    }
+}
+
+// Función para limpiar la selección del nomenclador
+function limpiarSeleccionNomenclador() {
+    if (modalNomencladorAbiertoPor) {
+        datosNomencladorSeleccionados[modalNomencladorAbiertoPor] = null;
+        
+        // Limpiar el botón correspondiente
+        let spanId;
+        if (modalNomencladorAbiertoPor === 'ficha') {
+            spanId = 'nomencladorSeleccionadoFicha';
+        } else {
+            spanId = 'nomencladorSeleccionadoCalendar';
+        }
+        
+        const span = document.getElementById(spanId);
+        if (span) {
+            span.textContent = '';
+            span.classList.add('hidden');
+            span.title = '';
+        }
+    }
+    
+    limpiarModal();
+    console.log('🧹 Selección del nomenclador limpiada');
+}
+
+// Función actualizada para obtener datos CIE-10 (ahora usa el modal)
+function obtenerDatosCIE10(formType = 'ficha') {
+    return datosNomencladorSeleccionados[formType];
+}
+
+// Función actualizada para limpiar campos CIE-10 (ahora usa el modal)
+function limpiarCamposCIE10() {
+    datosNomencladorSeleccionados.ficha = null;
+    datosNomencladorSeleccionados.calendar = null;
+    
+    // Limpiar botones
+    const spanFicha = document.getElementById('nomencladorSeleccionadoFicha');
+    const spanCalendar = document.getElementById('nomencladorSeleccionadoCalendar');
+    
+    if (spanFicha) {
+        spanFicha.textContent = '';
+        spanFicha.classList.add('hidden');
+        spanFicha.title = '';
+    }
+    
+    if (spanCalendar) {
+        spanCalendar.textContent = '';
+        spanCalendar.classList.add('hidden');
+        spanCalendar.title = '';
+    }
+    
+    console.log('🧹 Todos los campos CIE-10 limpiados');
+}
+
+// Configurar event listeners para el modal del nomenclador
+function configurarModalNomenclador() {
+    console.log('🔧 Configurando event listeners del modal del nomenclador...');
+    
+    // Botones para abrir el modal
+    const btnFicha = document.getElementById('btnAbrirNomencladorFicha');
+    const btnCalendar = document.getElementById('btnAbrirNomencladorCalendar');
+    
+    if (btnFicha) {
+        btnFicha.addEventListener('click', () => abrirModalNomenclador('ficha'));
+        console.log('✅ Listener configurado para botón de ficha');
+    }
+    
+    if (btnCalendar) {
+        btnCalendar.addEventListener('click', () => abrirModalNomenclador('calendar'));
+        console.log('✅ Listener configurado para botón de calendario');
+    }
+    
+    // Botones del modal
+    const btnCerrar = document.getElementById('cerrarModalNomenclador');
+    const btnCancelar = document.getElementById('btnCancelarNomenclador');
+    const btnLimpiar = document.getElementById('btnLimpiarNomenclador');
+    const btnAceptar = document.getElementById('btnAceptarNomenclador');
+    
+    if (btnCerrar) {
+        btnCerrar.addEventListener('click', cerrarModalNomenclador);
+    }
+    
+    if (btnCancelar) {
+        btnCancelar.addEventListener('click', cerrarModalNomenclador);
+    }
+    
+    if (btnLimpiar) {
+        btnLimpiar.addEventListener('click', limpiarSeleccionNomenclador);
+    }
+    
+    if (btnAceptar) {
+        btnAceptar.addEventListener('click', aceptarSeleccionModal);
+    }
+    
+    // Dropdowns del modal
+    const selectCategoria = document.getElementById('modalCategoriaCIE10');
+    const selectCodigo = document.getElementById('modalCodigoCIE10');
+    
+    if (selectCategoria) {
+        selectCategoria.addEventListener('change', (e) => {
+            cargarSubcategoriasEnModal(e.target.value);
+        });
+        console.log('✅ Listener configurado para categoría del modal');
+    }
+    
+    if (selectCodigo) {
+        selectCodigo.addEventListener('change', (e) => {
+            mostrarDescripcionEnModal(e.target.value);
+        });
+        console.log('✅ Listener configurado para código del modal');
+    }
+    
+    console.log('✅ Modal del nomenclador configurado completamente');
+}
+
+// Inicializar el modal del nomenclador cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        configurarModalNomenclador();
+        console.log('✅ Sistema de modal del nomenclador inicializado');
+    }, 1000); // Delay para asegurar que todo esté cargado
+});
+
+// Hacer disponibles las nuevas funciones globalmente
+window.abrirModalNomenclador = abrirModalNomenclador;
+window.cerrarModalNomenclador = cerrarModalNomenclador;
+window.limpiarSeleccionNomenclador = limpiarSeleccionNomenclador;
+window.configurarModalNomenclador = configurarModalNomenclador;
+
+// === FUNCIONES PARA EDITAR PACIENTE ===
+
+// Variables para el modal de edición
+let pacienteEditandoId = null;
+let pacienteEditandoRef = null;
+
+// Mostrar/Ocultar modal de edición de paciente
+window.hideEditPatientModal = function() {
+    console.log('🔄 Iniciando cierre del modal de edición...');
+    
+    const modal = document.getElementById('editPatientModal');
+    const form = document.getElementById('editPatientForm');
+    
+    console.log('🔍 Modal encontrado:', !!modal);
+    console.log('🔍 Form encontrado:', !!form);
+    
+    if (modal) {
+        modal.classList.add('hidden');
+        // También remover estilos inline que puedan estar interfiriendo
+        modal.style.display = 'none';
+        modal.style.visibility = 'hidden';
+        modal.style.opacity = '0';
+        console.log('✅ Modal ocultado');
+    } else {
+        console.error('❌ No se encontró el modal editPatientModal');
+    }
+    
+    if (form) {
+        form.reset();
+        console.log('✅ Formulario reseteado');
+    } else {
+        console.error('❌ No se encontró el formulario editPatientForm');
+    }
+    
+    // Limpiar variables globales
+    pacienteEditandoId = null;
+    pacienteEditandoRef = null;
+    
+    console.log('✅ Modal de edición cerrado completamente');
+};
+
+// Función para abrir el modal de edición con los datos del paciente
+window.showEditPatientModal = function(pacienteId, pacienteData) {
+    console.log('✏️ Abriendo modal de edición para paciente:', pacienteId);
+    console.log('📋 Datos del paciente:', pacienteData);
+    
+    // Verificar que el modal existe
+    const modal = document.getElementById('editPatientModal');
+    console.log('🔍 Modal encontrado:', !!modal);
+    
+    if (!modal) {
+        console.error('❌ No se encontró el modal de edición');
+        return;
+    }
+    
+    pacienteEditandoId = pacienteId;
+    pacienteEditandoRef = window.firebaseDB.collection('pacientes').doc(pacienteId);
+    
+    // Verificar que los campos existen
+    const nameField = document.getElementById('editPatientName');
+    const dniField = document.getElementById('editPatientDni');
+    const fechaNacimientoField = document.getElementById('editPatientFechaNacimiento');
+    const sexoField = document.getElementById('editPatientSexo');
+    const lugarNacimientoField = document.getElementById('editPatientLugarNacimiento');
+    const emailField = document.getElementById('editPatientEmail');
+    const telefonoField = document.getElementById('editPatientTelefono');
+    const contactoField = document.getElementById('editPatientContacto');
+    const educacionField = document.getElementById('editPatientEducacion');
+    const institutoField = document.getElementById('editPatientInstituto');
+    const motivoField = document.getElementById('editPatientMotivo');
+    
+    console.log('🔍 Campos encontrados:', {
+        name: !!nameField,
+        dni: !!dniField,
+        fechaNacimiento: !!fechaNacimientoField,
+        sexo: !!sexoField,
+        lugarNacimiento: !!lugarNacimientoField,
+        email: !!emailField,
+        telefono: !!telefonoField,
+        contacto: !!contactoField,
+        educacion: !!educacionField,
+        instituto: !!institutoField,
+        motivo: !!motivoField
+    });
+    
+    // Prellenar los campos con los datos actuales
+    if (nameField) nameField.value = pacienteData.nombre || '';
+    if (dniField) dniField.value = pacienteData.dni || '';
+    if (fechaNacimientoField) fechaNacimientoField.value = pacienteData.fechaNacimiento || '';
+    if (sexoField) sexoField.value = pacienteData.sexo || '';
+    if (lugarNacimientoField) lugarNacimientoField.value = pacienteData.lugarNacimiento || '';
+    if (emailField) emailField.value = pacienteData.email || '';
+    if (telefonoField) telefonoField.value = pacienteData.telefono || '';
+    if (contactoField) contactoField.value = pacienteData.contacto || '';
+    if (educacionField) educacionField.value = pacienteData.educacion || '';
+    if (institutoField) institutoField.value = pacienteData.instituto || '';
+    if (motivoField) motivoField.value = pacienteData.motivo || '';
+    
+    console.log('✅ Mostrando modal...');
+    modal.classList.remove('hidden');
+    console.log('🔍 Clases del modal después de mostrar:', modal.classList.toString());
+    
+    // Verificar estilos computados
+    const computedStyle = getComputedStyle(modal);
+    console.log('🔍 Estilos computados del modal:', {
+        display: computedStyle.display,
+        visibility: computedStyle.visibility,
+        opacity: computedStyle.opacity,
+        zIndex: computedStyle.zIndex,
+        position: computedStyle.position
+    });
+    
+    // Forzar que el modal sea visible
+    modal.style.display = 'flex';
+    modal.style.visibility = 'visible';
+    modal.style.opacity = '1';
+    modal.style.zIndex = '99999'; // Z-index muy alto para estar por encima de todo
+    
+    console.log('🔧 Estilos forzados aplicados al modal');
+};
+
+// Event listeners adicionales para el modal de edición
+document.addEventListener('DOMContentLoaded', () => {
+    // Event listener para el botón X de cerrar
+    const btnCerrarModal = document.querySelector('#editPatientModal button[onclick="hideEditPatientModal()"]');
+    if (btnCerrarModal) {
+        btnCerrarModal.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('🔄 Cerrando modal por botón X');
+            hideEditPatientModal();
+        });
+    }
+    
+    // Event listener para el botón Cancelar
+    const btnCancelarModal = document.querySelector('#editPatientModal button[type="button"][onclick="hideEditPatientModal()"]');
+    if (btnCancelarModal) {
+        btnCancelarModal.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('🔄 Cerrando modal por botón Cancelar');
+            hideEditPatientModal();
+        });
+    }
+    
+    // Event listener para cerrar al hacer clic fuera del modal
+    const editPatientModal = document.getElementById('editPatientModal');
+    if (editPatientModal) {
+        editPatientModal.addEventListener('click', (e) => {
+            if (e.target === editPatientModal) {
+                console.log('🔄 Cerrando modal por clic fuera');
+                hideEditPatientModal();
+            }
+        });
+    }
+});
+
+// Event listener para el formulario de edición
+const editPatientFormElement = document.getElementById('editPatientForm');
+if (editPatientFormElement) {
+    editPatientFormElement.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        if (!pacienteEditandoRef) {
+            console.error('❌ No hay referencia del paciente a editar');
+            showMessage('Error: No se pudo identificar el paciente a editar');
+            return;
+        }
+        
+        if (!pacienteEditandoId) {
+            console.error('❌ No hay ID del paciente a editar');
+            showMessage('Error: No se pudo identificar el ID del paciente');
+            return;
+        }
+        
+        // Verificar que Firebase esté disponible
+        if (!window.firebaseDB) {
+            console.error('❌ Firebase DB no está disponible');
+            showMessage('Error: Base de datos no disponible');
+            return;
+        }
+        
+        const nombre = editPatientFormElement.editPatientName.value;
+        const dni = editPatientFormElement.editPatientDni.value;
+        const fechaNacimiento = editPatientFormElement.editPatientFechaNacimiento.value;
+        const sexo = editPatientFormElement.editPatientSexo.value;
+        const lugarNacimiento = editPatientFormElement.editPatientLugarNacimiento.value;
+        const email = editPatientFormElement.editPatientEmail.value;
+        const telefono = editPatientFormElement.editPatientTelefono.value;
+        const contacto = editPatientFormElement.editPatientContacto.value;
+        const educacion = editPatientFormElement.editPatientEducacion.value;
+        const instituto = editPatientFormElement.editPatientInstituto.value;
+        const motivo = editPatientFormElement.editPatientMotivo.value;
+        
+        // Validar que al menos el nombre esté presente
+        if (!nombre || nombre.trim() === '') {
+            showMessage('Error: El nombre del paciente es obligatorio');
+            return;
+        }
+        
+        try {
+            console.log('💾 Actualizando datos del paciente...');
+            console.log('📋 Datos a actualizar:', { 
+                nombre, dni, fechaNacimiento, sexo, lugarNacimiento, 
+                email, telefono, contacto, educacion, instituto, motivo 
+            });
+            console.log('🔍 Referencia del paciente:', pacienteEditandoRef);
+            console.log('🔍 ID del paciente:', pacienteEditandoId);
+            
+            await pacienteEditandoRef.update({
+                // Información personal
+                nombre,
+                dni,
+                fechaNacimiento,
+                sexo,
+                lugarNacimiento,
+                // Información de contacto
+                email,
+                telefono,
+                contacto,
+                // Información educativa
+                educacion,
+                instituto,
+                // Motivo de consulta
+                motivo,
+                // Metadatos
+                actualizado: new Date()
+            });
+            
+            console.log('✅ Paciente actualizado exitosamente');
+            
+            // Cerrar modal
+            hideEditPatientModal();
+            
+            // Recargar la lista de pacientes
+            const user = window.firebaseAuth.currentUser;
+            if (user) {
+                // Determinar qué lista recargar según el contexto
+                if (isAdmin && adminPanelState.selectedUser) {
+                    loadPatients(adminPanelState.selectedUser);
+                } else {
+                    loadPatients(user.uid);
+                }
+            }
+            
+            // Si la ficha clínica está abierta para este paciente, actualizarla
+            if (fichaPacienteId === pacienteEditandoId) {
+                console.log('🔄 Actualizando ficha clínica abierta...');
+                const doc = await pacienteEditandoRef.get();
+                if (doc.exists) {
+                    const p = doc.data();
+                    
+                    // Calcular edad si hay fecha de nacimiento
+                    let edadTexto = '';
+                    if (p.fechaNacimiento) {
+                        const hoy = new Date();
+                        const fechaNac = new Date(p.fechaNacimiento);
+                        const edad = Math.floor((hoy - fechaNac) / (365.25 * 24 * 60 * 60 * 1000));
+                        edadTexto = ` (${edad} años)`;
+                    }
+                    
+                    fichaPacienteDatos.innerHTML = `
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex-1">
+                                <div class="font-bold text-[#2d3748] dark:text-gray-100 text-lg mb-2">${p.nombre || ''}${edadTexto}</div>
+                                
+                                <!-- Información Personal -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
+                                    ${p.dni ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">DNI:</span> ${p.dni}</div>` : ''}
+                                    ${p.fechaNacimiento ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Fecha Nac.:</span> ${new Date(p.fechaNacimiento).toLocaleDateString('es-AR')}</div>` : ''}
+                                    ${p.sexo ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Sexo:</span> ${p.sexo.charAt(0).toUpperCase() + p.sexo.slice(1)}</div>` : ''}
+                                    ${p.lugarNacimiento ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Lugar Nac.:</span> ${p.lugarNacimiento}</div>` : ''}
+                                </div>
+                                
+                                <!-- Información de Contacto -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
+                                    ${p.email ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Email:</span> ${p.email}</div>` : ''}
+                                    ${p.telefono ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Teléfono:</span> ${p.telefono}</div>` : ''}
+                                    ${p.contacto ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm md:col-span-2"><span class="font-semibold">Contacto Emerg.:</span> ${p.contacto}</div>` : ''}
+                                </div>
+                                
+                                <!-- Información Educativa -->
+                                ${p.educacion || p.instituto ? `
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
+                                    ${p.educacion ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Educación:</span> ${p.educacion.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>` : ''}
+                                    ${p.instituto ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Instituto:</span> ${p.instituto}</div>` : ''}
+                                </div>
+                                ` : ''}
+                                
+                                <!-- Motivo de Consulta -->
+                                ${p.motivo ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded"><span class="font-semibold">Motivo:</span> ${p.motivo}</div>` : ''}
+                            </div>
+                            <button onclick="showEditPatientModal('${fichaPacienteId}', ${JSON.stringify(p).replace(/"/g, '&quot;')})" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
+                                ✏️ Editar
+                            </button>
+                        </div>
+                    `;
+                }
+            }
+            
+            showMessage('Paciente actualizado exitosamente', 'success');
+            
+        } catch (error) {
+            console.error('❌ Error al actualizar paciente:', error);
+            console.error('❌ Detalles del error:', {
+                message: error.message,
+                code: error.code,
+                stack: error.stack,
+                pacienteEditandoRef: pacienteEditandoRef,
+                pacienteEditandoId: pacienteEditandoId
+            });
+            
+            let errorMessage = 'Error al actualizar paciente: ';
+            if (error.code) {
+                errorMessage += `[${error.code}] `;
+            }
+            errorMessage += error.message || 'Error desconocido';
+            
+            showMessage(errorMessage);
+        }
+    });
+}

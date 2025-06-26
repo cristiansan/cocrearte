@@ -441,10 +441,18 @@
         <div id="calendarTabs" class="hidden">
             <div id="calendarViewButtons" class="flex items-center gap-2 mb-4">
               <button id="btnPrev" class="px-2 py-1 rounded bg-gray-200 text-xl font-bold">&lt;</button>
-              <span id="calendarCurrentLabel" class="mx-2 font-semibold"></span>
+              <span id="calendarCurrentLabel" class="mx-2 font-semibold w-40 text-center inline-block"></span>
               <button id="btnNext" class="px-2 py-1 rounded bg-gray-200 text-xl font-bold">&gt;</button>
               <button id="btnVistaDia" class="bg-gray-200 px-3 py-1 rounded">Día</button>
               <button id="btnVistaSemana" class="bg-primary-700 text-white px-3 py-1 rounded">Semana</button>
+              
+              <!-- Filtro de profesionales al lado del botón Semana -->
+              <div id="profesionalesFilter" class="hidden ml-4 flex items-center gap-2">
+                <select id="profesionalesSelect" class="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-darkbg text-gray-700 dark:text-gray-300 text-sm min-w-32">
+                  <option value="todos">Todos los profesionales</option>
+                  <!-- Aquí se cargarán las opciones de profesionales -->
+                </select>
+              </div>
             </div>
             <div id="calendar" class="bg-white dark:bg-darkcard rounded-b-lg shadow p-4 border dark:border-darkborder"></div>
         </div>
@@ -472,29 +480,201 @@
 
     <!-- Modal para agregar paciente -->
     <div id="addPatientModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
-        <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg p-8 w-full max-w-md relative border dark:border-darkborder">
+        <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg p-8 w-full max-w-2xl relative border dark:border-darkborder max-h-[90vh] overflow-y-auto">
             <button onclick="hideAddPatientModal()" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">×</button>
             <h3 class="text-xl font-bold text-primary-600 mb-4">Agregar Paciente</h3>
             <form id="addPatientForm" class="space-y-4">
-                <div>
-                    <label for="patientName" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Nombre</label>
-                    <input id="patientName" name="patientName" type="text" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Nombre completo">
+                <!-- Información Personal -->
+                <div class="border-b pb-4 mb-4">
+                    <h4 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">📋 Información Personal</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="patientName" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Nombre Completo *</label>
+                            <input id="patientName" name="patientName" type="text" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Nombre completo">
+                        </div>
+                        <div>
+                            <label for="patientDni" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">DNI</label>
+                            <input id="patientDni" name="patientDni" type="text" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Número de documento">
+                        </div>
+                        <div>
+                            <label for="patientFechaNacimiento" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Fecha de Nacimiento</label>
+                            <input id="patientFechaNacimiento" name="patientFechaNacimiento" type="date" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder">
+                        </div>
+                        <div>
+                            <label for="patientSexo" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Sexo</label>
+                            <select id="patientSexo" name="patientSexo" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder">
+                                <option value="">Seleccionar...</option>
+                                <option value="masculino">Masculino</option>
+                                <option value="femenino">Femenino</option>
+                                <option value="no-binario">No binario</option>
+                                <option value="prefiero-no-decir">Prefiero no decir</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="patientLugarNacimiento" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Lugar de Nacimiento</label>
+                            <input id="patientLugarNacimiento" name="patientLugarNacimiento" type="text" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Ciudad, País">
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label for="patientEmail" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Email</label>
-                    <input id="patientEmail" name="patientEmail" type="email" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Correo electrónico">
+
+                <!-- Información de Contacto -->
+                <div class="border-b pb-4 mb-4">
+                    <h4 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">📞 Información de Contacto</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="patientEmail" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Email</label>
+                            <input id="patientEmail" name="patientEmail" type="email" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="correo@ejemplo.com">
+                        </div>
+                        <div>
+                            <label for="patientTelefono" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Teléfono</label>
+                            <input id="patientTelefono" name="patientTelefono" type="tel" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Teléfono">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="patientContacto" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Contacto de Emergencia</label>
+                            <input id="patientContacto" name="patientContacto" type="text" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Nombre y teléfono de contacto de emergencia">
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label for="patientTelefono" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Teléfono</label>
-                    <input id="patientTelefono" name="patientTelefono" type="tel" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Teléfono">
+
+                <!-- Información Educativa -->
+                <div class="border-b pb-4 mb-4">
+                    <h4 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">🎓 Información Educativa</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="patientEducacion" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Nivel de Educación</label>
+                            <select id="patientEducacion" name="patientEducacion" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder">
+                                <option value="">Seleccionar...</option>
+                                <option value="primaria-incompleta">Primaria Incompleta</option>
+                                <option value="primaria-completa">Primaria Completa</option>
+                                <option value="secundaria-incompleta">Secundaria Incompleta</option>
+                                <option value="secundaria-completa">Secundaria Completa</option>
+                                <option value="terciario-incompleto">Terciario Incompleto</option>
+                                <option value="terciario-completo">Terciario Completo</option>
+                                <option value="universitario-incompleto">Universitario Incompleto</option>
+                                <option value="universitario-completo">Universitario Completo</option>
+                                <option value="posgrado">Posgrado</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="patientInstituto" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Instituto/Universidad</label>
+                            <input id="patientInstituto" name="patientInstituto" type="text" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Nombre de la institución educativa">
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Motivo de Consulta -->
                 <div>
-                    <label for="patientMotivo" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Motivo de Consulta</label>
-                    <textarea id="patientMotivo" name="patientMotivo" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" rows="2" placeholder="Motivo de consulta"></textarea>
+                    <h4 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">💭 Motivo de Consulta</h4>
+                    <div>
+                        <label for="patientMotivo" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Motivo de Consulta</label>
+                        <textarea id="patientMotivo" name="patientMotivo" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" rows="3" placeholder="Describe el motivo principal de la consulta"></textarea>
+                    </div>
                 </div>
+
                 <div class="flex justify-end gap-3 pt-4">
                     <button type="button" onclick="hideAddPatientModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded">Cancelar</button>
-                    <button type="submit" class="bg-primary-700 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded border-2 border-primary-600 shadow-sm dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-darkbg">Agregar</button>
+                    <button type="submit" class="bg-primary-700 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded border-2 border-primary-600 shadow-sm dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-darkbg">Agregar Paciente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para editar paciente -->
+    <div id="editPatientModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden" style="z-index: 99999;">
+        <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg p-8 w-full max-w-2xl relative border dark:border-darkborder max-h-[90vh] overflow-y-auto">
+            <button onclick="hideEditPatientModal()" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">×</button>
+            <h3 class="text-xl font-bold text-primary-600 mb-4">Editar Paciente</h3>
+            <form id="editPatientForm" class="space-y-4">
+                <!-- Información Personal -->
+                <div class="border-b pb-4 mb-4">
+                    <h4 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">📋 Información Personal</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="editPatientName" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Nombre Completo *</label>
+                            <input id="editPatientName" name="editPatientName" type="text" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Nombre completo">
+                        </div>
+                        <div>
+                            <label for="editPatientDni" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">DNI</label>
+                            <input id="editPatientDni" name="editPatientDni" type="text" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Número de documento">
+                        </div>
+                        <div>
+                            <label for="editPatientFechaNacimiento" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Fecha de Nacimiento</label>
+                            <input id="editPatientFechaNacimiento" name="editPatientFechaNacimiento" type="date" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder">
+                        </div>
+                        <div>
+                            <label for="editPatientSexo" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Sexo</label>
+                            <select id="editPatientSexo" name="editPatientSexo" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder">
+                                <option value="">Seleccionar...</option>
+                                <option value="masculino">Masculino</option>
+                                <option value="femenino">Femenino</option>
+                                <option value="no-binario">No binario</option>
+                                <option value="prefiero-no-decir">Prefiero no decir</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="editPatientLugarNacimiento" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Lugar de Nacimiento</label>
+                            <input id="editPatientLugarNacimiento" name="editPatientLugarNacimiento" type="text" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Ciudad, País">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información de Contacto -->
+                <div class="border-b pb-4 mb-4">
+                    <h4 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">📞 Información de Contacto</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="editPatientEmail" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Email</label>
+                            <input id="editPatientEmail" name="editPatientEmail" type="email" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="correo@ejemplo.com">
+                        </div>
+                        <div>
+                            <label for="editPatientTelefono" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Teléfono</label>
+                            <input id="editPatientTelefono" name="editPatientTelefono" type="tel" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Teléfono">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="editPatientContacto" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Contacto de Emergencia</label>
+                            <input id="editPatientContacto" name="editPatientContacto" type="text" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Nombre y teléfono de contacto de emergencia">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información Educativa -->
+                <div class="border-b pb-4 mb-4">
+                    <h4 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">🎓 Información Educativa</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="editPatientEducacion" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Nivel de Educación</label>
+                            <select id="editPatientEducacion" name="editPatientEducacion" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder">
+                                <option value="">Seleccionar...</option>
+                                <option value="primaria-incompleta">Primaria Incompleta</option>
+                                <option value="primaria-completa">Primaria Completa</option>
+                                <option value="secundaria-incompleta">Secundaria Incompleta</option>
+                                <option value="secundaria-completa">Secundaria Completa</option>
+                                <option value="terciario-incompleto">Terciario Incompleto</option>
+                                <option value="terciario-completo">Terciario Completo</option>
+                                <option value="universitario-incompleto">Universitario Incompleto</option>
+                                <option value="universitario-completo">Universitario Completo</option>
+                                <option value="posgrado">Posgrado</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="editPatientInstituto" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Instituto/Universidad</label>
+                            <input id="editPatientInstituto" name="editPatientInstituto" type="text" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Nombre de la institución educativa">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Motivo de Consulta -->
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">💭 Motivo de Consulta</h4>
+                    <div>
+                        <label for="editPatientMotivo" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Motivo de Consulta</label>
+                        <textarea id="editPatientMotivo" name="editPatientMotivo" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" rows="3" placeholder="Describe el motivo principal de la consulta"></textarea>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" onclick="hideEditPatientModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded">Cancelar</button>
+                    <button type="submit" class="bg-primary-700 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded border-2 border-primary-600 shadow-sm dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-darkbg">Guardar Cambios</button>
                 </div>
             </form>
         </div>
@@ -525,6 +705,15 @@
                     <label for="sesionComentario" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Comentario</label>
                     <textarea id="sesionComentario" name="sesionComentario" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" rows="2" placeholder="Detalle de la sesión"></textarea>
                 </div>
+                
+                <!-- Botón para abrir modal del Nomenclador CIE-10 -->
+                <div class="flex justify-start">
+                    <button type="button" id="btnAbrirNomencladorFicha" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg text-sm flex items-center gap-2">
+                        📋 Clasificación CIE-10
+                        <span id="nomencladorSeleccionadoFicha" class="text-xs bg-blue-500 px-2 py-1 rounded hidden"></span>
+                    </button>
+                </div>
+                
                 <div>
                     <label for="sesionNotas" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Notas</label>
                     <textarea id="sesionNotas" name="sesionNotas" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" rows="4" placeholder="Notas adicionales (opcional)"></textarea>
@@ -573,6 +762,14 @@
             <label for="inputNotasSesion" class="block text-sm font-medium mb-1">Notas</label>
             <textarea id="inputNotasSesion" name="notas" rows="3" class="w-full px-3 py-2 border rounded-lg"></textarea>
           </div>
+          
+          <!-- Botón para abrir modal del Nomenclador CIE-10 para calendario -->
+          <div class="mb-4 flex justify-start">
+            <button type="button" id="btnAbrirNomencladorCalendar" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg text-sm flex items-center gap-2">
+              📋 Clasificación CIE-10
+              <span id="nomencladorSeleccionadoCalendar" class="text-xs bg-blue-500 px-2 py-1 rounded hidden"></span>
+            </button>
+          </div>
           <div class="flex justify-end gap-2">
             <button type="button" id="btnEliminarSesion" class="px-4 py-2 rounded bg-red-600 text-white font-semibold hidden">Eliminar</button>
             <button type="button" id="cancelNuevaSesion" class="px-4 py-2 rounded bg-gray-200 text-gray-800">Cancelar</button>
@@ -591,19 +788,252 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal del Nomenclador CIE-10 -->
+    <div id="modalNomencladorCIE10" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+      <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg p-8 w-full max-w-lg relative border dark:border-darkborder">
+        <button id="cerrarModalNomenclador" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">×</button>
+        <h2 class="text-2xl font-bold text-blue-700 dark:text-blue-400 mb-6 flex items-center gap-2">
+          📋 Nomenclador CIE-10
+        </h2>
+        
+        <div class="space-y-4">
+          <div>
+            <label for="modalCategoriaCIE10" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-2">Categoría Principal</label>
+            <select id="modalCategoriaCIE10" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-white">
+              <option value="">Seleccionar categoría...</option>
+              <!-- Las opciones se cargan dinámicamente -->
+            </select>
+          </div>
+          
+          <div>
+            <label for="modalCodigoCIE10" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-2">Código Específico</label>
+            <select id="modalCodigoCIE10" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-white" disabled>
+              <option value="">Seleccionar código...</option>
+              <!-- Las opciones se cargan dinámicamente según la categoría -->
+            </select>
+          </div>
+          
+          <div id="modalDescripcionCIE10" class="text-sm text-gray-700 dark:text-gray-300 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border-l-4 border-blue-400 hidden">
+            <!-- Aquí se muestra la descripción del código seleccionado -->
+          </div>
+          
+          <div class="flex justify-end gap-3 pt-4 border-t">
+            <button type="button" id="btnLimpiarNomenclador" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded-lg">
+              Limpiar
+            </button>
+            <button type="button" id="btnCancelarNomenclador" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded-lg">
+              Cancelar
+            </button>
+            <button type="button" id="btnAceptarNomenclador" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+              Aceptar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
     <!-- FullCalendar CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/main.min.css" rel="stylesheet">
-    <!-- FullCalendar JS -->
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/main.min.js"></script>
-    <!-- FullCalendar Scheduler para agenda múltiple -->
-    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/scheduler@5.11.5/index.global.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.css" rel="stylesheet">
+    
+    <!-- Estilos personalizados para FullCalendar en modo oscuro -->
+    <style>
+        /* Estilos para modo oscuro del calendario */
+        .dark .fc {
+            background-color: #232b3b;
+            color: #d1d5db;
+        }
+        
+        /* Headers de días de la semana */
+        .dark .fc-col-header-cell {
+            background-color: #313a4d;
+            color: #f3f4f6 !important;
+            border-color: #4b5563;
+        }
+        
+        .dark .fc-col-header-cell-cushion {
+            color: #f3f4f6 !important;
+            font-weight: 600;
+        }
+        
+        /* Horas del lado izquierdo */
+        .dark .fc-timegrid-slot-label-cushion {
+            color: #e5e7eb !important;
+            font-weight: 500;
+        }
+        
+        .dark .fc-timegrid-axis-cushion {
+            color: #e5e7eb !important;
+        }
+        
+        /* Líneas de la grilla */
+        .dark .fc-timegrid-slot {
+            border-color: #4b5563;
+        }
+        
+        .dark .fc-timegrid-divider {
+            border-color: #4b5563;
+        }
+        
+        /* Eventos */
+        .dark .fc-event {
+            background-color: #6366f1;
+            border-color: #4f46e5;
+            color: white;
+        }
+        
+        .dark .fc-event:hover {
+            background-color: #4f46e5;
+        }
+        
+        /* Día actual resaltado */
+        .dark .fc-day-today {
+            background-color: rgba(99, 102, 241, 0.1) !important;
+        }
+        
+        /* Bordes generales */
+        .dark .fc-scrollgrid {
+            border-color: #4b5563;
+        }
+        
+        .dark .fc-scrollgrid td,
+        .dark .fc-scrollgrid th {
+            border-color: #4b5563;
+        }
+        
+        /* Texto de "all-day" si aparece */
+        .dark .fc-timegrid-axis {
+            color: #e5e7eb;
+        }
+        
+        /* Botones del header si los hay */
+        .dark .fc-button {
+            background-color: #6366f1;
+            border-color: #4f46e5;
+            color: white;
+        }
+        
+        .dark .fc-button:hover {
+            background-color: #4f46e5;
+        }
+        
+        /* Texto del título si hay */
+        .dark .fc-toolbar-title {
+            color: #f3f4f6;
+        }
+        
+        /* Números de los días */
+        .dark .fc-daygrid-day-number {
+            color: #e5e7eb !important;
+        }
+        
+        /* Fondo de las celdas */
+        .dark .fc-timegrid-col {
+            background-color: #232b3b;
+        }
+        
+        /* Slot de tiempo seleccionado */
+        .dark .fc-highlight {
+            background-color: rgba(99, 102, 241, 0.2);
+        }
+        
+        /* Label del calendario (fecha actual/rango) */
+        .dark #calendarCurrentLabel {
+            color: #f3f4f6 !important;
+            font-weight: 600;
+        }
+        
+        /* Botones de navegación del calendario */
+        .dark #btnPrev,
+        .dark #btnNext {
+            background-color: #4b5563;
+            color: #f3f4f6;
+            border-color: #6b7280;
+        }
+        
+        .dark #btnPrev:hover,
+        .dark #btnNext:hover {
+            background-color: #6b7280;
+        }
+        
+        /* Botones de vista (Día/Semana) */
+        .dark #btnVistaDia,
+        .dark #btnVistaSemana {
+            color: #f3f4f6;
+            border-color: #6b7280;
+        }
+        
+        .dark #btnVistaDia:not(.bg-primary-700),
+        .dark #btnVistaSemana:not(.bg-primary-700) {
+            background-color: #4b5563;
+        }
+        
+        .dark #btnVistaDia:not(.bg-primary-700):hover,
+        .dark #btnVistaSemana:not(.bg-primary-700):hover {
+            background-color: #6b7280;
+        }
+        
+        /* Estilos para vista de recursos (agenda múltiple) */
+        .dark .fc-resource-timeline-divider,
+        .dark .fc-resource-area-divider {
+            border-color: #4b5563;
+        }
+        
+        .dark .fc-resource {
+            background-color: #313a4d;
+            color: #f3f4f6;
+            border-color: #4b5563;
+        }
+        
+        .dark .fc-resource-area {
+            background-color: #313a4d;
+        }
+        
+        .dark .fc-resource-area th {
+            background-color: #313a4d;
+            color: #f3f4f6;
+            border-color: #4b5563;
+        }
+        
+        /* Checkboxes de filtro de profesionales */
+        .profesional-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            background-color: #f9fafb;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .dark .profesional-checkbox {
+            background-color: #374151;
+            border-color: #4b5563;
+            color: #f3f4f6;
+        }
+        
+        .profesional-checkbox:hover {
+            background-color: #f3f4f6;
+        }
+        
+        .dark .profesional-checkbox:hover {
+            background-color: #4b5563;
+        }
+        
+        .profesional-checkbox input[type="checkbox"] {
+            margin: 0;
+        }
+    </style>
+    <!-- FullCalendar JS (versión básica sin scheduler para evitar licencia) -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.js"></script>
     <!-- Firebase SDKs para HTML puro -->
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
     <script src="firebase-config.js"></script>
-    <!-- Mover main.js aquí -->
+    <script src="nomenclador.js"></script>
     <script src="main.js"></script>
 </body>
 </html> 
