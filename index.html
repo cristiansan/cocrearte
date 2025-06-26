@@ -423,7 +423,7 @@
     </div>
     </div>
     <!-- Bloque de bienvenida SIEMPRE ARRIBA -->
-    <div id="welcomeBlock" class="w-full max-w-3xl mx-auto mt-10">
+    <div id="welcomeBlock" class="w-full max-w-3xl mx-auto mt-10 hidden">
         <div class="bg-white dark:bg-darkcard rounded-lg shadow p-6 mb-6 flex justify-between items-center border dark:border-darkborder">
             <div>
                 <h2 class="text-2xl font-bold text-[#2d3748] dark:text-gray-100" id="welcomeUser">Bienvenido</h2>
@@ -433,7 +433,7 @@
         </div>
     </div>
     <!-- Botones de agenda y calendario (ahora arriba del panel admin) -->
-    <div id="calendarToggleBlock" class="w-full max-w-4xl mx-auto mt-2">
+    <div id="calendarToggleBlock" class="w-full max-w-4xl mx-auto mt-2 hidden">
         <div class="flex gap-2 mb-4">
             <button id="tabAgendaIndividual" class="tab-calendar bg-primary-700 text-white font-semibold py-2 px-4 rounded-t">Agenda individual</button>
             <button id="tabAgendaMultiple" class="tab-calendar bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-t">Agenda múltiple</button>
@@ -458,7 +458,7 @@
         </div>
     </div>
     <!-- Aquí va el panel admin y luego el dashboard de pacientes -->
-    <section id="dashboardPacientesSection" class="w-full max-w-3xl mt-0 mx-auto">
+    <section id="dashboardPacientesSection" class="w-full max-w-3xl mt-0 mx-auto hidden">
         <div class="bg-white dark:bg-darkcard rounded-lg shadow p-6 border dark:border-darkborder">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-xl font-semibold text-[#2d3748] dark:text-gray-100">Pacientes</h3>

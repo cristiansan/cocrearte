@@ -620,6 +620,7 @@ async function showDashboard(user) {
     welcomeUser.textContent = `Bienvenido${user.displayName ? ', ' + user.displayName : ''}`;
     userEmail.textContent = user.email;
     welcomeBlock.classList.remove('hidden');
+    document.getElementById('calendarToggleBlock').classList.remove('hidden');
     document.getElementById('landingPage').classList.add('hidden');
     hideAuthModal();
     // Detectar admin
@@ -629,7 +630,7 @@ async function showDashboard(user) {
     if (isAdmin) {
         // Ocultar la grilla de pacientes propia para evitar duplicación, pero mostrar el botón '+ Agregar Paciente'
         if (dashboardSection) {
-            dashboardSection.style.display = 'none';
+            dashboardSection.classList.add('hidden');
         }
         // Seleccionar por defecto el propio usuario en el panel admin
         adminPanelState.selectedUser = user.uid;
@@ -642,7 +643,7 @@ async function showDashboard(user) {
             adminPanel = null;
         }
         if (dashboardSection) {
-            dashboardSection.style.display = '';
+            dashboardSection.classList.remove('hidden');
         }
         // Restaurar la lista de pacientes si se vuelve a modo profesional
         const patientsList = document.getElementById('patientsList');
@@ -690,14 +691,67 @@ window.firebaseAuth.onAuthStateChanged(user => {
     if (user) {
         showDashboard(user);
     } else {
+        // Ocultar todos los elementos del dashboard
         welcomeBlock.classList.add('hidden');
+        document.getElementById('calendarToggleBlock').classList.add('hidden');
+        document.getElementById('dashboardPacientesSection').classList.add('hidden');
+        
+        // Ocultar todos los modales
+        const modals = [
+            'addPatientModal', 'editPatientModal', 'fichaPacienteModal',
+            'customConfirmModal', 'modalNuevaSesion', 'modalDetalleSesionMultiple',
+            'modalNomencladorCIE10', 'authModal'
+        ];
+        modals.forEach(modalId => {
+            const modal = document.getElementById(modalId);
+            if (modal) modal.classList.add('hidden');
+        });
+        
+        // Remover panel de administración si existe
+        if (adminPanel) {
+            adminPanel.remove();
+            adminPanel = null;
+        }
+        
+        // Resetear estado de admin
+        isAdmin = false;
+        adminPanelState = { selectedUser: null, profesionales: [], pacientes: [], sesiones: {} };
+        
+        // Mostrar landing page
+        document.getElementById('landingPage').classList.remove('hidden');
     }
 });
 
 // Logout
 logoutBtn.addEventListener('click', async () => {
     await window.firebaseAuth.signOut();
+    // Ocultar todos los elementos del dashboard
     welcomeBlock.classList.add('hidden');
+    document.getElementById('calendarToggleBlock').classList.add('hidden');
+    document.getElementById('dashboardPacientesSection').classList.add('hidden');
+    
+    // Ocultar todos los modales
+    const modals = [
+        'addPatientModal', 'editPatientModal', 'fichaPacienteModal',
+        'customConfirmModal', 'modalNuevaSesion', 'modalDetalleSesionMultiple',
+        'modalNomencladorCIE10', 'authModal'
+    ];
+    modals.forEach(modalId => {
+        const modal = document.getElementById(modalId);
+        if (modal) modal.classList.add('hidden');
+    });
+    
+    // Remover panel de administración si existe
+    if (adminPanel) {
+        adminPanel.remove();
+        adminPanel = null;
+    }
+    
+    // Resetear estado de admin
+    isAdmin = false;
+    adminPanelState = { selectedUser: null, profesionales: [], pacientes: [], sesiones: {} };
+    
+    // Mostrar landing page
     document.getElementById('landingPage').classList.remove('hidden');
     location.hash = '';
 });
