@@ -58,7 +58,7 @@
                     </div>
                 </div>
 
-                <!-- Navigation -->
+                <!-- Navigation Desktop -->
                 <nav class="hidden md:flex items-center space-x-8">
                     <a href="#inicio" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition">Inicio</a>
                     <a href="#caracteristicas" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition">Características</a>
@@ -66,13 +66,38 @@
                     <a href="#contacto" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition">Contacto</a>
                 </nav>
 
-                <!-- Auth Buttons -->
-                <div class="flex items-center space-x-4">
+                <!-- Mobile Auth Buttons -->
+                <div class="flex items-center space-x-2 md:space-x-4">
                     <button id="themeToggle" title="Cambiar tema" class="p-2 rounded-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
                         <span id="themeIcon" class="text-lg">🌙</span>
                     </button>
-                    <button id="loginBtn" class="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium transition">Iniciar Sesión</button>
-                    <button id="registerBtn" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium transition shadow-sm">Registrarse</button>
+                    
+                    <!-- Mobile menu button -->
+                    <button id="mobileMenuBtn" class="md:hidden p-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                        <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                    
+                    <!-- Desktop Auth Buttons -->
+                    <div class="hidden md:flex items-center space-x-4">
+                        <button id="loginBtn" class="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium transition">Iniciar Sesión</button>
+                        <button id="registerBtn" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium transition shadow-sm">Registrarse</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile Navigation Menu -->
+        <div id="mobileMenu" class="md:hidden hidden bg-white dark:bg-darkcard border-t border-gray-200 dark:border-darkborder">
+            <div class="px-4 py-3 space-y-3">
+                <a href="#inicio" class="block py-3 px-4 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition">Inicio</a>
+                <a href="#caracteristicas" class="block py-3 px-4 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition">Características</a>
+                <a href="#beneficios" class="block py-3 px-4 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition">Beneficios</a>
+                <a href="#contacto" class="block py-3 px-4 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition">Contacto</a>
+                <div class="border-t border-gray-200 dark:border-gray-600 pt-3 mt-3">
+                    <button id="loginBtnMobile" class="block w-full text-left py-3 px-4 text-primary-600 dark:text-primary-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition font-medium">Iniciar Sesión</button>
+                    <button id="registerBtnMobile" class="block w-full mt-2 bg-primary-600 hover:bg-primary-700 text-white py-3 px-4 rounded-lg font-medium transition shadow-sm">Registrarse</button>
                 </div>
             </div>
         </div>
@@ -82,18 +107,18 @@
     <section id="inicio" class="bg-gradient-to-br from-primary-50 to-indigo-50 dark:from-darkbg dark:to-gray-900 py-20">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center">
-                <h1 class="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
+                <h1 class="text-3xl sm:text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
                     Gestiona tu <span class="text-primary-600 dark:text-primary-400">práctica terapéutica</span> de manera eficiente
                 </h1>
-                <p class="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
+                <p class="text-lg sm:text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto px-4">
                     Espacio Cocrearte es la plataforma integral que necesitas para gestionar pacientes, 
                     documentar sesiones y mantener un historial clínico seguro y organizado.
                 </p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <button id="ctaRegisterBtn" class="bg-primary-600 hover:bg-primary-700 text-white px-8 py-4 rounded-lg font-semibold text-lg transition shadow-lg hover:shadow-xl">
+                <div class="flex flex-col sm:flex-row gap-4 justify-center px-4">
+                    <button id="ctaRegisterBtn" class="bg-primary-600 hover:bg-primary-700 text-white px-6 sm:px-8 py-4 rounded-lg font-semibold text-base sm:text-lg transition shadow-lg hover:shadow-xl min-h-[48px] w-full sm:w-auto">
                         Comenzar Gratis
                     </button>
-                    <button id="demoBtn" class="border-2 border-primary-600 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 px-8 py-4 rounded-lg font-semibold text-lg transition">
+                    <button id="demoBtn" class="border-2 border-primary-600 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 px-6 sm:px-8 py-4 rounded-lg font-semibold text-base sm:text-lg transition min-h-[48px] w-full sm:w-auto">
                         Ver Demo
                     </button>
                 </div>
@@ -113,7 +138,7 @@
                 </p>
             </div>
 
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                 <!-- Feature 1 -->
                 <div class="bg-gray-50 dark:bg-darkbg p-8 rounded-xl border border-gray-100 dark:border-darkborder">
                     <div class="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center mb-6">
@@ -479,11 +504,14 @@
     </section>
 
     <!-- Modal para agregar paciente -->
-    <div id="addPatientModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
-        <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg p-8 w-full max-w-2xl relative border dark:border-darkborder max-h-[90vh] overflow-y-auto">
-            <button onclick="hideAddPatientModal()" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">×</button>
-            <h3 class="text-xl font-bold text-primary-600 mb-4">Agregar Paciente</h3>
-            <form id="addPatientForm" class="space-y-4">
+    <div id="addPatientModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-start sm:items-center justify-center z-50 hidden p-2 sm:p-4 overflow-y-auto">
+        <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg w-full max-w-2xl relative border dark:border-darkborder max-h-[95vh] my-4 sm:my-8 flex flex-col">
+            <div class="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-darkborder shrink-0">
+                <h3 class="text-lg sm:text-xl font-bold text-primary-600">Agregar Paciente</h3>
+                <button onclick="hideAddPatientModal()" class="text-gray-400 hover:text-gray-700 text-2xl min-h-[48px] min-w-[48px] flex items-center justify-center">×</button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 sm:p-6">
+            <form id="addPatientForm" class="space-y-4 sm:space-y-6">
                 <!-- Información Personal -->
                 <div class="border-b pb-4 mb-4">
                     <h4 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">📋 Información Personal</h4>
@@ -569,22 +597,37 @@
                         <label for="patientMotivo" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Motivo de Consulta</label>
                         <textarea id="patientMotivo" name="patientMotivo" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" rows="3" placeholder="Describe el motivo principal de la consulta"></textarea>
                     </div>
+                    
+                    <!-- Botón para abrir modal del Nomenclador CIE-10 -->
+                    <div class="flex justify-start mt-4">
+                        <button type="button" id="btnAbrirNomencladorAgregar" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg text-sm flex items-center gap-2 transition-colors">
+                            📋 Clasificación CIE-10
+                            <span id="nomencladorSeleccionadoAgregar" class="text-xs bg-blue-500 px-2 py-1 rounded hidden"></span>
+                        </button>
+                    </div>
                 </div>
 
-                <div class="flex justify-end gap-3 pt-4">
-                    <button type="button" onclick="hideAddPatientModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded">Cancelar</button>
-                    <button type="submit" class="bg-primary-700 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded border-2 border-primary-600 shadow-sm dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-darkbg">Agregar Paciente</button>
-                </div>
             </form>
+            </div>
+            
+            <div class="border-t border-gray-200 dark:border-darkborder p-4 sm:p-6 shrink-0">
+                <div class="flex flex-col sm:flex-row justify-end gap-3">
+                    <button type="button" onclick="hideAddPatientModal()" class="w-full sm:w-auto bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-3 px-4 rounded-lg transition-colors order-2 sm:order-1 min-h-[48px]">Cancelar</button>
+                    <button type="submit" form="addPatientForm" class="w-full sm:w-auto bg-primary-700 hover:bg-primary-600 text-white font-bold py-3 px-4 rounded-lg transition-colors order-1 sm:order-2 min-h-[48px]">Agregar Paciente</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Modal para editar paciente -->
-    <div id="editPatientModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden" style="z-index: 99999;">
-        <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg p-8 w-full max-w-2xl relative border dark:border-darkborder max-h-[90vh] overflow-y-auto">
-            <button onclick="hideEditPatientModal()" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">×</button>
-            <h3 class="text-xl font-bold text-primary-600 mb-4">Editar Paciente</h3>
-            <form id="editPatientForm" class="space-y-4">
+    <div id="editPatientModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-start sm:items-center justify-center hidden p-2 sm:p-4 overflow-y-auto" style="z-index: 99999;">
+        <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg w-full max-w-2xl relative border dark:border-darkborder max-h-[95vh] my-4 sm:my-8 flex flex-col">
+            <div class="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-darkborder shrink-0">
+                <h3 class="text-lg sm:text-xl font-bold text-primary-600">Editar Paciente</h3>
+                <button onclick="hideEditPatientModal()" class="text-gray-400 hover:text-gray-700 text-2xl min-h-[48px] min-w-[48px] flex items-center justify-center">×</button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 sm:p-6">
+            <form id="editPatientForm" class="space-y-4 sm:space-y-6">
                 <!-- Información Personal -->
                 <div class="border-b pb-4 mb-4">
                     <h4 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">📋 Información Personal</h4>
@@ -670,112 +713,184 @@
                         <label for="editPatientMotivo" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Motivo de Consulta</label>
                         <textarea id="editPatientMotivo" name="editPatientMotivo" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" rows="3" placeholder="Describe el motivo principal de la consulta"></textarea>
                     </div>
+                    
+                    <!-- Botón para abrir modal del Nomenclador CIE-10 -->
+                    <div class="flex justify-start mt-4">
+                        <button type="button" id="btnAbrirNomencladorEditar" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg text-sm flex items-center gap-2 transition-colors">
+                            📋 Clasificación CIE-10
+                            <span id="nomencladorSeleccionadoEditar" class="text-xs bg-blue-500 px-2 py-1 rounded hidden"></span>
+                        </button>
+                    </div>
                 </div>
 
-                <div class="flex justify-end gap-3 pt-4">
-                    <button type="button" onclick="hideEditPatientModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded">Cancelar</button>
-                    <button type="submit" class="bg-primary-700 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded border-2 border-primary-600 shadow-sm dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-darkbg">Guardar Cambios</button>
-                </div>
             </form>
+            </div>
+            
+            <div class="border-t border-gray-200 dark:border-darkborder p-4 sm:p-6 shrink-0">
+                <div class="flex flex-col sm:flex-row justify-end gap-3">
+                    <button type="button" onclick="hideEditPatientModal()" class="w-full sm:w-auto bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-3 px-4 rounded-lg transition-colors order-2 sm:order-1 min-h-[48px]">Cancelar</button>
+                    <button type="submit" form="editPatientForm" class="w-full sm:w-auto bg-primary-700 hover:bg-primary-600 text-white font-bold py-3 px-4 rounded-lg transition-colors order-1 sm:order-2 min-h-[48px]">Guardar Cambios</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Modal Ficha Clínica Paciente -->
-    <div id="fichaPacienteModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
-        <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg p-8 w-full max-w-2xl relative border dark:border-darkborder">
-            <button onclick="hideFichaPacienteModal()" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">×</button>
-            <h3 class="text-xl font-bold text-primary-600 mb-2">Ficha Clínica</h3>
-            <div id="fichaLoader" class="flex flex-col justify-center items-center py-8 hidden">
-                <svg class="animate-spin h-8 w-8 text-primary-600 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-                </svg>
-                <span class="text-primary-600 font-semibold">Cargando...</span>
+    <div id="fichaPacienteModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-start sm:items-center justify-center z-50 hidden p-2 sm:p-4 overflow-y-auto">
+        <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg w-full max-w-4xl relative border dark:border-darkborder my-4 sm:my-8 max-h-[95vh] flex flex-col">
+            <!-- Header fijo -->
+            <div class="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-darkborder shrink-0">
+                <h3 class="text-lg sm:text-xl font-bold text-primary-600">Ficha Clínica</h3>
+                <button onclick="hideFichaPacienteModal()" class="text-gray-400 hover:text-gray-700 text-2xl p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">×</button>
             </div>
-            <div id="fichaPacienteDatos" class="mb-4"></div>
-            <h4 class="text-lg font-semibold mb-2">Sesiones</h4>
-            <div id="sesionesList" class="space-y-3 mb-4 max-h-60 overflow-y-auto"></div>
-            <div id="noSesionesMsg" class="text-gray-500 text-center mb-4 hidden">No hay sesiones registradas.</div>
-            <form id="addSesionForm" class="space-y-2 border-t pt-4 mt-4">
-                <div>
-                    <label for="sesionFecha" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Fecha</label>
-                    <input id="sesionFecha" name="sesionFecha" type="date" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder">
-                </div>
-                <div>
-                    <label for="sesionComentario" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Comentario</label>
-                    <textarea id="sesionComentario" name="sesionComentario" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" rows="2" placeholder="Detalle de la sesión"></textarea>
+            
+            <!-- Contenido scrolleable -->
+            <div class="flex-1 overflow-y-auto p-4 sm:p-6">
+                <div id="fichaLoader" class="flex flex-col justify-center items-center py-8 hidden">
+                    <svg class="animate-spin h-8 w-8 text-primary-600 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                    </svg>
+                    <span class="text-primary-600 font-semibold">Cargando...</span>
                 </div>
                 
-                <!-- Botón para abrir modal del Nomenclador CIE-10 -->
-                <div class="flex justify-start">
-                    <button type="button" id="btnAbrirNomencladorFicha" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg text-sm flex items-center gap-2">
-                        📋 Clasificación CIE-10
-                        <span id="nomencladorSeleccionadoFicha" class="text-xs bg-blue-500 px-2 py-1 rounded hidden"></span>
+                <!-- Datos del paciente -->
+                <div id="fichaPacienteDatos" class="mb-6"></div>
+                
+                <!-- Sección de sesiones -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Lista de sesiones existentes -->
+                    <div class="lg:order-2">
+                        <h4 class="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Historial de Sesiones</h4>
+                        <div id="sesionesList" class="space-y-3 max-h-64 lg:max-h-80 overflow-y-auto border border-gray-200 dark:border-darkborder rounded-lg p-3"></div>
+                        <div id="noSesionesMsg" class="text-gray-500 text-center py-8 border border-gray-200 dark:border-darkborder rounded-lg hidden">
+                            <div class="text-4xl mb-2">📝</div>
+                            <p>No hay sesiones registradas.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Formulario para nueva sesión -->
+                    <div class="lg:order-1">
+                        <h4 class="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Nueva Sesión</h4>
+                        <form id="addSesionForm" class="space-y-4 border border-gray-200 dark:border-darkborder rounded-lg p-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="sm:col-span-2">
+                                    <label for="sesionFecha" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-1">Fecha</label>
+                                    <input id="sesionFecha" name="sesionFecha" type="date" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-darkbg dark:text-darktext">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label for="sesionComentario" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-1">Observaciones</label>
+                                <textarea id="sesionComentario" name="sesionComentario" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-darkbg dark:text-darktext resize-none" rows="3" placeholder="Detalle de la sesión"></textarea>
+                            </div>
+                            
+
+                            
+                            <div>
+                                <label for="sesionNotas" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-1">Notas adicionales</label>
+                                <textarea id="sesionNotas" name="sesionNotas" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-darkbg dark:text-darktext resize-none" rows="3" placeholder="Notas adicionales (opcional)"></textarea>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-3">Adjuntar archivos</label>
+                                
+                                <!-- Botones de opciones de adjunto -->
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+                                    <button type="button" id="btnElegirArchivo" class="camera-button flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors min-h-[48px]">
+                                        📁 <span class="text-sm">Elegir archivo</span>
+                                    </button>
+                                    <button type="button" id="btnTomarFoto" class="camera-button flex items-center justify-center gap-2 py-3 px-4 border border-blue-300 dark:border-blue-600 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors min-h-[48px]">
+                                        📸 <span class="text-sm">Tomar foto</span>
+                                    </button>
+                                </div>
+                                
+                                <!-- Inputs hidden para diferentes tipos de captura -->
+                                <input id="sesionArchivo" name="sesionArchivo" type="file" multiple class="hidden" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.txt">
+                                <input id="sesionFoto" name="sesionFoto" type="file" multiple class="hidden" accept="image/*" capture="environment">
+                                
+                                <!-- Preview de archivos seleccionados -->
+                                <div id="archivosPreview" class="hidden mt-3 p-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800">
+                                    <h5 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Archivos seleccionados:</h5>
+                                    <div id="listaArchivos" class="space-y-2"></div>
+                                    <button type="button" id="btnLimpiarArchivos" class="mt-2 text-xs text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
+                                        Limpiar todos
+                                    </button>
+                                </div>
+                                
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Máximo 5 archivos, 5MB cada uno. Formatos: PDF, imágenes, documentos.</p>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer fijo con botones -->
+            <div class="border-t border-gray-200 dark:border-darkborder p-4 sm:p-6 shrink-0">
+                <div class="flex flex-col sm:flex-row justify-end gap-3">
+                    <button type="button" onclick="hideFichaPacienteModal()" class="w-full sm:w-auto bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors order-2 sm:order-1">
+                        Cerrar
+                    </button>
+                    <button type="submit" form="addSesionForm" class="w-full sm:w-auto bg-primary-700 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded-lg border-2 border-primary-600 shadow-sm dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-darkbg transition-colors order-1 sm:order-2">
+                        Agregar Sesión
                     </button>
                 </div>
-                
-                <div>
-                    <label for="sesionNotas" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Notas</label>
-                    <textarea id="sesionNotas" name="sesionNotas" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" rows="4" placeholder="Notas adicionales (opcional)"></textarea>
-                </div>
-                <div>
-                    <label for="sesionArchivo" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Adjuntar archivos (opcional)</label>
-                    <input id="sesionArchivo" name="sesionArchivo" type="file" multiple class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-darkbg dark:file:text-gray-100" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.txt">
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Máximo 5 archivos, 5MB cada uno.</p>
-                </div>
-                <div class="flex justify-end gap-3 pt-2">
-                    <button type="button" onclick="hideFichaPacienteModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded">Cerrar</button>
-                    <button type="submit" class="bg-primary-700 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded border-2 border-primary-600 shadow-sm dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-darkbg">Agregar Sesión</button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 
     <!-- Modal de confirmación personalizado -->
-    <div id="customConfirmModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
-        <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg p-8 w-full max-w-sm relative border dark:border-darkborder flex flex-col items-center">
+    <div id="customConfirmModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden p-4">
+        <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg w-full max-w-sm relative border dark:border-darkborder flex flex-col items-center p-6 sm:p-8">
             <h3 class="text-lg font-bold text-primary-700 dark:text-primary-600 mb-4">Espacio Cocrearte dice</h3>
             <p id="customConfirmMessage" class="text-center text-[#2d3748] dark:text-gray-100 mb-6">¿Está seguro de guardar esta sesión? No podrá editarla después.</p>
-            <div class="flex gap-4 justify-center">
-                <button id="customConfirmCancel" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded">Cancelar</button>
-                <button id="customConfirmOk" class="bg-primary-700 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded border-2 border-primary-600 shadow-sm dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-darkbg">Aceptar</button>
+            <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto justify-center">
+                <button id="customConfirmCancel" class="w-full sm:w-auto bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-3 px-4 rounded-lg order-2 sm:order-1 min-h-[48px]">Cancelar</button>
+                <button id="customConfirmOk" class="w-full sm:w-auto bg-primary-700 hover:bg-primary-600 text-white font-bold py-3 px-4 rounded-lg border-2 border-primary-600 shadow-sm dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-darkbg order-1 sm:order-2 min-h-[48px]">Aceptar</button>
             </div>
         </div>
     </div>
 
     <!-- Modal Nueva Sesión Calendario -->
-    <div id="modalNuevaSesion" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-      <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg p-8 w-full max-w-md relative">
-        <h2 class="text-2xl font-bold mb-4">Nueva sesión</h2>
-        <form id="formNuevaSesion">
-          <div class="mb-4">
-            <label for="selectPaciente" class="block text-sm font-medium mb-1">Paciente</label>
-            <select id="selectPaciente" name="paciente" required class="w-full px-3 py-2 border rounded-lg">
+    <div id="modalNuevaSesion" class="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center z-50 hidden p-2 sm:p-4 overflow-y-auto">
+      <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg w-full max-w-md relative my-4 sm:my-8 max-h-[95vh] flex flex-col">
+        <div class="p-4 sm:p-6 border-b border-gray-200 dark:border-darkborder shrink-0">
+          <h2 class="text-lg sm:text-xl font-bold">Nueva sesión</h2>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 sm:p-6">
+        <form id="formNuevaSesion" class="space-y-4">
+          <div>
+            <label for="selectPaciente" class="block text-sm font-medium mb-2">Paciente</label>
+            <select id="selectPaciente" name="paciente" required class="w-full px-3 py-3 border rounded-lg text-base">
               <option value="">Selecciona un paciente</option>
             </select>
           </div>
-          <div class="mb-4">
-            <label for="inputFechaSesion" class="block text-sm font-medium mb-1">Fecha y hora</label>
-            <input id="inputFechaSesion" name="fecha" type="datetime-local" class="w-full px-3 py-2 border rounded-lg">
+          <div>
+            <label for="inputFechaSesion" class="block text-sm font-medium mb-2">Fecha y hora</label>
+            <input id="inputFechaSesion" name="fecha" type="datetime-local" class="w-full px-3 py-3 border rounded-lg text-base">
           </div>
-          <div class="mb-4">
-            <label for="inputNotasSesion" class="block text-sm font-medium mb-1">Notas</label>
-            <textarea id="inputNotasSesion" name="notas" rows="3" class="w-full px-3 py-2 border rounded-lg"></textarea>
+          <div>
+            <label for="inputNotasSesion" class="block text-sm font-medium mb-2">Notas</label>
+            <textarea id="inputNotasSesion" name="notas" rows="3" class="w-full px-3 py-3 border rounded-lg text-base"></textarea>
           </div>
           
           <!-- Botón para abrir modal del Nomenclador CIE-10 para calendario -->
-          <div class="mb-4 flex justify-start">
-            <button type="button" id="btnAbrirNomencladorCalendar" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg text-sm flex items-center gap-2">
+          <div class="flex justify-start">
+            <button type="button" id="btnAbrirNomencladorCalendar" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg text-sm flex items-center gap-2 min-h-[48px]">
               📋 Clasificación CIE-10
               <span id="nomencladorSeleccionadoCalendar" class="text-xs bg-blue-500 px-2 py-1 rounded hidden"></span>
             </button>
           </div>
-          <div class="flex justify-end gap-2">
-            <button type="button" id="btnEliminarSesion" class="px-4 py-2 rounded bg-red-600 text-white font-semibold hidden">Eliminar</button>
-            <button type="button" id="cancelNuevaSesion" class="px-4 py-2 rounded bg-gray-200 text-gray-800">Cancelar</button>
-            <button type="submit" class="px-4 py-2 rounded bg-primary-700 text-white font-semibold">Guardar</button>
-          </div>
         </form>
+        </div>
+        
+        <div class="border-t border-gray-200 dark:border-darkborder p-4 sm:p-6 shrink-0">
+          <div class="flex flex-col sm:flex-row justify-end gap-3">
+            <button type="button" id="btnEliminarSesion" class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-lg hidden min-h-[48px]">Eliminar</button>
+            <button type="button" id="cancelNuevaSesion" class="w-full sm:w-auto bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-3 px-4 rounded-lg order-2 sm:order-1 min-h-[48px]">Cancelar</button>
+            <button type="submit" form="formNuevaSesion" class="w-full sm:w-auto bg-primary-700 hover:bg-primary-600 text-white font-semibold py-3 px-4 rounded-lg order-1 sm:order-2 min-h-[48px]">Guardar</button>
+          </div>
+        </div>
       </div>
     </div>
     <!-- Modal solo lectura para agenda múltiple -->
@@ -790,7 +905,7 @@
     </div>
 
     <!-- Modal del Nomenclador CIE-10 -->
-    <div id="modalNomencladorCIE10" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+    <div id="modalNomencladorCIE10" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden" style="z-index: 999999;">
       <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg p-8 w-full max-w-lg relative border dark:border-darkborder">
         <button id="cerrarModalNomenclador" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">×</button>
         <h2 class="text-2xl font-bold text-blue-700 dark:text-blue-400 mb-6 flex items-center gap-2">
@@ -835,7 +950,7 @@
     <!-- FullCalendar CSS -->
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.css" rel="stylesheet">
     
-    <!-- Estilos personalizados para FullCalendar en modo oscuro -->
+    <!-- Estilos personalizados para FullCalendar en modo oscuro y responsividad -->
     <style>
         /* Estilos para modo oscuro del calendario */
         .dark .fc {
@@ -865,29 +980,228 @@
             color: #e5e7eb !important;
         }
         
-        /* Líneas de la grilla */
+        /* Líneas de la grilla - Todos los slots de tiempo con fondo verde */
         .dark .fc-timegrid-slot {
             border-color: #4b5563;
+            background-color: rgba(16, 185, 129, 0.08) !important; /* Verde sutil por defecto */
+        }
+        
+        .fc-timegrid-slot {
+            background-color: rgba(16, 185, 129, 0.05) !important; /* Verde sutil en modo claro */
         }
         
         .dark .fc-timegrid-divider {
             border-color: #4b5563;
         }
         
-        /* Eventos */
+        /* Eventos - Días ocupados en violeta */
         .dark .fc-event {
-            background-color: #6366f1;
-            border-color: #4f46e5;
-            color: white;
+            background-color: #8b5cf6;
+            border-color: #7c3aed;
+        }
+        
+        /* Eventos en modo claro también violeta */
+        .fc-event {
+            background-color: #8b5cf6 !important;
+            border-color: #7c3aed !important;
+            color: white !important;
+        }
+        
+        /* Estilos para mejorar la responsividad de modales */
+        @media (max-height: 800px) {
+            #fichaPacienteModal .max-h-\[95vh\] {
+                max-height: 90vh;
+            }
+            
+            #fichaPacienteModal #sesionesList {
+                max-height: 200px;
+            }
+            
+            #fichaPacienteModal .lg\:max-h-80 {
+                max-height: 200px;
+            }
+        }
+        
+        @media (max-height: 700px) {
+            #fichaPacienteModal .max-h-\[95vh\] {
+                max-height: 85vh;
+            }
+            
+            #fichaPacienteModal #sesionesList {
+                max-height: 150px;
+            }
+            
+            #fichaPacienteModal .lg\:max-h-80 {
+                max-height: 150px;
+            }
+            
+            #fichaPacienteModal textarea {
+                min-height: 60px;
+            }
+        }
+        
+        @media (max-height: 600px) {
+            #fichaPacienteModal .max-h-\[95vh\] {
+                max-height: 80vh;
+            }
+            
+            #fichaPacienteModal #sesionesList {
+                max-height: 120px;
+            }
+            
+            #fichaPacienteModal .lg\:max-h-80 {
+                max-height: 120px;
+            }
+            
+            #fichaPacienteModal .p-4 {
+                padding: 0.75rem;
+            }
+            
+            #fichaPacienteModal .sm\:p-6 {
+                padding: 1rem;
+            }
+        }
+        
+        /* Mejoras para pantallas pequeñas en ancho */
+        @media (max-width: 640px) {
+            #fichaPacienteModal .grid-cols-1 {
+                gap: 1rem;
+            }
+            
+            #fichaPacienteModal .space-y-4 > * + * {
+                margin-top: 0.75rem;
+            }
+            
+            #fichaPacienteModal textarea {
+                font-size: 16px; /* Evita zoom en iOS */
+            }
+            
+            #fichaPacienteModal input[type="date"],
+            #fichaPacienteModal input[type="file"] {
+                font-size: 16px; /* Evita zoom en iOS */
+            }
+        }
+        
+        /* Estilos específicos para MacBook Air y pantallas similares */
+        @media (min-width: 1024px) and (max-height: 768px) {
+            #fichaPacienteModal .lg\:grid-cols-2 {
+                grid-template-columns: 1fr 1fr;
+                gap: 1.5rem;
+            }
+            
+            #fichaPacienteModal .lg\:max-h-80 {
+                max-height: 250px;
+            }
+        }
+        
+        /* Scrollbar personalizado para mejor UX */
+        #fichaPacienteModal ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        #fichaPacienteModal ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        
+        #fichaPacienteModal ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        
+        #fichaPacienteModal ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        .dark #fichaPacienteModal ::-webkit-scrollbar-track {
+            background: #374151;
+        }
+        
+        .dark #fichaPacienteModal ::-webkit-scrollbar-thumb {
+            background: #6b7280;
+        }
+        
+        .dark #fichaPacienteModal ::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+        
+        /* Animaciones suaves para mejor UX */
+        #fichaPacienteModal {
+            transition: opacity 0.2s ease-in-out;
+        }
+        
+        #fichaPacienteModal .bg-white {
+            transition: transform 0.2s ease-in-out;
+        }
+        
+        /* Focus states mejorados para accesibilidad */
+        #fichaPacienteModal input:focus,
+        #fichaPacienteModal textarea:focus,
+        #fichaPacienteModal select:focus,
+        #fichaPacienteModal button:focus {
+            outline: 2px solid #6366f1;
+            outline-offset: 2px;
+        }
+        
+        /* Eventos del calendario en modo oscuro - Días ocupados violeta */
+        .dark .fc-event {
+            background-color: #8b5cf6 !important;
+            border-color: #7c3aed !important;
+            color: white !important;
         }
         
         .dark .fc-event:hover {
-            background-color: #4f46e5;
+            background-color: #7c3aed !important;
         }
         
-        /* Día actual resaltado */
+        /* Días libres - Fondo verde sutil para vista mensual */
+        .fc-daygrid-day:not(.fc-day-other):not(:has(.fc-event)) {
+            background-color: rgba(16, 185, 129, 0.1) !important; /* Verde muy sutil */
+        }
+        
+        .dark .fc-daygrid-day:not(.fc-day-other):not(:has(.fc-event)) {
+            background-color: rgba(16, 185, 129, 0.15) !important; /* Verde sutil para modo oscuro */
+        }
+        
+        /* Horarios libres - Cada slot individual que no tiene evento */
+        .fc-timegrid-slot {
+            background-color: rgba(16, 185, 129, 0.05) !important; /* Verde muy sutil por defecto */
+        }
+        
+        .dark .fc-timegrid-slot {
+            background-color: rgba(16, 185, 129, 0.08) !important;
+        }
+        
+        /* Columnas completas (para vista de día/semana) */
+        .fc-timegrid-col {
+            background-color: rgba(16, 185, 129, 0.05) !important;
+        }
+        
+        .dark .fc-timegrid-col {
+            background-color: rgba(16, 185, 129, 0.08) !important;
+        }
+        
+        /* Asegurar que las áreas con eventos no sobrescriban el fondo verde de slots libres */
+        .fc-timegrid-event-harness {
+            background-color: transparent !important;
+        }
+        
+        /* Día actual resaltado - Si tiene eventos violeta, si no verde */
         .dark .fc-day-today {
-            background-color: rgba(99, 102, 241, 0.1) !important;
+            background-color: rgba(139, 92, 246, 0.1) !important;
+        }
+        
+        .fc-day-today {
+            background-color: rgba(139, 92, 246, 0.1) !important;
+        }
+        
+        /* Día actual sin eventos - Verde más visible */
+        .fc-day-today:not(:has(.fc-event)) {
+            background-color: rgba(16, 185, 129, 0.2) !important;
+        }
+        
+        .dark .fc-day-today:not(:has(.fc-event)) {
+            background-color: rgba(16, 185, 129, 0.25) !important;
         }
         
         /* Bordes generales */
@@ -907,13 +1221,24 @@
         
         /* Botones del header si los hay */
         .dark .fc-button {
-            background-color: #6366f1;
-            border-color: #4f46e5;
+            background-color: #8b5cf6;
+            border-color: #7c3aed;
             color: white;
         }
         
         .dark .fc-button:hover {
-            background-color: #4f46e5;
+            background-color: #7c3aed;
+        }
+        
+        /* Botones en modo claro también violeta */
+        .fc-button {
+            background-color: #8b5cf6 !important;
+            border-color: #7c3aed !important;
+            color: white !important;
+        }
+        
+        .fc-button:hover {
+            background-color: #7c3aed !important;
         }
         
         /* Texto del título si hay */
@@ -926,14 +1251,22 @@
             color: #e5e7eb !important;
         }
         
-        /* Fondo de las celdas */
+        /* Fondo de las celdas - Verde por defecto */
         .dark .fc-timegrid-col {
-            background-color: #232b3b;
+            background-color: rgba(16, 185, 129, 0.08) !important; /* Verde sutil en lugar de gris */
+        }
+        
+        .fc-timegrid-col {
+            background-color: rgba(16, 185, 129, 0.05) !important; /* Verde sutil en modo claro */
         }
         
         /* Slot de tiempo seleccionado */
         .dark .fc-highlight {
-            background-color: rgba(99, 102, 241, 0.2);
+            background-color: rgba(139, 92, 246, 0.2);
+        }
+        
+        .fc-highlight {
+            background-color: rgba(139, 92, 246, 0.2) !important;
         }
         
         /* Label del calendario (fecha actual/rango) */
@@ -960,6 +1293,88 @@
         .dark #btnVistaSemana {
             color: #f3f4f6;
             border-color: #6b7280;
+        }
+        
+        /* Mejoras móviles adicionales */
+        @media (max-width: 640px) {
+            /* Tamaño mínimo de toque de 48px para móviles */
+            button, .btn, [role="button"] {
+                min-height: 48px;
+                min-width: 48px;
+            }
+            
+            /* Padding móvil para secciones */
+            .py-20 {
+                padding-top: 3rem;
+                padding-bottom: 3rem;
+            }
+            
+            /* Espaciado en cards */
+            .space-y-6 > * + * {
+                margin-top: 1rem;
+            }
+            
+            /* Texto responsivo */
+            .text-xl {
+                font-size: 1.125rem;
+            }
+            
+            /* Evitar zoom en inputs en iOS */
+            input, textarea, select {
+                font-size: 16px !important;
+            }
+            
+            /* Modales móviles */
+            .modal-content {
+                max-height: 90vh;
+                margin: 1rem;
+            }
+            
+            /* Grids móviles */
+            .grid-mobile-1 {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Animación del menú móvil */
+        #mobileMenu {
+            transition: all 0.3s ease-in-out;
+            transform: translateY(-10px);
+            opacity: 0;
+        }
+        
+        #mobileMenu.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        /* Estilos específicos para funcionalidad de cámara */
+        @media (max-width: 640px) {
+            /* Mejorar botones de adjuntar en móvil */
+            #btnElegirArchivo, #btnTomarFoto {
+                font-size: 14px;
+                padding: 12px 8px;
+            }
+            
+            /* Preview de archivos más compacto en móvil */
+            #archivosPreview {
+                max-height: 200px;
+                overflow-y: auto;
+            }
+            
+            #listaArchivos img {
+                width: 40px;
+                height: 40px;
+            }
+        }
+        
+        /* Animaciones para los botones de cámara */
+        .camera-button {
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .camera-button:active {
+            transform: scale(0.95);
         }
         
         .dark #btnVistaDia:not(.bg-primary-700),
@@ -1035,5 +1450,232 @@
     <script src="firebase-config.js"></script>
     <script src="nomenclador.js"></script>
     <script src="main.js"></script>
+    
+    <script>
+        // JavaScript para el menú móvil
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const mobileMenu = document.getElementById('mobileMenu');
+            const mobileMenuLinks = mobileMenu.querySelectorAll('a, button');
+            
+            // Toggle del menú móvil
+            mobileMenuBtn.addEventListener('click', function() {
+                if (mobileMenu.classList.contains('hidden')) {
+                    mobileMenu.classList.remove('hidden');
+                    setTimeout(() => mobileMenu.classList.add('show'), 10);
+                } else {
+                    mobileMenu.classList.remove('show');
+                    setTimeout(() => mobileMenu.classList.add('hidden'), 300);
+                }
+            });
+            
+            // Cerrar menú al hacer clic en enlaces
+            mobileMenuLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    mobileMenu.classList.remove('show');
+                    setTimeout(() => mobileMenu.classList.add('hidden'), 300);
+                });
+            });
+            
+            // Conectar botones móviles con los principales
+            document.getElementById('loginBtnMobile').addEventListener('click', function() {
+                document.getElementById('loginBtn').click();
+            });
+            
+            document.getElementById('registerBtnMobile').addEventListener('click', function() {
+                document.getElementById('registerBtn').click();
+            });
+            
+            // Cerrar menú al hacer clic fuera
+            document.addEventListener('click', function(event) {
+                if (!mobileMenuBtn.contains(event.target) && 
+                    !mobileMenu.contains(event.target) && 
+                    !mobileMenu.classList.contains('hidden')) {
+                    mobileMenu.classList.remove('show');
+                    setTimeout(() => mobileMenu.classList.add('hidden'), 300);
+                }
+            });
+        });
+        
+        // JavaScript para funcionalidad de cámara y archivos
+        let archivosSeleccionados = [];
+        
+        function configurarArchivos() {
+            const btnElegirArchivo = document.getElementById('btnElegirArchivo');
+            const btnTomarFoto = document.getElementById('btnTomarFoto');
+            const inputArchivo = document.getElementById('sesionArchivo');
+            const inputFoto = document.getElementById('sesionFoto');
+            const btnLimpiarArchivos = document.getElementById('btnLimpiarArchivos');
+            
+            // Botón elegir archivo
+            if (btnElegirArchivo) {
+                btnElegirArchivo.addEventListener('click', () => {
+                    inputArchivo.click();
+                });
+            }
+            
+            // Botón tomar foto
+            if (btnTomarFoto) {
+                btnTomarFoto.addEventListener('click', () => {
+                    inputFoto.click();
+                });
+            }
+            
+            // Event listeners para inputs
+            if (inputArchivo) {
+                inputArchivo.addEventListener('change', (e) => manejarArchivos(e.target.files));
+            }
+            
+            if (inputFoto) {
+                inputFoto.addEventListener('change', (e) => manejarArchivos(e.target.files, 'foto'));
+            }
+            
+            // Botón limpiar archivos
+            if (btnLimpiarArchivos) {
+                btnLimpiarArchivos.addEventListener('click', () => {
+                    limpiarArchivos();
+                });
+            }
+        }
+        
+        function manejarArchivos(files, tipo = 'archivo') {
+            const maxArchivos = 5;
+            const maxTamano = 5 * 1024 * 1024; // 5MB
+            
+            for (let file of files) {
+                // Verificar límite de archivos
+                if (archivosSeleccionados.length >= maxArchivos) {
+                    mostrarMensaje('Máximo ' + maxArchivos + ' archivos permitidos', 'warning');
+                    break;
+                }
+                
+                // Verificar tamaño
+                if (file.size > maxTamano) {
+                    mostrarMensaje(`El archivo "${file.name}" es muy grande. Máximo 5MB.`, 'warning');
+                    continue;
+                }
+                
+                // Agregar archivo
+                const archivoInfo = {
+                    file: file,
+                    tipo: tipo,
+                    id: Date.now() + Math.random(),
+                    nombre: file.name,
+                    tamano: formatearTamano(file.size),
+                    preview: null
+                };
+                
+                // Generar preview para imágenes
+                if (file.type.startsWith('image/')) {
+                    generarPreviewImagen(file, archivoInfo);
+                }
+                
+                archivosSeleccionados.push(archivoInfo);
+            }
+            
+            actualizarVistaArchivos();
+            limpiarInputs();
+        }
+        
+        function generarPreviewImagen(file, archivoInfo) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                archivoInfo.preview = e.target.result;
+                actualizarVistaArchivos();
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        function actualizarVistaArchivos() {
+            const archivosPreview = document.getElementById('archivosPreview');
+            const listaArchivos = document.getElementById('listaArchivos');
+            
+            if (!archivosPreview || !listaArchivos) return;
+            
+            if (archivosSeleccionados.length === 0) {
+                archivosPreview.classList.add('hidden');
+                return;
+            }
+            
+            archivosPreview.classList.remove('hidden');
+            listaArchivos.innerHTML = '';
+            
+            archivosSeleccionados.forEach((archivo, index) => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center gap-3 p-2 bg-white dark:bg-gray-700 rounded border';
+                
+                let iconoTipo = '📄';
+                if (archivo.tipo === 'foto' || archivo.file.type.startsWith('image/')) iconoTipo = '📸';
+                
+                div.innerHTML = `
+                    <div class="flex-shrink-0">
+                        ${archivo.preview ? 
+                            `<img src="${archivo.preview}" class="w-12 h-12 object-cover rounded border" alt="Preview">` :
+                            `<span class="text-2xl">${iconoTipo}</span>`
+                        }
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">${archivo.nombre}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">${archivo.tamano}</p>
+                    </div>
+                    <button type="button" onclick="eliminarArchivo(${index})" class="flex-shrink-0 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1 min-h-[32px] min-w-[32px] flex items-center justify-center">
+                        ✕
+                    </button>
+                `;
+                
+                listaArchivos.appendChild(div);
+            });
+        }
+        
+        function eliminarArchivo(index) {
+            archivosSeleccionados.splice(index, 1);
+            actualizarVistaArchivos();
+        }
+        
+        function limpiarArchivos() {
+            archivosSeleccionados = [];
+            actualizarVistaArchivos();
+            limpiarInputs();
+        }
+        
+        function limpiarInputs() {
+            const inputs = ['sesionArchivo', 'sesionFoto'];
+            inputs.forEach(id => {
+                const input = document.getElementById(id);
+                if (input) input.value = '';
+            });
+        }
+        
+        function formatearTamano(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        function obtenerArchivosSeleccionados() {
+            return archivosSeleccionados.map(archivo => archivo.file);
+        }
+        
+        // Función global para eliminar archivo (llamada desde el HTML)
+        window.eliminarArchivo = eliminarArchivo;
+        
+        // Configurar eventos cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            configurarArchivos();
+        });
+        
+        // Función para mostrar mensajes (puedes adaptarla a tu sistema de mensajes existente)
+        function mostrarMensaje(mensaje, tipo = 'info') {
+            // Si ya tienes una función showMessage, úsala
+            if (typeof showMessage === 'function') {
+                showMessage(mensaje, tipo);
+            } else {
+                console.log(`${tipo.toUpperCase()}: ${mensaje}`);
+                alert(mensaje);
+            }
+        }
+    </script>
 </body>
 </html> 

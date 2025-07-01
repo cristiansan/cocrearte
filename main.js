@@ -760,6 +760,15 @@ logoutBtn.addEventListener('click', async () => {
 window.hideAddPatientModal = function() {
     addPatientModal.classList.add('hidden');
     addPatientForm.reset();
+    
+    // Limpiar datos del nomenclador
+    datosNomencladorSeleccionados.agregar = null;
+    const spanAgregar = document.getElementById('nomencladorSeleccionadoAgregar');
+    if (spanAgregar) {
+        spanAgregar.textContent = '';
+        spanAgregar.classList.add('hidden');
+        spanAgregar.title = '';
+    }
 };
 
 showAddPatientBtn.addEventListener('click', () => {
@@ -813,6 +822,9 @@ addPatientForm.addEventListener('submit', async (e) => {
     const instituto = addPatientForm.patientInstituto.value;
     const motivo = addPatientForm.patientMotivo.value;
 
+    // Obtener datos del nomenclador CIE-10 si fueron seleccionados
+    const datosCIE10 = obtenerDatosCIE10('agregar');
+
     // Si eres admin y tienes seleccionado un profesional, asigna el paciente a ese profesional
     let ownerUid = user.uid;
     if (isAdmin && adminPanelState.selectedUser) {
@@ -820,7 +832,7 @@ addPatientForm.addEventListener('submit', async (e) => {
     }
 
     try {
-        await window.firebaseDB.collection('pacientes').add({
+        const pacienteData = {
             owner: ownerUid,
             // Información personal
             nombre,
@@ -840,8 +852,22 @@ addPatientForm.addEventListener('submit', async (e) => {
             // Metadatos
             creado: new Date(),
             actualizado: new Date()
-        });
+        };
+
+        // Agregar datos del nomenclador CIE-10 si están disponibles
+        if (datosCIE10) {
+            pacienteData.nomencladorCIE10 = datosCIE10;
+        }
+
+        await window.firebaseDB.collection('pacientes').add(pacienteData);
         hideAddPatientModal();
+        // Limpiar datos del nomenclador después de guardar
+        datosNomencladorSeleccionados.agregar = null;
+        const spanAgregar = document.getElementById('nomencladorSeleccionadoAgregar');
+        if (spanAgregar) {
+            spanAgregar.textContent = '';
+            spanAgregar.classList.add('hidden');
+        }
         loadPatients(ownerUid); // Recarga la lista del profesional correcto
         showMessage('Paciente agregado exitosamente', 'success');
     } catch (error) {
@@ -856,6 +882,12 @@ window.hideFichaPacienteModal = function() {
     sesionesList.innerHTML = '';
     noSesionesMsg.classList.add('hidden');
     addSesionForm.reset();
+    
+    // Limpiar archivos seleccionados
+    if (typeof limpiarArchivos === 'function') {
+        limpiarArchivos();
+    }
+    
     fichaPacienteId = null;
     fichaPacienteRef = null;
 };
@@ -870,6 +902,12 @@ patientsList.addEventListener('click', async (e) => {
     fichaPacienteDatos.innerHTML = '';
     sesionesList.innerHTML = '';
     fichaPacienteModal.classList.remove('hidden');
+    
+    // Limpiar archivos seleccionados al abrir modal
+    if (typeof limpiarArchivos === 'function') {
+        limpiarArchivos();
+    }
+    
     // Cargar datos paciente
     const doc = await fichaPacienteRef.get();
     if (!doc.exists) {
@@ -917,6 +955,18 @@ patientsList.addEventListener('click', async (e) => {
                 
                 <!-- Motivo de Consulta -->
                 ${p.motivo ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded"><span class="font-semibold">Motivo:</span> ${p.motivo}</div>` : ''}
+                
+                <!-- Clasificación CIE-10 -->
+                ${p.nomencladorCIE10 ? `
+                <div class="mt-3 p-2 bg-green-50 dark:bg-green-900/20 rounded border-l-4 border-green-400">
+                    <div class="text-xs font-semibold text-green-700 dark:text-green-300 mb-1">📋 Clasificación CIE-10</div>
+                    <div class="text-xs text-green-600 dark:text-green-400">
+                        <div><strong>Código:</strong> ${p.nomencladorCIE10.codigo}</div>
+                        <div><strong>Categoría:</strong> ${p.nomencladorCIE10.categoriaNombre}</div>
+                        <div class="mt-1 text-green-500 dark:text-green-300">${p.nomencladorCIE10.descripcion}</div>
+                    </div>
+                </div>
+                ` : ''}
             </div>
             <button onclick="showEditPatientModal('${fichaPacienteId}', ${JSON.stringify(p).replace(/"/g, '&quot;')})" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
                 ✏️ Editar
@@ -1011,28 +1061,33 @@ addSesionForm.addEventListener('submit', async (e) => {
     const fecha = addSesionForm.sesionFecha.value;
     const comentario = addSesionForm.sesionComentario.value;
     const notas = addSesionForm.sesionNotas.value;
-    const archivoInput = document.getElementById('sesionArchivo');
+    // Obtener archivos desde la nueva funcionalidad de cámara
     let archivosUrls = [];
-    if (archivoInput && archivoInput.files && archivoInput.files.length > 0) {
-        if (archivoInput.files.length > 5) {
+    const archivosParaSubir = typeof obtenerArchivosSeleccionados === 'function' ? obtenerArchivosSeleccionados() : [];
+    
+    if (archivosParaSubir.length > 0) {
+        if (archivosParaSubir.length > 5) {
             showMessage('Solo puedes adjuntar hasta 5 archivos por sesión.');
             return;
         }
-        console.log(`🔄 Iniciando subida de ${archivoInput.files.length} archivo(s)...`);
+        console.log(`🔄 Iniciando subida de ${archivosParaSubir.length} archivo(s)...`);
         
-        for (let i = 0; i < archivoInput.files.length; i++) {
-            const archivo = archivoInput.files[i];
+        // Verificar tamaño de archivos
+        for (let i = 0; i < archivosParaSubir.length; i++) {
+            const archivo = archivosParaSubir[i];
             if (archivo.size > 5 * 1024 * 1024) { // 5MB
                 showMessage('El archivo "' + archivo.name + '" supera el tamaño máximo de 5MB.');
                 return;
             }
         }
+        
         const storageRef = window.firebaseStorage.ref();
         const sesionId = window.firebaseDB.collection('tmp').doc().id; // id único
-        for (let i = 0; i < archivoInput.files.length; i++) {
-            const archivo = archivoInput.files[i];
+        
+        for (let i = 0; i < archivosParaSubir.length; i++) {
+            const archivo = archivosParaSubir[i];
             try {
-                console.log(`📤 Subiendo archivo ${i + 1}/${archivoInput.files.length}: ${archivo.name} (${(archivo.size / 1024 / 1024).toFixed(2)} MB)`);
+                console.log(`📤 Subiendo archivo ${i + 1}/${archivosParaSubir.length}: ${archivo.name} (${(archivo.size / 1024 / 1024).toFixed(2)} MB)`);
                 const fileRef = storageRef.child(`sesiones_adjuntos/${fichaPacienteId}/${sesionId}_${i}_${archivo.name}`);
                 await fileRef.put(archivo);
                 const url = await fileRef.getDownloadURL();
@@ -1088,6 +1143,12 @@ O usa un servidor local diferente como Live Server en VS Code.`);
         
         addSesionForm.reset();
         limpiarCamposCIE10(); // Limpiar campos del nomenclador
+        
+        // Limpiar archivos seleccionados
+        if (typeof limpiarArchivos === 'function') {
+            limpiarArchivos();
+        }
+        
         loadSesiones();
         disableFileInput();
     } catch (error) {
@@ -1109,7 +1170,13 @@ function enableFileInput() {
 
 // Al abrir el modal de agregar sesión, habilitar input de archivos
 if (addSesionForm) {
-    addSesionForm.addEventListener('reset', enableFileInput);
+    addSesionForm.addEventListener('reset', function() {
+        enableFileInput();
+        // Limpiar archivos seleccionados al resetear formulario
+        if (typeof limpiarArchivos === 'function') {
+            limpiarArchivos();
+        }
+    });
 }
 
 // Al registrar usuario, guardar en Firestore
@@ -1298,6 +1365,18 @@ async function showAdminPanel() {
                       
                       <!-- Motivo de Consulta -->
                       ${p.motivo ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded"><span class="font-semibold">Motivo:</span> ${p.motivo}</div>` : ''}
+                      
+                      <!-- Clasificación CIE-10 -->
+                      ${p.nomencladorCIE10 ? `
+                      <div class="mt-3 p-2 bg-green-50 dark:bg-green-900/20 rounded border-l-4 border-green-400">
+                          <div class="text-xs font-semibold text-green-700 dark:text-green-300 mb-1">📋 Clasificación CIE-10</div>
+                          <div class="text-xs text-green-600 dark:text-green-400">
+                              <div><strong>Código:</strong> ${p.nomencladorCIE10.codigo}</div>
+                              <div><strong>Categoría:</strong> ${p.nomencladorCIE10.categoriaNombre}</div>
+                              <div class="mt-1 text-green-500 dark:text-green-300">${p.nomencladorCIE10.descripcion}</div>
+                          </div>
+                      </div>
+                      ` : ''}
                   </div>
                   <button onclick="showEditPatientModal('${pacienteId}', ${JSON.stringify(p).replace(/"/g, '&quot;')})" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
                       ✏️ Editar
@@ -1507,23 +1586,10 @@ function activarBotonVista(tipo) {
 let profesionalesDisponibles = [];
 let profesionalesSeleccionados = [];
 
-// Función para asignar colores únicos a cada profesional
+// Función para asignar colores: Violeta para días ocupados
 function getColorForProfessional(profesionalId) {
-    const colors = [
-        '#3b82f6', // blue
-        '#ef4444', // red
-        '#10b981', // emerald
-        '#f59e0b', // amber
-        '#8b5cf6', // violet
-        '#ec4899', // pink
-        '#06b6d4', // cyan
-        '#84cc16', // lime
-        '#f97316', // orange
-        '#6366f1'  // indigo
-    ];
-    
-    const index = profesionalesDisponibles.findIndex(p => p.id === profesionalId);
-    return colors[index % colors.length];
+    // Todos los eventos (días ocupados) serán de color violeta
+    return '#8b5cf6'; // violet
 }
 
 // Función para cargar select de profesionales
@@ -2936,6 +3002,14 @@ function abrirModalNomenclador(origen) {
     }
     
     modal.classList.remove('hidden');
+    
+    // Forzar que el modal sea visible con z-index alto
+    modal.style.display = 'flex';
+    modal.style.visibility = 'visible';
+    modal.style.opacity = '1';
+    modal.style.zIndex = '999999';
+    
+    console.log('✅ Modal del nomenclador mostrado');
 }
 
 // Función para cerrar el modal del nomenclador
@@ -2943,8 +3017,14 @@ function cerrarModalNomenclador() {
     const modal = document.getElementById('modalNomencladorCIE10');
     if (modal) {
         modal.classList.add('hidden');
+        // Limpiar estilos inline
+        modal.style.display = '';
+        modal.style.visibility = '';
+        modal.style.opacity = '';
+        modal.style.zIndex = '';
     }
     modalNomencladorAbiertoPor = null;
+    console.log('✅ Modal del nomenclador cerrado');
 }
 
 // Función para cargar categorías en el modal
@@ -3120,8 +3200,10 @@ function aceptarSeleccionModal() {
 // Función para actualizar el botón del nomenclador
 function actualizarBotonNomenclador(origen, datos) {
     let spanId;
-    if (origen === 'ficha') {
-        spanId = 'nomencladorSeleccionadoFicha';
+    if (origen === 'agregar') {
+        spanId = 'nomencladorSeleccionadoAgregar';
+    } else if (origen === 'editar') {
+        spanId = 'nomencladorSeleccionadoEditar';
     } else {
         spanId = 'nomencladorSeleccionadoCalendar';
     }
@@ -3141,8 +3223,10 @@ function limpiarSeleccionNomenclador() {
         
         // Limpiar el botón correspondiente
         let spanId;
-        if (modalNomencladorAbiertoPor === 'ficha') {
-            spanId = 'nomencladorSeleccionadoFicha';
+        if (modalNomencladorAbiertoPor === 'agregar') {
+            spanId = 'nomencladorSeleccionadoAgregar';
+        } else if (modalNomencladorAbiertoPor === 'editar') {
+            spanId = 'nomencladorSeleccionadoEditar';
         } else {
             spanId = 'nomencladorSeleccionadoCalendar';
         }
@@ -3160,23 +3244,31 @@ function limpiarSeleccionNomenclador() {
 }
 
 // Función actualizada para obtener datos CIE-10 (ahora usa el modal)
-function obtenerDatosCIE10(formType = 'ficha') {
+function obtenerDatosCIE10(formType = 'agregar') {
     return datosNomencladorSeleccionados[formType];
 }
 
 // Función actualizada para limpiar campos CIE-10 (ahora usa el modal)
 function limpiarCamposCIE10() {
-    datosNomencladorSeleccionados.ficha = null;
+    datosNomencladorSeleccionados.agregar = null;
+    datosNomencladorSeleccionados.editar = null;
     datosNomencladorSeleccionados.calendar = null;
     
     // Limpiar botones
-    const spanFicha = document.getElementById('nomencladorSeleccionadoFicha');
+    const spanAgregar = document.getElementById('nomencladorSeleccionadoAgregar');
+    const spanEditar = document.getElementById('nomencladorSeleccionadoEditar');
     const spanCalendar = document.getElementById('nomencladorSeleccionadoCalendar');
     
-    if (spanFicha) {
-        spanFicha.textContent = '';
-        spanFicha.classList.add('hidden');
-        spanFicha.title = '';
+    if (spanAgregar) {
+        spanAgregar.textContent = '';
+        spanAgregar.classList.add('hidden');
+        spanAgregar.title = '';
+    }
+    
+    if (spanEditar) {
+        spanEditar.textContent = '';
+        spanEditar.classList.add('hidden');
+        spanEditar.title = '';
     }
     
     if (spanCalendar) {
@@ -3193,12 +3285,18 @@ function configurarModalNomenclador() {
     console.log('🔧 Configurando event listeners del modal del nomenclador...');
     
     // Botones para abrir el modal
-    const btnFicha = document.getElementById('btnAbrirNomencladorFicha');
+    const btnAgregar = document.getElementById('btnAbrirNomencladorAgregar');
+    const btnEditar = document.getElementById('btnAbrirNomencladorEditar');
     const btnCalendar = document.getElementById('btnAbrirNomencladorCalendar');
     
-    if (btnFicha) {
-        btnFicha.addEventListener('click', () => abrirModalNomenclador('ficha'));
-        console.log('✅ Listener configurado para botón de ficha');
+    if (btnAgregar) {
+        btnAgregar.addEventListener('click', () => abrirModalNomenclador('agregar'));
+        console.log('✅ Listener configurado para botón de agregar paciente');
+    }
+    
+    if (btnEditar) {
+        btnEditar.addEventListener('click', () => abrirModalNomenclador('editar'));
+        console.log('✅ Listener configurado para botón de editar paciente');
     }
     
     if (btnCalendar) {
@@ -3301,6 +3399,15 @@ window.hideEditPatientModal = function() {
     pacienteEditandoId = null;
     pacienteEditandoRef = null;
     
+    // Limpiar datos del nomenclador
+    datosNomencladorSeleccionados.editar = null;
+    const spanEditar = document.getElementById('nomencladorSeleccionadoEditar');
+    if (spanEditar) {
+        spanEditar.textContent = '';
+        spanEditar.classList.add('hidden');
+        spanEditar.title = '';
+    }
+    
     console.log('✅ Modal de edición cerrado completamente');
 };
 
@@ -3360,6 +3467,17 @@ window.showEditPatientModal = function(pacienteId, pacienteData) {
     if (educacionField) educacionField.value = pacienteData.educacion || '';
     if (institutoField) institutoField.value = pacienteData.instituto || '';
     if (motivoField) motivoField.value = pacienteData.motivo || '';
+    
+    // Precargar datos del nomenclador CIE-10 si existen
+    if (pacienteData.nomencladorCIE10) {
+        datosNomencladorSeleccionados.editar = pacienteData.nomencladorCIE10;
+        const spanEditar = document.getElementById('nomencladorSeleccionadoEditar');
+        if (spanEditar) {
+            spanEditar.textContent = pacienteData.nomencladorCIE10.codigo;
+            spanEditar.classList.remove('hidden');
+            spanEditar.title = `${pacienteData.nomencladorCIE10.codigo}: ${pacienteData.nomencladorCIE10.descripcion}`;
+        }
+    }
     
     console.log('✅ Mostrando modal...');
     modal.classList.remove('hidden');
@@ -3455,6 +3573,9 @@ if (editPatientFormElement) {
         const instituto = editPatientFormElement.editPatientInstituto.value;
         const motivo = editPatientFormElement.editPatientMotivo.value;
         
+        // Obtener datos del nomenclador CIE-10 si fueron seleccionados
+        const datosCIE10 = obtenerDatosCIE10('editar');
+        
         // Validar que al menos el nombre esté presente
         if (!nombre || nombre.trim() === '') {
             showMessage('Error: El nombre del paciente es obligatorio');
@@ -3470,7 +3591,7 @@ if (editPatientFormElement) {
             console.log('🔍 Referencia del paciente:', pacienteEditandoRef);
             console.log('🔍 ID del paciente:', pacienteEditandoId);
             
-            await pacienteEditandoRef.update({
+            const updateData = {
                 // Información personal
                 nombre,
                 dni,
@@ -3488,12 +3609,27 @@ if (editPatientFormElement) {
                 motivo,
                 // Metadatos
                 actualizado: new Date()
-            });
+            };
+
+            // Agregar o actualizar datos del nomenclador CIE-10
+            if (datosCIE10) {
+                updateData.nomencladorCIE10 = datosCIE10;
+            }
+            
+            await pacienteEditandoRef.update(updateData);
             
             console.log('✅ Paciente actualizado exitosamente');
             
             // Cerrar modal
             hideEditPatientModal();
+            
+            // Limpiar datos del nomenclador después de guardar
+            datosNomencladorSeleccionados.editar = null;
+            const spanEditar = document.getElementById('nomencladorSeleccionadoEditar');
+            if (spanEditar) {
+                spanEditar.textContent = '';
+                spanEditar.classList.add('hidden');
+            }
             
             // Recargar la lista de pacientes
             const user = window.firebaseAuth.currentUser;
@@ -3552,6 +3688,18 @@ if (editPatientFormElement) {
                                 
                                 <!-- Motivo de Consulta -->
                                 ${p.motivo ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded"><span class="font-semibold">Motivo:</span> ${p.motivo}</div>` : ''}
+                                
+                                <!-- Clasificación CIE-10 -->
+                                ${p.nomencladorCIE10 ? `
+                                <div class="mt-3 p-2 bg-green-50 dark:bg-green-900/20 rounded border-l-4 border-green-400">
+                                    <div class="text-xs font-semibold text-green-700 dark:text-green-300 mb-1">📋 Clasificación CIE-10</div>
+                                    <div class="text-xs text-green-600 dark:text-green-400">
+                                        <div><strong>Código:</strong> ${p.nomencladorCIE10.codigo}</div>
+                                        <div><strong>Categoría:</strong> ${p.nomencladorCIE10.categoriaNombre}</div>
+                                        <div class="mt-1 text-green-500 dark:text-green-300">${p.nomencladorCIE10.descripcion}</div>
+                                    </div>
+                                </div>
+                                ` : ''}
                             </div>
                             <button onclick="showEditPatientModal('${fichaPacienteId}', ${JSON.stringify(p).replace(/"/g, '&quot;')})" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
                                 ✏️ Editar
