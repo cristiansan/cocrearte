@@ -368,9 +368,15 @@
             </div>
             
             <div class="border-t border-gray-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-                <p class="text-gray-400 text-sm">
-                    © 2024 Espacio Cocrearte. Todos los derechos reservados.
-                </p>
+                <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
+                    <p class="text-gray-400 text-sm">
+                        © 2024 Espacio Cocrearte. Todos los derechos reservados.
+                    </p>
+                    <!-- Número de versión - Solo visible para administradores -->
+                    <button id="versionBtn" class="hidden text-xs text-gray-500 hover:text-gray-300 transition mt-2 sm:mt-0 cursor-pointer" onclick="abrirModalVersion()">
+                        v2.1.0
+                    </button>
+                </div>
                 <div class="flex space-x-6 mt-4 md:mt-0">
                     <a href="#" class="text-gray-400 hover:text-white transition">Privacidad</a>
                     <a href="#" class="text-gray-400 hover:text-white transition">Términos</a>
@@ -454,13 +460,20 @@
                 <h2 class="text-2xl font-bold text-[#2d3748] dark:text-gray-100" id="welcomeUser">Bienvenido</h2>
                 <p class="text-gray-500" id="userEmail"></p>
             </div>
-            <button id="logoutBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded transition">Cerrar sesión</button>
+            <div class="flex items-center gap-3">
+                <!-- Número de versión - Solo visible para administradores -->
+                <button id="versionBtnDashboard" class="hidden text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition cursor-pointer px-2 py-1 rounded" onclick="abrirModalVersion()">
+                    v2.1.0
+                </button>
+                <button id="logoutBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded transition">Cerrar sesión</button>
+            </div>
         </div>
     </div>
     <!-- Botones de agenda y calendario (ahora arriba del panel admin) -->
     <div id="calendarToggleBlock" class="w-full max-w-4xl mx-auto mt-2 hidden">
         <div class="flex gap-2 mb-4">
-            <button id="tabAgendaIndividual" class="tab-calendar bg-primary-700 text-white font-semibold py-2 px-4 rounded-t">Agenda individual</button>
+            <button id="tabPacientes" class="tab-calendar bg-primary-700 text-white font-semibold py-2 px-4 rounded-t">Pacientes</button>
+            <button id="tabAgendaIndividual" class="tab-calendar bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-t">Agenda individual</button>
             <button id="tabAgendaMultiple" class="tab-calendar bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-t">Agenda múltiple</button>
         </div>
         <div id="calendarTabs" class="hidden">
@@ -468,8 +481,9 @@
               <button id="btnPrev" class="px-2 py-1 rounded bg-gray-200 text-xl font-bold">&lt;</button>
               <span id="calendarCurrentLabel" class="mx-2 font-semibold w-40 text-center inline-block"></span>
               <button id="btnNext" class="px-2 py-1 rounded bg-gray-200 text-xl font-bold">&gt;</button>
-              <button id="btnVistaDia" class="bg-gray-200 px-3 py-1 rounded">Día</button>
-              <button id="btnVistaSemana" class="bg-primary-700 text-white px-3 py-1 rounded">Semana</button>
+                                          <button id="btnVistaDia" class="bg-gray-200 px-3 py-1 rounded">Día</button>
+                            <button id="btnVistaSemana" class="bg-primary-700 text-white px-3 py-1 rounded">Semana</button>
+                            <button id="btnVistaMes" class="bg-gray-200 px-3 py-1 rounded">Mes</button>
               
               <!-- Filtro de profesionales al lado del botón Semana -->
               <div id="profesionalesFilter" class="hidden ml-4 flex items-center gap-2">
@@ -1163,6 +1177,33 @@
             background-color: rgba(16, 185, 129, 0.15) !important; /* Verde sutil para modo oscuro */
         }
         
+        /* Vista mensual - Estilos específicos */
+        .fc-dayGridMonth-view .fc-daygrid-day {
+            min-height: 100px;
+        }
+        
+        .fc-dayGridMonth-view .fc-daygrid-day-number {
+            font-weight: 600;
+            padding: 8px;
+        }
+        
+        /* Eventos en vista mensual - Más compactos */
+        .fc-dayGridMonth-view .fc-event {
+            font-size: 12px;
+            padding: 2px 4px;
+            margin: 1px 0;
+            border-radius: 3px;
+        }
+        
+        /* Días del mes anterior/siguiente en vista mensual */
+        .fc-daygrid-day.fc-day-other {
+            background-color: rgba(0, 0, 0, 0.05) !important;
+        }
+        
+        .dark .fc-daygrid-day.fc-day-other {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+        }
+        
         /* Horarios libres - Cada slot individual que no tiene evento */
         .fc-timegrid-slot {
             background-color: rgba(16, 185, 129, 0.05) !important; /* Verde muy sutil por defecto */
@@ -1288,9 +1329,10 @@
             background-color: #6b7280;
         }
         
-        /* Botones de vista (Día/Semana) */
+        /* Botones de vista (Día/Semana/Mes) */
         .dark #btnVistaDia,
-        .dark #btnVistaSemana {
+        .dark #btnVistaSemana,
+        .dark #btnVistaMes {
             color: #f3f4f6;
             border-color: #6b7280;
         }
@@ -1378,12 +1420,14 @@
         }
         
         .dark #btnVistaDia:not(.bg-primary-700),
-        .dark #btnVistaSemana:not(.bg-primary-700) {
+        .dark #btnVistaSemana:not(.bg-primary-700),
+        .dark #btnVistaMes:not(.bg-primary-700) {
             background-color: #4b5563;
         }
         
         .dark #btnVistaDia:not(.bg-primary-700):hover,
-        .dark #btnVistaSemana:not(.bg-primary-700):hover {
+        .dark #btnVistaSemana:not(.bg-primary-700):hover,
+        .dark #btnVistaMes:not(.bg-primary-700):hover {
             background-color: #6b7280;
         }
         
@@ -1677,5 +1721,325 @@
             }
         }
     </script>
+
+    <!-- Modales de Información Familiar -->
+    
+    <!-- Modal Información Padre -->
+    <div id="modalInfoPadre" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden p-4">
+        <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg w-full max-w-lg relative border dark:border-darkborder max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-darkborder">
+                <h3 class="text-xl font-bold text-blue-700 dark:text-blue-400">👨 Información del Padre</h3>
+                <button onclick="cerrarModalInfoPadre()" class="text-gray-400 hover:text-gray-700 text-2xl p-1">×</button>
+            </div>
+            
+            <form id="formInfoPadre" class="p-6 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="padreNombre" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre Completo</label>
+                        <input id="padreNombre" name="padreNombre" type="text" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-darkbg dark:text-darktext" placeholder="Nombre del padre">
+                    </div>
+                    <div>
+                        <label for="padreEdad" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Edad</label>
+                        <input id="padreEdad" name="padreEdad" type="number" min="18" max="100" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-darkbg dark:text-darktext" placeholder="Edad">
+                    </div>
+                    <div>
+                        <label for="padreOcupacion" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ocupación</label>
+                        <input id="padreOcupacion" name="padreOcupacion" type="text" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-darkbg dark:text-darktext" placeholder="Ocupación del padre">
+                    </div>
+                    <div>
+                        <label for="padreEstadoCivil" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estado Civil</label>
+                        <select id="padreEstadoCivil" name="padreEstadoCivil" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-darkbg dark:text-darktext">
+                            <option value="">Seleccionar...</option>
+                            <option value="soltero">Soltero</option>
+                            <option value="casado">Casado</option>
+                            <option value="divorciado">Divorciado</option>
+                            <option value="viudo">Viudo</option>
+                            <option value="union-libre">Unión Libre</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="padreEducacion" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nivel Educativo</label>
+                        <select id="padreEducacion" name="padreEducacion" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-darkbg dark:text-darktext">
+                            <option value="">Seleccionar...</option>
+                            <option value="primaria-incompleta">Primaria Incompleta</option>
+                            <option value="primaria-completa">Primaria Completa</option>
+                            <option value="secundaria-incompleta">Secundaria Incompleta</option>
+                            <option value="secundaria-completa">Secundaria Completa</option>
+                            <option value="terciario-incompleto">Terciario Incompleto</option>
+                            <option value="terciario-completo">Terciario Completo</option>
+                            <option value="universitario-incompleto">Universitario Incompleto</option>
+                            <option value="universitario-completo">Universitario Completo</option>
+                            <option value="posgrado">Posgrado</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="padreObservaciones" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Observaciones</label>
+                        <textarea id="padreObservaciones" name="padreObservaciones" rows="3" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-darkbg dark:text-darktext" placeholder="Información adicional relevante..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end gap-3 pt-4 border-t">
+                    <button type="button" onclick="cerrarModalInfoPadre()" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded-lg">Cancelar</button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Información Madre -->
+    <div id="modalInfoMadre" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden p-4">
+        <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg w-full max-w-lg relative border dark:border-darkborder max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-darkborder">
+                <h3 class="text-xl font-bold text-purple-700 dark:text-purple-400">👩 Información de la Madre</h3>
+                <button onclick="cerrarModalInfoMadre()" class="text-gray-400 hover:text-gray-700 text-2xl p-1">×</button>
+            </div>
+            
+            <form id="formInfoMadre" class="p-6 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="madreNombre" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre Completo</label>
+                        <input id="madreNombre" name="madreNombre" type="text" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-darkbg dark:text-darktext" placeholder="Nombre de la madre">
+                    </div>
+                    <div>
+                        <label for="madreEdad" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Edad</label>
+                        <input id="madreEdad" name="madreEdad" type="number" min="18" max="100" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-darkbg dark:text-darktext" placeholder="Edad">
+                    </div>
+                    <div>
+                        <label for="madreOcupacion" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ocupación</label>
+                        <input id="madreOcupacion" name="madreOcupacion" type="text" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-darkbg dark:text-darktext" placeholder="Ocupación de la madre">
+                    </div>
+                    <div>
+                        <label for="madreEstadoCivil" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estado Civil</label>
+                        <select id="madreEstadoCivil" name="madreEstadoCivil" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-darkbg dark:text-darktext">
+                            <option value="">Seleccionar...</option>
+                            <option value="soltera">Soltera</option>
+                            <option value="casada">Casada</option>
+                            <option value="divorciada">Divorciada</option>
+                            <option value="viuda">Viuda</option>
+                            <option value="union-libre">Unión Libre</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="madreEducacion" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nivel Educativo</label>
+                        <select id="madreEducacion" name="madreEducacion" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-darkbg dark:text-darktext">
+                            <option value="">Seleccionar...</option>
+                            <option value="primaria-incompleta">Primaria Incompleta</option>
+                            <option value="primaria-completa">Primaria Completa</option>
+                            <option value="secundaria-incompleta">Secundaria Incompleta</option>
+                            <option value="secundaria-completa">Secundaria Completa</option>
+                            <option value="terciario-incompleto">Terciario Incompleto</option>
+                            <option value="terciario-completo">Terciario Completo</option>
+                            <option value="universitario-incompleto">Universitario Incompleto</option>
+                            <option value="universitario-completo">Universitario Completo</option>
+                            <option value="posgrado">Posgrado</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="madreObservaciones" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Observaciones</label>
+                        <textarea id="madreObservaciones" name="madreObservaciones" rows="3" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-darkbg dark:text-darktext" placeholder="Información adicional relevante..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end gap-3 pt-4 border-t">
+                    <button type="button" onclick="cerrarModalInfoMadre()" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded-lg">Cancelar</button>
+                    <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Información Hermanos -->
+    <div id="modalInfoHermanos" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden p-4">
+        <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg w-full max-w-2xl relative border dark:border-darkborder max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-darkborder">
+                <h3 class="text-xl font-bold text-green-700 dark:text-green-400">👫 Información de Hermanos</h3>
+                <button onclick="cerrarModalInfoHermanos()" class="text-gray-400 hover:text-gray-700 text-2xl p-1">×</button>
+            </div>
+            
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h4 class="text-lg font-semibold text-gray-700 dark:text-gray-300">Lista de Hermanos</h4>
+                    <button type="button" onclick="agregarHermano()" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg text-sm">+ Agregar Hermano</button>
+                </div>
+                
+                <div id="listaHermanos" class="space-y-4 mb-6">
+                    <!-- Los hermanos se agregan dinámicamente aquí -->
+                </div>
+                
+                <div class="flex justify-end gap-3 pt-4 border-t">
+                    <button type="button" onclick="cerrarModalInfoHermanos()" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded-lg">Cancelar</button>
+                    <button type="button" onclick="guardarInfoHermanos()" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Historial de Versiones - Solo para Administradores -->
+    <div id="modalVersion" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden p-4">
+        <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg w-full max-w-4xl relative border dark:border-darkborder max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-darkborder sticky top-0 bg-white dark:bg-darkcard">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">🚀</span>
+                    <div>
+                        <h3 class="text-xl font-bold text-primary-700 dark:text-primary-400">Historial de Versiones</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Espacio Cocrearte v2.1.0</p>
+                    </div>
+                </div>
+                <button onclick="cerrarModalVersion()" class="text-gray-400 hover:text-gray-700 text-2xl p-1">×</button>
+            </div>
+            
+            <div class="p-6 space-y-6">
+                <!-- Versión 2.1.0 -->
+                <div class="border-l-4 border-green-500 pl-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="bg-green-100 text-green-800 text-sm font-medium px-2 py-1 rounded">v2.1.0</span>
+                        <span class="text-sm text-gray-500">Actual</span>
+                    </div>
+                    <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Información Familiar Completa</h4>
+                    <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                        <li>• <strong>Modales de Información Familiar:</strong> Padre, Madre y Hermanos con formularios especializados</li>
+                        <li>• <strong>Indicadores Visuales:</strong> Marcas ✓ en botones cuando hay información guardada</li>
+                        <li>• <strong>Persistencia de Datos:</strong> Integración completa con Firebase para almacenar información familiar</li>
+                        <li>• <strong>Interfaz Responsive:</strong> Modales adaptados para dispositivos móviles</li>
+                    </ul>
+                </div>
+
+                <!-- Versión 2.0.0 -->
+                <div class="border-l-4 border-blue-500 pl-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded">v2.0.0</span>
+                    </div>
+                    <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Primera Sesión Destacada</h4>
+                    <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                        <li>• <strong>Identificación Automática:</strong> Detección de primera sesión por paciente</li>
+                        <li>• <strong>Visualización Especial:</strong> Color verde esmeralda y emoji 🌟 para primeras sesiones</li>
+                        <li>• <strong>Calendarios Actualizados:</strong> Títulos especiales en agenda individual y múltiple</li>
+                        <li>• <strong>Historial Diferenciado:</strong> Bordes y fondos especiales en historial de sesiones</li>
+                    </ul>
+                </div>
+
+                <!-- Versión 1.9.0 -->
+                <div class="border-l-4 border-purple-500 pl-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="bg-purple-100 text-purple-800 text-sm font-medium px-2 py-1 rounded">v1.9.0</span>
+                    </div>
+                    <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Navegación Principal Reorganizada</h4>
+                    <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                        <li>• <strong>Tres Estados Principales:</strong> Pacientes | Agenda Individual | Agenda Múltiple</li>
+                        <li>• <strong>Vista Pacientes por Defecto:</strong> Inicio con lista de pacientes visible</li>
+                        <li>• <strong>Navegación Inteligente:</strong> Oculta pacientes al seleccionar calendarios</li>
+                        <li>• <strong>Manejo de Administradores:</strong> Visibilidad correcta para diferentes tipos de usuario</li>
+                    </ul>
+                </div>
+
+                <!-- Versión 1.8.0 -->
+                <div class="border-l-4 border-yellow-500 pl-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="bg-yellow-100 text-yellow-800 text-sm font-medium px-2 py-1 rounded">v1.8.0</span>
+                    </div>
+                    <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Vista Mensual del Calendario</h4>
+                    <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                        <li>• <strong>Nueva Vista "Mes":</strong> Agregada junto a día y semana</li>
+                        <li>• <strong>Navegación Mejorada:</strong> Botones anterior/siguiente para meses</li>
+                        <li>• <strong>Etiquetas Dinámicas:</strong> "Enero 2024" en vista mensual</li>
+                        <li>• <strong>Integración Completa:</strong> Funciona en agenda individual y múltiple</li>
+                    </ul>
+                </div>
+
+                <!-- Versión 1.7.0 -->
+                <div class="border-l-4 border-red-500 pl-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="bg-red-100 text-red-800 text-sm font-medium px-2 py-1 rounded">v1.7.0</span>
+                    </div>
+                    <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Colores Intuitivos del Calendario</h4>
+                    <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                        <li>• <strong>Código de Colores:</strong> Verde para días libres, Violeta para días ocupados</li>
+                        <li>• <strong>Visualización Clara:</strong> Fácil identificación de disponibilidad</li>
+                        <li>• <strong>Modo Oscuro Compatible:</strong> Colores adaptados para ambos temas</li>
+                        <li>• <strong>Slots Individuales:</strong> Cada horario muestra su estado específico</li>
+                    </ul>
+                </div>
+
+                <!-- Versión 1.6.0 -->
+                <div class="border-l-4 border-indigo-500 pl-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="bg-indigo-100 text-indigo-800 text-sm font-medium px-2 py-1 rounded">v1.6.0</span>
+                    </div>
+                    <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Funcionalidad de Cámara</h4>
+                    <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                        <li>• <strong>Captura de Fotos:</strong> Usar cámara del dispositivo directamente</li>
+                        <li>• <strong>Preview Inteligente:</strong> Vista previa de imágenes seleccionadas</li>
+                        <li>• <strong>Validaciones:</strong> Límite de 5 archivos de 5MB cada uno</li>
+                        <li>• <strong>Integración Firebase:</strong> Subida automática a Firebase Storage</li>
+                    </ul>
+                </div>
+
+                <!-- Versión 1.5.0 -->
+                <div class="border-l-4 border-pink-500 pl-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="bg-pink-100 text-pink-800 text-sm font-medium px-2 py-1 rounded">v1.5.0</span>
+                    </div>
+                    <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Responsive Móvil Completo</h4>
+                    <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                        <li>• <strong>Menú Hamburguesa:</strong> Navegación móvil con animaciones</li>
+                        <li>• <strong>Modales Responsive:</strong> Estructura header/body/footer adaptable</li>
+                        <li>• <strong>Área de Toque Optimizada:</strong> Botones de mínimo 48px</li>
+                        <li>• <strong>CSS Móvil Específico:</strong> font-size: 16px para evitar zoom en iOS</li>
+                    </ul>
+                </div>
+
+                <!-- Versión 1.4.0 -->
+                <div class="border-l-4 border-teal-500 pl-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="bg-teal-100 text-teal-800 text-sm font-medium px-2 py-1 rounded">v1.4.0</span>
+                    </div>
+                    <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Nomenclador CIE-10 Reubicado</h4>
+                    <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                        <li>• <strong>Nueva Ubicación:</strong> Movido a formularios de agregar/editar paciente</li>
+                        <li>• <strong>Visualización Mejorada:</strong> Clasificación CIE-10 en tarjetas de pacientes</li>
+                        <li>• <strong>Modal Corregido:</strong> Z-index aumentado a 999999</li>
+                        <li>• <strong>Integración Completa:</strong> Datos guardados con el paciente</li>
+                    </ul>
+                </div>
+
+                <!-- Versión 1.3.0 -->
+                <div class="border-l-4 border-orange-500 pl-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="bg-orange-100 text-orange-800 text-sm font-medium px-2 py-1 rounded">v1.3.0</span>
+                    </div>
+                    <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Mejoras de Terminología</h4>
+                    <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                        <li>• <strong>Cambio de Etiquetas:</strong> "Comentario" → "Observaciones" en ficha clínica</li>
+                        <li>• <strong>Consistencia Terminológica:</strong> Unificación de términos en toda la aplicación</li>
+                        <li>• <strong>Experiencia de Usuario:</strong> Lenguaje más profesional y claro</li>
+                    </ul>
+                </div>
+
+                <!-- Versión Base -->
+                <div class="border-l-4 border-gray-500 pl-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="bg-gray-100 text-gray-800 text-sm font-medium px-2 py-1 rounded">v1.0.0</span>
+                    </div>
+                    <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Funcionalidades Base</h4>
+                    <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                        <li>• <strong>Gestión de Pacientes:</strong> CRUD completo con información personal y contacto</li>
+                        <li>• <strong>Sesiones Clínicas:</strong> Documentación con fecha, observaciones y archivos</li>
+                        <li>• <strong>Autenticación:</strong> Login/registro con Firebase Auth</li>
+                        <li>• <strong>Panel Administrativo:</strong> Gestión multiusuario</li>
+                        <li>• <strong>Modo Oscuro:</strong> Tema claro/oscuro con persistencia</li>
+                        <li>• <strong>Calendarios:</strong> Vista individual y múltiple profesionales</li>
+                        <li>• <strong>Firebase Integration:</strong> Firestore y Storage</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-200 dark:border-darkborder p-6 text-center">
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                    🧠 Desarrollado con dedicación para profesionales de la salud mental
+                </p>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html> 

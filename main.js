@@ -652,11 +652,45 @@ async function showDashboard(user) {
         if (noPatientsMsg) noPatientsMsg.style.display = '';
     }
     if (!isAdmin) loadPatients(user.uid);
-    // Ocultar calendario al iniciar sesión
+    
+    // Configurar estado inicial: mostrar Pacientes por defecto
     const calendarTabs = document.getElementById('calendarTabs');
     if (calendarTabs) calendarTabs.classList.add('hidden');
-    // Mostrar agenda individual
-    mostrarAgendaIndividual();
+    
+    // Asegurar que la sección de pacientes esté visible por defecto
+    const dashboardPacientesSection = document.getElementById('dashboardPacientesSection');
+    if (dashboardPacientesSection && !isAdmin) {
+        dashboardPacientesSection.classList.remove('hidden');
+    }
+    
+    // Para administradores, asegurar que el panel de administración esté visible por defecto
+    if (isAdmin && adminPanel) {
+        adminPanel.classList.remove('hidden');
+        adminPanel.style.display = 'block';
+    }
+    
+    // Asegurar que el botón "Pacientes" esté activo por defecto
+    const tabPacientes = document.getElementById('tabPacientes');
+    const tabAgendaIndividual = document.getElementById('tabAgendaIndividual');
+    const tabAgendaMultiple = document.getElementById('tabAgendaMultiple');
+    
+    if (tabPacientes && tabAgendaIndividual && tabAgendaMultiple) {
+        // Activar botón Pacientes
+        tabPacientes.classList.add('bg-primary-700', 'text-white');
+        tabPacientes.classList.remove('bg-gray-200', 'text-gray-800');
+        
+        // Desactivar botones de agenda
+        tabAgendaIndividual.classList.remove('bg-primary-700', 'text-white');
+        tabAgendaIndividual.classList.add('bg-gray-200', 'text-gray-800');
+        tabAgendaMultiple.classList.remove('bg-primary-700', 'text-white');
+        tabAgendaMultiple.classList.add('bg-gray-200', 'text-gray-800');
+    }
+    
+    // Inicializar funcionalidad de versión para administradores
+    // Usar setTimeout para asegurar que el DOM esté completamente cargado
+    setTimeout(async () => {
+        await inicializarVersion(user);
+    }, 100);
 }
 
 // Login
@@ -717,6 +751,9 @@ window.firebaseAuth.onAuthStateChanged(user => {
         isAdmin = false;
         adminPanelState = { selectedUser: null, profesionales: [], pacientes: [], sesiones: {} };
         
+        // Ocultar botón de versión
+        actualizarVisibilidadVersion(false);
+        
         // Mostrar landing page
         document.getElementById('landingPage').classList.remove('hidden');
     }
@@ -750,6 +787,9 @@ logoutBtn.addEventListener('click', async () => {
     // Resetear estado de admin
     isAdmin = false;
     adminPanelState = { selectedUser: null, profesionales: [], pacientes: [], sesiones: {} };
+    
+    // Ocultar botón de versión
+    actualizarVisibilidadVersion(false);
     
     // Mostrar landing page
     document.getElementById('landingPage').classList.remove('hidden');
@@ -953,6 +993,19 @@ patientsList.addEventListener('click', async (e) => {
                 </div>
                 ` : ''}
                 
+                <!-- Información Familiar -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3 border-t pt-3">
+                    <button onclick="abrirModalInfoPadre('${fichaPacienteId}')" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors">
+                        👨 Info. Padre ${p.infoPadre && p.infoPadre.nombre ? '✓' : ''}
+                    </button>
+                    <button onclick="abrirModalInfoMadre('${fichaPacienteId}')" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors">
+                        👩 Info. Madre ${p.infoMadre && p.infoMadre.nombre ? '✓' : ''}
+                    </button>
+                    <button onclick="abrirModalInfoHermanos('${fichaPacienteId}')" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors">
+                        👫 Info. Hermanos ${p.infoHermanos && p.infoHermanos.length > 0 ? '✓' : ''}
+                    </button>
+                </div>
+                
                 <!-- Motivo de Consulta -->
                 ${p.motivo ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded"><span class="font-semibold">Motivo:</span> ${p.motivo}</div>` : ''}
                 
@@ -992,13 +1045,55 @@ async function loadSesiones() {
     }
     
     console.log(`📄 Encontradas ${snapshot.size} sesión(es)`);
+    
+    // Convertir sesiones a array para poder identificar la primera
+    const sesionesArray = [];
     snapshot.forEach(doc => {
         const s = doc.data();
-        const div = document.createElement('div');
-        div.className = 'border rounded p-3 bg-gray-50 dark:bg-darkbg';
+        sesionesArray.push({
+            id: doc.id,
+            data: s,
+            fecha: new Date(s.fecha).getTime()
+        });
+    });
+    
+    // Ordenar por fecha ascendente para identificar la primera
+    sesionesArray.sort((a, b) => a.fecha - b.fecha);
+    
+    // Reordenar por fecha descendente para mostrar (más reciente primero)
+    const sesionesParaMostrar = [...sesionesArray].sort((a, b) => b.fecha - a.fecha);
+    
+    // Identificar la primera sesión (la más antigua)
+    const primeraSesionId = sesionesArray.length > 0 ? sesionesArray[0].id : null;
+    
+    sesionesParaMostrar.forEach(sesionInfo => {
+        const s = sesionInfo.data;
+        const esPrimera = sesionInfo.id === primeraSesionId;
         
-        // Construir HTML básico
-        let htmlContent = `
+        const div = document.createElement('div');
+        
+        // Aplicar estilo diferente si es la primera sesión
+        if (esPrimera) {
+            div.className = 'border-2 border-green-400 rounded p-3 bg-green-50 dark:bg-green-900/20 shadow-lg';
+        } else {
+            div.className = 'border rounded p-3 bg-gray-50 dark:bg-darkbg';
+        }
+        
+        // Construir HTML básico con indicador de primera sesión
+        let htmlContent = '';
+        
+        if (esPrimera) {
+            htmlContent += `
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="text-lg">🌟</span>
+                    <span class="text-sm font-bold text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-800 px-2 py-1 rounded-full">
+                        Primera Sesión
+                    </span>
+                </div>
+            `;
+        }
+        
+        htmlContent += `
             <div class="text-sm font-bold text-[#2d3748] dark:text-gray-100"><span class="font-semibold">Fecha:</span> ${s.fecha || ''}</div>
             <div class="text-gray-900 dark:text-gray-200">${s.comentario || ''}</div>
             ${s.notas ? `<div class="text-xs mt-2 text-[#4b5563] dark:text-gray-400"><span class="font-semibold">Notas:</span> ${s.notas}</div>` : ''}
@@ -1017,7 +1112,7 @@ async function loadSesiones() {
                     </div>
                 </div>
             `;
-            console.log(`📋 Sesión del ${s.fecha} tiene clasificación CIE-10: ${cie10.codigo} - ${cie10.descripcion}`);
+            console.log(`📋 Sesión del ${s.fecha} tiene clasificación CIE-10: ${cie10.codigo} - ${cie10.descripcion}${esPrimera ? ' (PRIMERA SESIÓN)' : ''}`);
         }
         
         // Agregar archivos adjuntos
@@ -1029,7 +1124,12 @@ async function loadSesiones() {
         sesionesList.appendChild(div);
         
         if (s.archivosUrls && s.archivosUrls.length > 0) {
-            console.log(`📎 Sesión del ${s.fecha} tiene ${s.archivosUrls.length} archivo(s) adjunto(s)`);
+            console.log(`📎 Sesión del ${s.fecha} tiene ${s.archivosUrls.length} archivo(s) adjunto(s)${esPrimera ? ' (PRIMERA SESIÓN)' : ''}`);
+        }
+        
+        // Log para identificar primera sesión
+        if (esPrimera) {
+            console.log(`🌟 PRIMERA SESIÓN identificada: ${s.fecha} - ${s.comentario}`);
         }
     });
 }
@@ -1363,6 +1463,19 @@ async function showAdminPanel() {
                       </div>
                       ` : ''}
                       
+                      <!-- Información Familiar -->
+                      <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3 border-t pt-3">
+                          <button onclick="abrirModalInfoPadre('${fichaPacienteId}')" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors">
+                              👨 Info. Padre ${p.infoPadre && p.infoPadre.nombre ? '✓' : ''}
+                          </button>
+                          <button onclick="abrirModalInfoMadre('${fichaPacienteId}')" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors">
+                              👩 Info. Madre ${p.infoMadre && p.infoMadre.nombre ? '✓' : ''}
+                          </button>
+                          <button onclick="abrirModalInfoHermanos('${fichaPacienteId}')" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors">
+                              👫 Info. Hermanos ${p.infoHermanos && p.infoHermanos.length > 0 ? '✓' : ''}
+                          </button>
+                      </div>
+                      
                       <!-- Motivo de Consulta -->
                       ${p.motivo ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded"><span class="font-semibold">Motivo:</span> ${p.motivo}</div>` : ''}
                       
@@ -1378,7 +1491,7 @@ async function showAdminPanel() {
                       </div>
                       ` : ''}
                   </div>
-                  <button onclick="showEditPatientModal('${pacienteId}', ${JSON.stringify(p).replace(/"/g, '&quot;')})" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
+                  <button onclick="showEditPatientModal('${fichaPacienteId}', ${JSON.stringify(p).replace(/"/g, '&quot;')})" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
                       ✏️ Editar
                   </button>
               </div>
@@ -1415,7 +1528,7 @@ async function showAdminPanel() {
     });
 }
 
-// === BOTONES DE CAMBIO DE VISTA (DÍA/SEMANA) ===
+// === BOTONES DE CAMBIO DE VISTA (DÍA/SEMANA/MES) ===
 function actualizarLabelCalendario() {
     const label = document.getElementById('calendarCurrentLabel');
     let calendar = calendarInstance || calendarMultipleInstance;
@@ -1427,6 +1540,8 @@ function actualizarLabelCalendario() {
         const start = view.currentStart;
         const end = new Date(view.currentEnd.getTime() - 1);
         label.textContent = `${start.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })} - ${end.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}`;
+    } else if (view.type === 'dayGridMonth') {
+        label.textContent = view.currentStart.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
     }
 }
 
@@ -1434,10 +1549,11 @@ function agregarListenersVistaCalendario() {
     console.log('=== AGREGANDO LISTENERS VISTA CALENDARIO ===');
     const btnDia = document.getElementById('btnVistaDia');
     const btnSemana = document.getElementById('btnVistaSemana');
+    const btnMes = document.getElementById('btnVistaMes');
     const btnPrev = document.getElementById('btnPrev');
     const btnNext = document.getElementById('btnNext');
-    console.log('Botones encontrados:', { btnDia, btnSemana, btnPrev, btnNext });
-    if (!btnDia || !btnSemana || !btnPrev || !btnNext) {
+    console.log('Botones encontrados:', { btnDia, btnSemana, btnMes, btnPrev, btnNext });
+    if (!btnDia || !btnSemana || !btnMes || !btnPrev || !btnNext) {
         console.error('FALTAN BOTONES! No se pueden agregar listeners');
         return;
     }
@@ -1445,11 +1561,13 @@ function agregarListenersVistaCalendario() {
     // REMOVER LISTENERS EXISTENTES ANTES DE AGREGAR NUEVOS
     const newBtnDia = btnDia.cloneNode(true);
     const newBtnSemana = btnSemana.cloneNode(true);
+    const newBtnMes = btnMes.cloneNode(true);
     const newBtnPrev = btnPrev.cloneNode(true);
     const newBtnNext = btnNext.cloneNode(true);
     
     btnDia.parentNode.replaceChild(newBtnDia, btnDia);
     btnSemana.parentNode.replaceChild(newBtnSemana, btnSemana);
+    btnMes.parentNode.replaceChild(newBtnMes, btnMes);
     btnPrev.parentNode.replaceChild(newBtnPrev, btnPrev);
     btnNext.parentNode.replaceChild(newBtnNext, btnNext);
 
@@ -1496,6 +1614,17 @@ function agregarListenersVistaCalendario() {
         activarBotonVista('week');
         actualizarLabelCalendario();
     });
+    
+    newBtnMes.addEventListener('click', () => {
+        let calendar = calendarInstance || calendarMultipleInstance;
+        if (calendar) {
+            const currentDate = calendar.getDate();
+            calendar.changeView('dayGridMonth');
+            calendar.gotoDate(currentDate);
+        }
+        activarBotonVista('month');
+        actualizarLabelCalendario();
+    });
     newBtnPrev.addEventListener('click', () => {
         if (navegacionEnProceso) {
             console.log('PREV - Navegación en proceso, ignorando clic');
@@ -1520,6 +1649,12 @@ function agregarListenersVistaCalendario() {
                 const currentDate = new Date(calendar.getDate());
                 currentDate.setUTCDate(currentDate.getUTCDate() - 7);
                 console.log('PREV - Nueva fecha (semana):', currentDate);
+                calendar.gotoDate(currentDate);
+            } else if (view.type === 'dayGridMonth') {
+                // Usar método más directo para mes anterior
+                const currentDate = new Date(calendar.getDate());
+                currentDate.setUTCMonth(currentDate.getUTCMonth() - 1);
+                console.log('PREV - Nueva fecha (mes):', currentDate);
                 calendar.gotoDate(currentDate);
             }
         }
@@ -1554,6 +1689,12 @@ function agregarListenersVistaCalendario() {
                 currentDate.setUTCDate(currentDate.getUTCDate() + 7);
                 console.log('NEXT - Nueva fecha (semana):', currentDate);
                 calendar.gotoDate(currentDate);
+            } else if (view.type === 'dayGridMonth') {
+                // Usar método más directo para mes siguiente
+                const currentDate = new Date(calendar.getDate());
+                currentDate.setUTCMonth(currentDate.getUTCMonth() + 1);
+                console.log('NEXT - Nueva fecha (mes):', currentDate);
+                calendar.gotoDate(currentDate);
             }
         }
         
@@ -1567,17 +1708,25 @@ function agregarListenersVistaCalendario() {
 function activarBotonVista(tipo) {
     const btnDia = document.getElementById('btnVistaDia');
     const btnSemana = document.getElementById('btnVistaSemana');
-    if (!btnDia || !btnSemana) return;
+    const btnMes = document.getElementById('btnVistaMes');
+    if (!btnDia || !btnSemana || !btnMes) return;
+    
+    // Resetear todos los botones
+    [btnDia, btnSemana, btnMes].forEach(btn => {
+        btn.classList.remove('bg-primary-700', 'text-white');
+        btn.classList.add('bg-gray-200');
+    });
+    
+    // Activar el botón correspondiente
     if (tipo === 'day') {
         btnDia.classList.add('bg-primary-700', 'text-white');
         btnDia.classList.remove('bg-gray-200');
-        btnSemana.classList.remove('bg-primary-700', 'text-white');
-        btnSemana.classList.add('bg-gray-200');
-    } else {
+    } else if (tipo === 'week') {
         btnSemana.classList.add('bg-primary-700', 'text-white');
         btnSemana.classList.remove('bg-gray-200');
-        btnDia.classList.remove('bg-primary-700', 'text-white');
-        btnDia.classList.add('bg-gray-200');
+    } else if (tipo === 'month') {
+        btnMes.classList.add('bg-primary-700', 'text-white');
+        btnMes.classList.remove('bg-gray-200');
     }
     actualizarLabelCalendario();
 }
@@ -1697,6 +1846,20 @@ function cargarFiltrosProfesionales() {
                 // Crear nuevo calendario con eventos filtrados
                 calendarMultipleInstance = new window.FullCalendar.Calendar(calendarEl, {
                     initialView: vistaInicial,
+                    views: {
+                        timeGridWeek: { 
+                            type: 'timeGridWeek', 
+                            buttonText: 'Semana'
+                        },
+                        timeGridDay: { 
+                            type: 'timeGridDay', 
+                            buttonText: 'Día'
+                        },
+                        dayGridMonth: { 
+                            type: 'dayGridMonth', 
+                            buttonText: 'Mes'
+                        }
+                    },
                     locale: 'es',
                     headerToolbar: false,
                     height: 600,
@@ -1751,8 +1914,10 @@ function cargarFiltrosProfesionales() {
                 // Activar botón de vista correcto
                 if (vistaInicial === 'timeGridDay') {
                     activarBotonVista('day');
-                } else {
+                } else if (vistaInicial === 'timeGridWeek') {
                     activarBotonVista('week');
+                } else if (vistaInicial === 'dayGridMonth') {
+                    activarBotonVista('month');
                 }
                 
                 // Actualizar label del calendario
@@ -1874,9 +2039,24 @@ async function cargarEventosFiltrados() {
                 
                 console.log(`📝 Sesiones para paciente ${pacienteData.nombre}:`, sesionesSnap.size);
                 
-                // Crear eventos para cada sesión
+                // Convertir sesiones a array para poder ordenar y encontrar la primera
+                const sesionesArray = [];
                 sesionesSnap.forEach(sesionDoc => {
                     const sesionData = sesionDoc.data();
+                    sesionesArray.push({
+                        id: sesionDoc.id,
+                        data: sesionData,
+                        fecha: new Date(sesionData.fecha).getTime()
+                    });
+                });
+                
+                // Ordenar sesiones por fecha para identificar la primera
+                sesionesArray.sort((a, b) => a.fecha - b.fecha);
+                
+                // Crear eventos para cada sesión
+                sesionesArray.forEach((sesionInfo, index) => {
+                    const sesionData = sesionInfo.data;
+                    const esPrimera = index === 0; // La primera en el array ordenado
                     
                     const extendedProps = {
                         pacienteId: pacDoc.id,
@@ -1884,8 +2064,9 @@ async function cargarEventosFiltrados() {
                         profesionalName: profesional.title,
                         pacienteNombre: pacienteData.nombre || pacienteData.email,
                         notas: sesionData.comentario,
-                        sesionId: sesionDoc.id,
-                        fecha: sesionData.fecha
+                        sesionId: sesionInfo.id,
+                        fecha: sesionData.fecha,
+                        esPrimeraSesion: esPrimera
                     };
                     
                     // Agregar información CIE-10 si existe
@@ -1894,16 +2075,25 @@ async function cargarEventosFiltrados() {
                         console.log(`📋 Sesión tiene clasificación CIE-10: ${sesionData.nomencladorCIE10.codigo}`);
                     }
                     
+                    // Determinar color y título según si es primera sesión
+                    const backgroundColor = esPrimera ? getColorPrimeraSesion() : getColorForProfessional(profesional.id);
+                    const borderColor = backgroundColor;
+                    const title = generarTituloSesion(
+                        pacienteData.nombre || pacienteData.email, 
+                        profesional.title, 
+                        esPrimera
+                    );
+                    
                     const evento = {
-                        title: `${pacienteData.nombre || pacienteData.email} (${profesional.title})`,
+                        title: title,
                         start: sesionData.fecha,
-                        backgroundColor: getColorForProfessional(profesional.id),
-                        borderColor: getColorForProfessional(profesional.id),
+                        backgroundColor: backgroundColor,
+                        borderColor: borderColor,
                         extendedProps: extendedProps
                     };
                     
                     eventos.push(evento);
-                    console.log(`✅ Evento creado: "${evento.title}" - Profesional: ${profesional.title} (${profesional.id})`);
+                    console.log(`✅ Evento creado: "${evento.title}" - ${esPrimera ? '🌟 PRIMERA SESIÓN' : 'Sesión regular'} - Profesional: ${profesional.title} (${profesional.id})`);
                 });
             }
             
@@ -2069,6 +2259,20 @@ async function mostrarAgendaMultiple() {
     // Crear calendario simple
     calendarMultipleInstance = new window.FullCalendar.Calendar(calendarEl, {
         initialView: vistaInicial,
+        views: {
+            timeGridWeek: { 
+                type: 'timeGridWeek', 
+                buttonText: 'Semana'
+            },
+            timeGridDay: { 
+                type: 'timeGridDay', 
+                buttonText: 'Día'
+            },
+            dayGridMonth: { 
+                type: 'dayGridMonth', 
+                buttonText: 'Mes'
+            }
+        },
         locale: 'es',
         headerToolbar: false,
         height: 600,
@@ -2131,8 +2335,10 @@ async function mostrarAgendaMultiple() {
     // Activar el botón correcto según la vista inicial
     if (vistaInicial === 'timeGridDay') {
         activarBotonVista('day');
-    } else {
+    } else if (vistaInicial === 'timeGridWeek') {
         activarBotonVista('week');
+    } else if (vistaInicial === 'dayGridMonth') {
+        activarBotonVista('month');
     }
 }
 
@@ -2172,6 +2378,10 @@ function mostrarAgendaIndividual() {
                 timeGridDay: { 
                     type: 'timeGridDay', 
                     buttonText: 'Día'
+                },
+                dayGridMonth: { 
+                    type: 'dayGridMonth', 
+                    buttonText: 'Mes'
                 }
             },
             locale: 'es',
@@ -2192,15 +2402,42 @@ function mostrarAgendaIndividual() {
                     const pacientesSnap = await window.firebaseDB.collection('pacientes').where('owner', '==', user.uid).get();
                     for (const pacDoc of pacientesSnap.docs) {
                         const sesionesSnap = await window.firebaseDB.collection('pacientes').doc(pacDoc.id).collection('sesiones').get();
+                        
+                        // Convertir sesiones a array para poder ordenar y encontrar la primera
+                        const sesionesArray = [];
                         sesionesSnap.forEach(sDoc => {
                             const s = sDoc.data();
+                            sesionesArray.push({
+                                id: sDoc.id,
+                                data: s,
+                                fecha: new Date(s.fecha).getTime()
+                            });
+                        });
+                        
+                        // Ordenar sesiones por fecha para identificar la primera
+                        sesionesArray.sort((a, b) => a.fecha - b.fecha);
+                        
+                        // Crear eventos para cada sesión
+                        sesionesArray.forEach((sesionInfo, index) => {
+                            const s = sesionInfo.data;
+                            const esPrimera = index === 0; // La primera en el array ordenado
+                            const pacienteNombre = pacDoc.data().nombre || pacDoc.data().email;
+                            
+                            // Determinar color y título según si es primera sesión
+                            const backgroundColor = esPrimera ? getColorPrimeraSesion() : '#8b5cf6'; // Violeta por defecto
+                            const borderColor = backgroundColor;
+                            const title = generarTituloSesion(pacienteNombre, null, esPrimera);
+                            
                             eventos.push({
-                                title: pacDoc.data().nombre || pacDoc.data().email,
+                                title: title,
                                 start: s.fecha,
+                                backgroundColor: backgroundColor,
+                                borderColor: borderColor,
                                 extendedProps: {
                                     pacienteId: pacDoc.id,
                                     notas: s.comentario,
-                                    sesionId: sDoc.id
+                                    sesionId: sesionInfo.id,
+                                    esPrimeraSesion: esPrimera
                                 }
                             });
                         });
@@ -2237,81 +2474,135 @@ function mostrarAgendaIndividual() {
     }
 }
 
-// Estado de visibilidad del calendario
+// Estado de visibilidad del calendario y pacientes
 let calendarVisible = false;
-let activeTab = null; // 'individual', 'multiple' o null
+let patientsVisible = true; // Por defecto mostramos pacientes
+let activeTab = 'patients'; // 'patients', 'individual', 'multiple'
 
-// Event listeners para tabs del calendario (toggle)
+// Event listeners para tabs (Pacientes, Agenda Individual, Agenda Múltiple)
+const tabPacientes = document.getElementById('tabPacientes');
 const tabAgendaIndividual = document.getElementById('tabAgendaIndividual');
 const tabAgendaMultiple = document.getElementById('tabAgendaMultiple');
 const calendarTabs = document.getElementById('calendarTabs');
-if (tabAgendaIndividual && tabAgendaMultiple && calendarTabs) {
-    tabAgendaIndividual.addEventListener('click', () => {
-        if (calendarVisible && activeTab === 'individual') {
-            calendarTabs.classList.add('hidden');
-            calendarVisible = false;
+const dashboardPacientesSection = document.getElementById('dashboardPacientesSection');
+
+if (tabPacientes && tabAgendaIndividual && tabAgendaMultiple && calendarTabs && dashboardPacientesSection) {
+    
+    // Función para resetear todos los botones
+    function resetearBotones() {
+        [tabPacientes, tabAgendaIndividual, tabAgendaMultiple].forEach(btn => {
+            btn.classList.remove('bg-primary-700', 'text-white');
+            btn.classList.add('bg-gray-200', 'text-gray-800');
+        });
+    }
+    
+    // Función para mostrar solo pacientes
+    function mostrarSoloPacientes() {
+        calendarTabs.classList.add('hidden');
+        patientsVisible = true;
+        calendarVisible = false;
+        
+        // Manejar visibilidad según el tipo de usuario
+        if (isAdmin) {
+            // Para administradores: ocultar dashboard normal y mostrar panel admin
+            dashboardPacientesSection.classList.add('hidden');
+            if (adminPanel) {
+                adminPanel.classList.remove('hidden');
+                adminPanel.style.display = 'block';
+            }
         } else {
-            tabAgendaIndividual.classList.add('bg-primary-700', 'text-white');
-            tabAgendaIndividual.classList.remove('bg-gray-200', 'text-gray-800');
-            tabAgendaMultiple.classList.remove('bg-primary-700', 'text-white');
-            tabAgendaMultiple.classList.add('bg-gray-200', 'text-gray-800');
-            calendarTabs.classList.remove('hidden');
-            calendarVisible = true;
-            activeTab = 'individual';
-            mostrarAgendaIndividual();
+            // Para usuarios normales: mostrar dashboard normal y ocultar panel admin
+            dashboardPacientesSection.classList.remove('hidden');
+            if (adminPanel) {
+                adminPanel.classList.add('hidden');
+                adminPanel.style.display = 'none';
+            }
         }
+        
+        // Ocultar filtro cuando se oculta el calendario
+        const profesionalesFilter = document.getElementById('profesionalesFilter');
+        if (profesionalesFilter) {
+            profesionalesFilter.classList.add('hidden');
+            profesionalesFilter.style.display = 'none';
+        }
+    }
+    
+    // Función para mostrar solo calendario
+    function mostrarSoloCalendario() {
+        // Ocultar ambas secciones de pacientes (normal y admin)
+        dashboardPacientesSection.classList.add('hidden');
+        if (adminPanel) {
+            adminPanel.classList.add('hidden');
+            adminPanel.style.display = 'none';
+        }
+        
+        calendarTabs.classList.remove('hidden');
+        patientsVisible = false;
+        calendarVisible = true;
+    }
+    
+    // Event listener para botón Pacientes
+    tabPacientes.addEventListener('click', () => {
+        resetearBotones();
+        tabPacientes.classList.add('bg-primary-700', 'text-white');
+        tabPacientes.classList.remove('bg-gray-200', 'text-gray-800');
+        
+        mostrarSoloPacientes();
+        activeTab = 'patients';
+        console.log('🔄 Mostrando solo pacientes');
     });
+    
+    // Event listener para Agenda Individual
+    tabAgendaIndividual.addEventListener('click', () => {
+        resetearBotones();
+        tabAgendaIndividual.classList.add('bg-primary-700', 'text-white');
+        tabAgendaIndividual.classList.remove('bg-gray-200', 'text-gray-800');
+        
+        mostrarSoloCalendario();
+        activeTab = 'individual';
+        mostrarAgendaIndividual();
+        console.log('🔄 Mostrando agenda individual');
+    });
+    
+    // Event listener para Agenda Múltiple
     tabAgendaMultiple.addEventListener('click', async () => {
         console.log('🎯 CLICK EN AGENDA MÚLTIPLE');
-        if (calendarVisible && activeTab === 'multiple') {
-            console.log('🔄 Ocultando calendario múltiple');
-            calendarTabs.classList.add('hidden');
-            calendarVisible = false;
-            // Ocultar filtro cuando se oculta el calendario
-            const profesionalesFilter = document.getElementById('profesionalesFilter');
-            if (profesionalesFilter) {
-                profesionalesFilter.classList.add('hidden');
-                profesionalesFilter.style.display = 'none';
+        resetearBotones();
+        tabAgendaMultiple.classList.add('bg-primary-700', 'text-white');
+        tabAgendaMultiple.classList.remove('bg-gray-200', 'text-gray-800');
+        
+        mostrarSoloCalendario();
+        activeTab = 'multiple';
+        
+        // Asegurar que el filtro se muestre inmediatamente ANTES de cargar la agenda
+        const profesionalesFilter = document.getElementById('profesionalesFilter');
+        if (profesionalesFilter) {
+            console.log('🎯 Mostrando filtro inmediatamente');
+            profesionalesFilter.classList.remove('hidden');
+            profesionalesFilter.style.display = 'flex';
+            profesionalesFilter.style.visibility = 'visible';
+            profesionalesFilter.style.opacity = '1';
+            console.log('✅ Filtro visible antes de cargar agenda');
+        }
+        
+        // Verificar si ya tenemos profesionales cargados
+        if (profesionalesDisponibles.length === 0) {
+            console.log('🔄 No hay profesionales cargados, cargando automáticamente...');
+            try {
+                await window.cargarProfesionalesFirebase();
+                console.log('✅ Profesionales cargados automáticamente');
+            } catch (error) {
+                console.error('❌ Error al cargar profesionales automáticamente:', error);
             }
         } else {
-            console.log('🔄 Mostrando calendario múltiple');
-            tabAgendaMultiple.classList.add('bg-primary-700', 'text-white');
-            tabAgendaMultiple.classList.remove('bg-gray-200', 'text-gray-800');
-            tabAgendaIndividual.classList.remove('bg-primary-700', 'text-white');
-            tabAgendaIndividual.classList.add('bg-gray-200', 'text-gray-800');
-            calendarTabs.classList.remove('hidden');
-            calendarVisible = true;
-            activeTab = 'multiple';
-            
-            // Asegurar que el filtro se muestre inmediatamente ANTES de cargar la agenda
-            const profesionalesFilter = document.getElementById('profesionalesFilter');
-            if (profesionalesFilter) {
-                console.log('🎯 Mostrando filtro inmediatamente');
-                profesionalesFilter.classList.remove('hidden');
-                profesionalesFilter.style.display = 'flex';
-                profesionalesFilter.style.visibility = 'visible';
-                profesionalesFilter.style.opacity = '1';
-                console.log('✅ Filtro visible antes de cargar agenda');
-            }
-            
-            // Verificar si ya tenemos profesionales cargados
-            if (profesionalesDisponibles.length === 0) {
-                console.log('🔄 No hay profesionales cargados, cargando automáticamente...');
-                try {
-                    await window.cargarProfesionalesFirebase();
-                    console.log('✅ Profesionales cargados automáticamente');
-                } catch (error) {
-                    console.error('❌ Error al cargar profesionales automáticamente:', error);
-                }
-            } else {
-                console.log('✅ Profesionales ya disponibles:', profesionalesDisponibles.length);
-                // Asegurar que el filtro esté cargado
-                cargarFiltrosProfesionales();
-            }
-            
-            console.log('🚀 Llamando a mostrarAgendaMultiple()');
-            mostrarAgendaMultiple();
+            console.log('✅ Profesionales ya disponibles:', profesionalesDisponibles.length);
+            // Asegurar que el filtro esté cargado
+            cargarFiltrosProfesionales();
         }
+        
+        console.log('🚀 Llamando a mostrarAgendaMultiple()');
+        mostrarAgendaMultiple();
+        console.log('🔄 Mostrando agenda múltiple');
     });
 }
 
@@ -2375,20 +2666,36 @@ if (formNuevaSesion) {
                 
                 const docRef = await window.firebaseDB.collection('pacientes').doc(pacienteId).collection('sesiones').add(datosSession);
                 
+                // Verificar si es la primera sesión de este paciente
+                const esPrimera = await esPrimeraSesion(pacienteId, fecha);
+                
                 // Agregar evento a la instancia activa
                 const activeCalendar = calendarMultipleInstance || calendarInstance;
                 if (activeCalendar) {
-                    const eventProps = { pacienteId, notas, sesionId: docRef.id };
+                    const eventProps = { pacienteId, notas, sesionId: docRef.id, esPrimeraSesion: esPrimera };
                     if (datosCIE10) {
                         eventProps.nomencladorCIE10 = datosCIE10;
                     }
                     
+                    // Obtener nombre del paciente y profesional para el título
+                    const pacienteNombre = selectPaciente.options[selectPaciente.selectedIndex].text;
+                    const profesionalNombre = calendarMultipleInstance ? null : null; // Para agenda individual no incluir profesional
+                    const title = generarTituloSesion(pacienteNombre, profesionalNombre, esPrimera);
+                    
+                    // Determinar colores
+                    const backgroundColor = esPrimera ? getColorPrimeraSesion() : (calendarMultipleInstance ? '#8b5cf6' : '#8b5cf6');
+                    const borderColor = backgroundColor;
+                    
                     activeCalendar.addEvent({
-                        title: selectPaciente.options[selectPaciente.selectedIndex].text,
+                        title: title,
                         start: fecha,
                         end: null,
+                        backgroundColor: backgroundColor,
+                        borderColor: borderColor,
                         extendedProps: eventProps
                     });
+                    
+                    console.log(`✅ Evento agregado al calendario: "${title}" - ${esPrimera ? '🌟 PRIMERA SESIÓN' : 'Sesión regular'}`);
                 }
             }
             modalNuevaSesion.classList.add('hidden');
@@ -2487,6 +2794,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 timeGridDay: { 
                     type: 'timeGridDay', 
                     buttonText: 'Día'
+                },
+                dayGridMonth: { 
+                    type: 'dayGridMonth', 
+                    buttonText: 'Mes'
                 }
             },
             locale: 'es',
@@ -3686,6 +3997,19 @@ if (editPatientFormElement) {
                                 </div>
                                 ` : ''}
                                 
+                                <!-- Información Familiar -->
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3 border-t pt-3">
+                                    <button onclick="abrirModalInfoPadre('${pacienteId}')" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors">
+                                        👨 Info. Padre ${p.infoPadre && p.infoPadre.nombre ? '✓' : ''}
+                                    </button>
+                                    <button onclick="abrirModalInfoMadre('${pacienteId}')" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors">
+                                        👩 Info. Madre ${p.infoMadre && p.infoMadre.nombre ? '✓' : ''}
+                                    </button>
+                                    <button onclick="abrirModalInfoHermanos('${pacienteId}')" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors">
+                                        👫 Info. Hermanos ${p.infoHermanos && p.infoHermanos.length > 0 ? '✓' : ''}
+                                    </button>
+                                </div>
+                                
                                 <!-- Motivo de Consulta -->
                                 ${p.motivo ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded"><span class="font-semibold">Motivo:</span> ${p.motivo}</div>` : ''}
                                 
@@ -3701,7 +4025,7 @@ if (editPatientFormElement) {
                                 </div>
                                 ` : ''}
                             </div>
-                            <button onclick="showEditPatientModal('${fichaPacienteId}', ${JSON.stringify(p).replace(/"/g, '&quot;')})" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
+                            <button onclick="showEditPatientModal('${pacienteId}', ${JSON.stringify(p).replace(/"/g, '&quot;')})" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
                                 ✏️ Editar
                             </button>
                         </div>
@@ -3731,3 +4055,518 @@ if (editPatientFormElement) {
         }
     });
 }
+
+// Función para determinar si es la primera sesión de un paciente
+async function esPrimeraSesion(pacienteId, fechaSesion) {
+    try {
+        const sesionesSnap = await window.firebaseDB
+            .collection('pacientes')
+            .doc(pacienteId)
+            .collection('sesiones')
+            .orderBy('fecha', 'asc')
+            .get();
+        
+        if (sesionesSnap.empty) {
+            return true; // Si no hay sesiones, la próxima será la primera
+        }
+        
+        // Obtener la fecha de la primera sesión
+        const primeraSesion = sesionesSnap.docs[0].data();
+        const fechaPrimera = new Date(primeraSesion.fecha).getTime();
+        const fechaActual = new Date(fechaSesion).getTime();
+        
+        // Es primera sesión si es la fecha más temprana
+        return fechaActual === fechaPrimera;
+    } catch (error) {
+        console.error('Error verificando primera sesión:', error);
+        return false;
+    }
+}
+
+// Función para obtener el color de primera sesión
+function getColorPrimeraSesion() {
+    return '#10b981'; // Verde esmeralda para primera sesión
+}
+
+// Función para generar título de sesión con indicador de primera sesión
+function generarTituloSesion(pacienteNombre, profesionalNombre, esPrimera) {
+    if (esPrimera) {
+        if (profesionalNombre) {
+            return `🌟 Primera Sesión - ${pacienteNombre} (${profesionalNombre})`;
+        } else {
+            return `🌟 Primera Sesión - ${pacienteNombre}`;
+        }
+    } else {
+        if (profesionalNombre) {
+            return `${pacienteNombre} (${profesionalNombre})`;
+        } else {
+            return pacienteNombre;
+        }
+    }
+}
+
+// ===== FUNCIONES PARA MODALES DE INFORMACIÓN FAMILIAR =====
+
+// Variables globales para manejo de información familiar
+let currentPacienteId = null;
+let hermanosCounter = 0;
+
+// === MODAL INFORMACIÓN PADRE ===
+window.abrirModalInfoPadre = async function(pacienteId) {
+    currentPacienteId = pacienteId;
+    const modal = document.getElementById('modalInfoPadre');
+    modal.classList.remove('hidden');
+    
+    // Cargar datos existentes si los hay
+    try {
+        const pacienteDoc = await window.firebaseDB.collection('pacientes').doc(pacienteId).get();
+        if (pacienteDoc.exists) {
+            const pacienteData = pacienteDoc.data();
+            if (pacienteData.infoPadre) {
+                cargarDatosPadre(pacienteData.infoPadre);
+            }
+        }
+    } catch (error) {
+        console.error('Error cargando datos del padre:', error);
+    }
+};
+
+window.cerrarModalInfoPadre = function() {
+    const modal = document.getElementById('modalInfoPadre');
+    modal.classList.add('hidden');
+    limpiarFormularioPadre();
+};
+
+function cargarDatosPadre(datosPadre) {
+    document.getElementById('padreNombre').value = datosPadre.nombre || '';
+    document.getElementById('padreEdad').value = datosPadre.edad || '';
+    document.getElementById('padreOcupacion').value = datosPadre.ocupacion || '';
+    document.getElementById('padreEstadoCivil').value = datosPadre.estadoCivil || '';
+    document.getElementById('padreEducacion').value = datosPadre.educacion || '';
+    document.getElementById('padreObservaciones').value = datosPadre.observaciones || '';
+}
+
+function limpiarFormularioPadre() {
+    document.getElementById('formInfoPadre').reset();
+}
+
+// === MODAL INFORMACIÓN MADRE ===
+window.abrirModalInfoMadre = async function(pacienteId) {
+    currentPacienteId = pacienteId;
+    const modal = document.getElementById('modalInfoMadre');
+    modal.classList.remove('hidden');
+    
+    // Cargar datos existentes si los hay
+    try {
+        const pacienteDoc = await window.firebaseDB.collection('pacientes').doc(pacienteId).get();
+        if (pacienteDoc.exists) {
+            const pacienteData = pacienteDoc.data();
+            if (pacienteData.infoMadre) {
+                cargarDatosMadre(pacienteData.infoMadre);
+            }
+        }
+    } catch (error) {
+        console.error('Error cargando datos de la madre:', error);
+    }
+};
+
+window.cerrarModalInfoMadre = function() {
+    const modal = document.getElementById('modalInfoMadre');
+    modal.classList.add('hidden');
+    limpiarFormularioMadre();
+};
+
+function cargarDatosMadre(datosMadre) {
+    document.getElementById('madreNombre').value = datosMadre.nombre || '';
+    document.getElementById('madreEdad').value = datosMadre.edad || '';
+    document.getElementById('madreOcupacion').value = datosMadre.ocupacion || '';
+    document.getElementById('madreEstadoCivil').value = datosMadre.estadoCivil || '';
+    document.getElementById('madreEducacion').value = datosMadre.educacion || '';
+    document.getElementById('madreObservaciones').value = datosMadre.observaciones || '';
+}
+
+function limpiarFormularioMadre() {
+    document.getElementById('formInfoMadre').reset();
+}
+
+// === MODAL INFORMACIÓN HERMANOS ===
+window.abrirModalInfoHermanos = async function(pacienteId) {
+    currentPacienteId = pacienteId;
+    const modal = document.getElementById('modalInfoHermanos');
+    modal.classList.remove('hidden');
+    
+    // Cargar datos existentes si los hay
+    try {
+        const pacienteDoc = await window.firebaseDB.collection('pacientes').doc(pacienteId).get();
+        if (pacienteDoc.exists) {
+            const pacienteData = pacienteDoc.data();
+            if (pacienteData.infoHermanos && pacienteData.infoHermanos.length > 0) {
+                cargarDatosHermanos(pacienteData.infoHermanos);
+            } else {
+                // Si no hay hermanos, agregar uno vacío por defecto
+                agregarHermano();
+            }
+        }
+    } catch (error) {
+        console.error('Error cargando datos de hermanos:', error);
+    }
+};
+
+window.cerrarModalInfoHermanos = function() {
+    const modal = document.getElementById('modalInfoHermanos');
+    modal.classList.add('hidden');
+    limpiarListaHermanos();
+};
+
+window.agregarHermano = function() {
+    const listaHermanos = document.getElementById('listaHermanos');
+    const hermanoId = hermanosCounter++;
+    
+    const div = document.createElement('div');
+    div.className = 'border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-800';
+    div.setAttribute('data-hermano-id', hermanoId);
+    
+    div.innerHTML = `
+        <div class="flex justify-between items-center mb-3">
+            <h5 class="font-semibold text-gray-700 dark:text-gray-300">Hermano/a ${hermanoId + 1}</h5>
+            <button type="button" onclick="eliminarHermano(${hermanoId})" class="text-red-500 hover:text-red-700 text-xl">×</button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre</label>
+                <input type="text" name="hermanoNombre_${hermanoId}" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 dark:bg-darkbg dark:text-darktext" placeholder="Nombre del hermano/a">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Edad</label>
+                <input type="number" name="hermanoEdad_${hermanoId}" min="0" max="100" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 dark:bg-darkbg dark:text-darktext" placeholder="Edad">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ocupación/Estudios</label>
+                <input type="text" name="hermanoOcupacion_${hermanoId}" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 dark:bg-darkbg dark:text-darktext" placeholder="Estudios o trabajo">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Relación</label>
+                <select name="hermanoRelacion_${hermanoId}" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 dark:bg-darkbg dark:text-darktext">
+                    <option value="">Seleccionar...</option>
+                    <option value="hermano">Hermano</option>
+                    <option value="hermana">Hermana</option>
+                    <option value="medio-hermano">Medio hermano</option>
+                    <option value="media-hermana">Media hermana</option>
+                </select>
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Observaciones</label>
+                <textarea name="hermanoObservaciones_${hermanoId}" rows="2" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 dark:bg-darkbg dark:text-darktext" placeholder="Información adicional..."></textarea>
+            </div>
+        </div>
+    `;
+    
+    listaHermanos.appendChild(div);
+};
+
+window.eliminarHermano = function(hermanoId) {
+    const hermanoDiv = document.querySelector(`[data-hermano-id="${hermanoId}"]`);
+    if (hermanoDiv) {
+        hermanoDiv.remove();
+    }
+};
+
+function cargarDatosHermanos(hermanos) {
+    limpiarListaHermanos();
+    
+    hermanos.forEach((hermano, index) => {
+        agregarHermano();
+        const hermanoDiv = document.querySelector(`[data-hermano-id="${index}"]`);
+        if (hermanoDiv) {
+            hermanoDiv.querySelector(`input[name="hermanoNombre_${index}"]`).value = hermano.nombre || '';
+            hermanoDiv.querySelector(`input[name="hermanoEdad_${index}"]`).value = hermano.edad || '';
+            hermanoDiv.querySelector(`input[name="hermanoOcupacion_${index}"]`).value = hermano.ocupacion || '';
+            hermanoDiv.querySelector(`select[name="hermanoRelacion_${index}"]`).value = hermano.relacion || '';
+            hermanoDiv.querySelector(`textarea[name="hermanoObservaciones_${index}"]`).value = hermano.observaciones || '';
+        }
+    });
+}
+
+function limpiarListaHermanos() {
+    const listaHermanos = document.getElementById('listaHermanos');
+    listaHermanos.innerHTML = '';
+    hermanosCounter = 0;
+}
+
+window.guardarInfoHermanos = async function() {
+    if (!currentPacienteId) return;
+    
+    const listaHermanos = document.getElementById('listaHermanos');
+    const hermanosData = [];
+    
+    // Recopilar datos de todos los hermanos
+    const hermanoDivs = listaHermanos.querySelectorAll('[data-hermano-id]');
+    hermanoDivs.forEach(div => {
+        const hermanoId = div.getAttribute('data-hermano-id');
+        const nombre = div.querySelector(`input[name="hermanoNombre_${hermanoId}"]`).value;
+        const edad = div.querySelector(`input[name="hermanoEdad_${hermanoId}"]`).value;
+        const ocupacion = div.querySelector(`input[name="hermanoOcupacion_${hermanoId}"]`).value;
+        const relacion = div.querySelector(`select[name="hermanoRelacion_${hermanoId}"]`).value;
+        const observaciones = div.querySelector(`textarea[name="hermanoObservaciones_${hermanoId}"]`).value;
+        
+        // Solo agregar si tiene al menos el nombre
+        if (nombre.trim()) {
+            hermanosData.push({
+                nombre: nombre.trim(),
+                edad: edad ? parseInt(edad) : null,
+                ocupacion: ocupacion.trim(),
+                relacion: relacion,
+                observaciones: observaciones.trim()
+            });
+        }
+    });
+    
+    try {
+        await window.firebaseDB.collection('pacientes').doc(currentPacienteId).update({
+            infoHermanos: hermanosData,
+            modificado: new Date()
+        });
+        
+        showMessage('✅ Información de hermanos guardada exitosamente', 'success');
+        cerrarModalInfoHermanos();
+        
+        // Actualizar la ficha si está abierta
+        if (fichaPacienteId === currentPacienteId) {
+            // Recargar los datos de la ficha
+            const pacienteDoc = await window.firebaseDB.collection('pacientes').doc(currentPacienteId).get();
+            if (pacienteDoc.exists) {
+                // Actualizar solo los botones con el indicador ✓
+                actualizarIndicadoresFamilia(pacienteDoc.data());
+            }
+        }
+    } catch (error) {
+        console.error('Error guardando información de hermanos:', error);
+        showMessage('❌ Error al guardar información de hermanos', 'error');
+    }
+};
+
+// === EVENT LISTENERS PARA FORMULARIOS ===
+document.addEventListener('DOMContentLoaded', function() {
+    // Form Padre
+    const formPadre = document.getElementById('formInfoPadre');
+    if (formPadre) {
+        formPadre.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            if (!currentPacienteId) return;
+            
+            const formData = new FormData(formPadre);
+            const datosPadre = {
+                nombre: formData.get('padreNombre')?.trim() || '',
+                edad: formData.get('padreEdad') ? parseInt(formData.get('padreEdad')) : null,
+                ocupacion: formData.get('padreOcupacion')?.trim() || '',
+                estadoCivil: formData.get('padreEstadoCivil') || '',
+                educacion: formData.get('padreEducacion') || '',
+                observaciones: formData.get('padreObservaciones')?.trim() || ''
+            };
+            
+            try {
+                await window.firebaseDB.collection('pacientes').doc(currentPacienteId).update({
+                    infoPadre: datosPadre,
+                    modificado: new Date()
+                });
+                
+                showMessage('✅ Información del padre guardada exitosamente', 'success');
+                cerrarModalInfoPadre();
+                
+                // Actualizar la ficha si está abierta
+                if (fichaPacienteId === currentPacienteId) {
+                    // Recargar los datos de la ficha
+                    const pacienteDoc = await window.firebaseDB.collection('pacientes').doc(currentPacienteId).get();
+                    if (pacienteDoc.exists) {
+                        actualizarIndicadoresFamilia(pacienteDoc.data());
+                    }
+                }
+            } catch (error) {
+                console.error('Error guardando información del padre:', error);
+                showMessage('❌ Error al guardar información del padre', 'error');
+            }
+        });
+    }
+    
+    // Form Madre
+    const formMadre = document.getElementById('formInfoMadre');
+    if (formMadre) {
+        formMadre.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            if (!currentPacienteId) return;
+            
+            const formData = new FormData(formMadre);
+            const datosMadre = {
+                nombre: formData.get('madreNombre')?.trim() || '',
+                edad: formData.get('madreEdad') ? parseInt(formData.get('madreEdad')) : null,
+                ocupacion: formData.get('madreOcupacion')?.trim() || '',
+                estadoCivil: formData.get('madreEstadoCivil') || '',
+                educacion: formData.get('madreEducacion') || '',
+                observaciones: formData.get('madreObservaciones')?.trim() || ''
+            };
+            
+            try {
+                await window.firebaseDB.collection('pacientes').doc(currentPacienteId).update({
+                    infoMadre: datosMadre,
+                    modificado: new Date()
+                });
+                
+                showMessage('✅ Información de la madre guardada exitosamente', 'success');
+                cerrarModalInfoMadre();
+                
+                // Actualizar la ficha si está abierta
+                if (fichaPacienteId === currentPacienteId) {
+                    // Recargar los datos de la ficha
+                    const pacienteDoc = await window.firebaseDB.collection('pacientes').doc(currentPacienteId).get();
+                    if (pacienteDoc.exists) {
+                        actualizarIndicadoresFamilia(pacienteDoc.data());
+                    }
+                }
+            } catch (error) {
+                console.error('Error guardando información de la madre:', error);
+                showMessage('❌ Error al guardar información de la madre', 'error');
+            }
+        });
+    }
+});
+
+// Función para actualizar solo los indicadores de familia sin recargar toda la ficha
+function actualizarIndicadoresFamilia(pacienteData) {
+    // Esta función se ejecuta para actualizar los indicadores ✓ en los botones
+    // sin necesidad de recargar toda la ficha clínica
+    console.log('🔄 Actualizando indicadores de información familiar');
+}
+
+console.log('✅ Funciones de información familiar cargadas correctamente');
+
+// ===== FUNCIONES PARA MODAL DE VERSIÓN =====
+
+// Variable para controlar si el usuario es administrador
+let isUserAdmin = false;
+
+// Función para verificar si el usuario es administrador
+async function verificarSiEsAdmin(uid) {
+    try {
+        const userDoc = await window.firebaseDB.collection('usuarios').doc(uid).get();
+        return userDoc.exists && userDoc.data().isAdmin === true;
+    } catch (error) {
+        console.error('Error verificando si es admin:', error);
+        return false;
+    }
+}
+
+// Función para mostrar/ocultar el botón de versión
+function actualizarVisibilidadVersion(esAdmin) {
+    console.log('🎛️ Actualizando visibilidad de versión. Es admin:', esAdmin);
+    
+    const versionBtn = document.getElementById('versionBtn'); // Footer landing page
+    const versionBtnDashboard = document.getElementById('versionBtnDashboard'); // Dashboard
+    
+    console.log('🔍 Elementos encontrados:', {
+        versionBtn: !!versionBtn,
+        versionBtnDashboard: !!versionBtnDashboard
+    });
+    
+    if (versionBtn) {
+        if (esAdmin) {
+            versionBtn.classList.remove('hidden');
+            console.log('✅ Botón footer visible');
+        } else {
+            versionBtn.classList.add('hidden');
+            console.log('❌ Botón footer oculto');
+        }
+    }
+    
+    if (versionBtnDashboard) {
+        if (esAdmin) {
+            versionBtnDashboard.classList.remove('hidden');
+            console.log('✅ Botón dashboard visible');
+        } else {
+            versionBtnDashboard.classList.add('hidden');
+            console.log('❌ Botón dashboard oculto');
+        }
+    } else {
+        console.log('⚠️ Elemento versionBtnDashboard no encontrado');
+        
+        // Reintentar después de un momento si es admin
+        if (esAdmin) {
+            console.log('🔄 Reintentando en 500ms...');
+            setTimeout(() => {
+                const versionBtnDashboardRetry = document.getElementById('versionBtnDashboard');
+                if (versionBtnDashboardRetry) {
+                    versionBtnDashboardRetry.classList.remove('hidden');
+                    console.log('✅ Botón dashboard visible (segundo intento)');
+                } else {
+                    console.log('❌ Elemento versionBtnDashboard aún no encontrado');
+                }
+            }, 500);
+        }
+    }
+}
+
+// Función para abrir el modal de versión
+window.abrirModalVersion = function() {
+    const modal = document.getElementById('modalVersion');
+    if (modal) {
+        modal.classList.remove('hidden');
+        console.log('🚀 Modal de versión abierto');
+    }
+};
+
+// Función para cerrar el modal de versión
+window.cerrarModalVersion = function() {
+    const modal = document.getElementById('modalVersion');
+    if (modal) {
+        modal.classList.add('hidden');
+        console.log('🚀 Modal de versión cerrado');
+    }
+};
+
+// Función para inicializar la funcionalidad de versión cuando el usuario se autentica
+async function inicializarVersion(user) {
+    console.log('🚀 Inicializando versión para usuario:', user?.email);
+    
+    if (user && user.uid) {
+        console.log('🔍 Verificando si es administrador...');
+        isUserAdmin = await verificarSiEsAdmin(user.uid);
+        console.log('👤 Es administrador:', isUserAdmin);
+        
+        actualizarVisibilidadVersion(isUserAdmin);
+        
+        if (isUserAdmin) {
+            console.log('🔧 Usuario administrador detectado - Funcionalidades de versión habilitadas');
+        } else {
+            console.log('👨‍💼 Usuario normal - Versión oculta');
+        }
+    } else {
+        // Usuario no autenticado - ocultar versión
+        console.log('❌ Usuario no autenticado - Ocultando versión');
+        actualizarVisibilidadVersion(false);
+        isUserAdmin = false;
+    }
+}
+
+// La inicialización de versión se llamará desde showDashboard directamente
+
+// Event listener para cerrar modal con Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const modalVersion = document.getElementById('modalVersion');
+        if (modalVersion && !modalVersion.classList.contains('hidden')) {
+            cerrarModalVersion();
+        }
+    }
+});
+
+// Event listener para cerrar modal haciendo clic fuera
+document.addEventListener('click', function(e) {
+    const modalVersion = document.getElementById('modalVersion');
+    if (modalVersion && !modalVersion.classList.contains('hidden')) {
+        // Si el clic fue en el fondo del modal (no en el contenido)
+        if (e.target === modalVersion) {
+            cerrarModalVersion();
+        }
+    }
+});
+
+console.log('🚀 Funciones de versión cargadas correctamente');
