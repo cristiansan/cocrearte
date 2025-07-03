@@ -454,7 +454,8 @@
     </div>
     </div>
     <!-- Bloque de bienvenida SIEMPRE ARRIBA -->
-    <div id="welcomeBlock" class="w-full max-w-3xl mx-auto mt-10 hidden">
+    <div class="dashboard-container w-full min-h-screen box-border p-2 flex flex-col gap-4">
+      <div id="welcomeBlock" class="w-full mt-2 hidden">
         <div class="bg-white dark:bg-darkcard rounded-lg shadow p-6 mb-6 flex justify-between items-center border dark:border-darkborder">
             <div>
                 <h2 class="text-2xl font-bold text-[#2d3748] dark:text-gray-100" id="welcomeUser">Bienvenido</h2>
@@ -468,9 +469,8 @@
                 <button id="logoutBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded transition">Cerrar sesión</button>
             </div>
         </div>
-    </div>
-    <!-- Botones de agenda y calendario (ahora arriba del panel admin) -->
-    <div id="calendarToggleBlock" class="w-full max-w-4xl mx-auto mt-2 hidden">
+      </div>
+      <div id="calendarToggleBlock" class="w-full mt-2 hidden">
         <div class="flex gap-2 mb-4">
             <button id="tabPacientes" class="tab-calendar bg-primary-700 text-white font-semibold py-2 px-4 rounded-t">Pacientes</button>
             <button id="tabAgendaIndividual" class="tab-calendar bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-t">Agenda individual</button>
@@ -495,27 +495,42 @@
             </div>
             <div id="calendar" class="bg-white dark:bg-darkcard rounded-b-lg shadow p-4 border dark:border-darkborder"></div>
         </div>
-    </div>
-    <!-- Aquí va el panel admin y luego el dashboard de pacientes -->
-    <section id="dashboardPacientesSection" class="w-full max-w-3xl mt-0 mx-auto hidden">
-        <div class="bg-white dark:bg-darkcard rounded-lg shadow p-6 border dark:border-darkborder">
-            <div class="flex justify-between items-center mb-4">
+      </div>
+      <!-- Panel de pacientes -->
+      <section id="dashboardPacientesSection" class="w-full mt-0 hidden">
+        <div class="bg-white dark:bg-darkcard rounded-lg shadow p-6 border dark:border-darkborder w-full">
+          <div class="flex flex-col md:flex-row w-full gap-6">
+            <!-- Panel de administración y pacientes, estructura original -->
+            <!-- Panel de administración -->
+            <div class="w-full md:w-1/2 mb-6 md:mb-0 md:mr-4">
+              <h3 class="text-xl font-semibold text-primary-700 mb-4">Panel de Administración</h3>
+              <div id="profesionalesList">
+                <!-- Aquí se listan los profesionales registrados -->
+              </div>
+            </div>
+            <!-- Panel de pacientes -->
+            <div class="w-full md:w-1/2">
+              <div class="flex justify-between items-center mb-4">
                 <h3 class="text-xl font-semibold text-[#2d3748] dark:text-gray-100">Pacientes</h3>
                 <button id="showAddPatientBtn" class="bg-primary-700 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded border-2 border-primary-600 shadow-sm dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-darkbg">+ Agregar Paciente</button>
-            </div>
-            <div id="pacientesLoader" class="flex flex-col justify-center items-center py-8 hidden">
+              </div>
+              <div id="pacientesLoader" class="flex flex-col justify-center items-center py-8 hidden">
                 <svg class="animate-spin h-8 w-8 text-primary-600 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
                 </svg>
                 <span class="text-primary-600 font-semibold">Cargando pacientes...</span>
-            </div>
-            <div id="patientsList" class="space-y-4">
+              </div>
+              <div id="patientsList" class="space-y-4">
                 <!-- Aquí se listarán los pacientes -->
+              </div>
+              <div id="noPatientsMsg" class="text-gray-500 text-center mt-8 hidden">No hay pacientes registrados.</div>
             </div>
-            <div id="noPatientsMsg" class="text-gray-500 text-center mt-8 hidden">No hay pacientes registrados.</div>
+          </div>
         </div>
-    </section>
+      </section>
+      <!-- Aquí iría el calendario si es visible -->
+    </div>
 
     <!-- Modal para agregar paciente -->
     <div id="addPatientModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-start sm:items-center justify-center z-50 hidden p-2 sm:p-4 overflow-y-auto">
@@ -2040,6 +2055,28 @@
             </div>
         </div>
     </div>
+
+    <style>
+    .dashboard-container {
+      padding: 10px;
+      min-height: 100vh;
+      width: calc(100vw - 24px);
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    body {
+      overflow-x: hidden;
+    }
+    @media (max-width: 640px) {
+      .dashboard-container {
+        padding: 4px;
+        gap: 8px;
+        width: 100vw;
+      }
+    }
+    </style>
 
 </body>
 </html> 
