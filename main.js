@@ -626,6 +626,17 @@ async function showDashboard(user) {
     // Detectar admin
     const userDoc = await window.firebaseDB.collection('usuarios').doc(user.uid).get();
     isAdmin = userDoc.exists && userDoc.data().isAdmin === true;
+    // Mostrar foto de perfil si existe
+    const profileAvatar = document.getElementById('profileAvatar');
+    if (profileAvatar) {
+      const photoURL = userDoc.exists && userDoc.data().photoURL;
+      if (photoURL) {
+        profileAvatar.src = photoURL;
+      } else {
+        // Avatar por defecto
+        profileAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email || 'U')}&background=8b5cf6&color=fff&size=96`;
+      }
+    }
     const dashboardSection = document.getElementById('dashboardPacientesSection');
     if (isAdmin) {
         // Ocultar la grilla de pacientes propia para evitar duplicación, pero mostrar el botón '+ Agregar Paciente'
@@ -1313,11 +1324,13 @@ async function showAdminPanel() {
       adminPanelState.profesionales = usuariosSnap.docs.map(doc => doc.data());
     }
     adminPanelState.profesionales.forEach(u => {
+      const avatarUrl = u.photoURL ? u.photoURL : `https://ui-avatars.com/api/?name=${encodeURIComponent(u.displayName || u.email || 'U')}&background=8b5cf6&color=fff&size=80`;
       html += `<li>
         <button class="w-full text-left flex items-center gap-2 px-3 py-2 rounded transition font-medium
           ${adminPanelState.selectedUser === u.uid ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300' : 'hover:bg-primary-50 dark:hover:bg-darkborder text-gray-700 dark:text-gray-200'}"
           data-uid="${u.uid}">
-          <span class="text-lg">👤</span> <span>${u.displayName || u.email}</span>
+          <img src="${avatarUrl}" alt="avatar" class="w-10 h-10 rounded-full object-cover border border-primary-200 dark:border-primary-700 bg-gray-100 dark:bg-gray-800" />
+          <span>${u.displayName || u.email}</span>
           ${u.isAdmin ? '<span class=\"text-xs bg-green-100 text-green-700 rounded px-2 py-0.5 ml-2\">admin</span>' : ''}
         </button>
       </li>`;
@@ -4570,3 +4583,199 @@ document.addEventListener('click', function(e) {
 });
 
 console.log('🚀 Funciones de versión cargadas correctamente');
+
+// === FOTO DE PERFIL DEL TERAPEUTA ===
+document.addEventListener('DOMContentLoaded', function() {
+  const profileAvatar = document.getElementById('profileAvatar');
+  const changeProfilePhotoBtn = document.getElementById('changeProfilePhotoBtn');
+  const profilePhotoInput = document.getElementById('profilePhotoInput');
+  const profilePhotoMenu = document.getElementById('profilePhotoMenu');
+  const optionUploadPhoto = document.getElementById('optionUploadPhoto');
+  const optionTakePhoto = document.getElementById('optionTakePhoto');
+  const cameraModal = document.getElementById('cameraModal');
+  const closeCameraModal = document.getElementById('closeCameraModal');
+  const cameraVideo = document.getElementById('cameraVideo');
+  const cameraCanvas = document.getElementById('cameraCanvas');
+  const takePhotoBtn = document.getElementById('takePhotoBtn');
+  const confirmPhotoBtn = document.getElementById('confirmPhotoBtn');
+  const retakePhotoBtn = document.getElementById('retakePhotoBtn');
+
+  let cameraStream = null;
+  let photoBlob = null;
+
+  // Mostrar menú al hacer clic en el ícono de cámara
+  if (changeProfilePhotoBtn && profilePhotoMenu) {
+    changeProfilePhotoBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      profilePhotoMenu.classList.toggle('hidden');
+      // Posicionar el menú debajo del botón
+      const rect = changeProfilePhotoBtn.getBoundingClientRect();
+      profilePhotoMenu.style.top = rect.bottom + 8 + 'px';
+      profilePhotoMenu.style.right = '0px';
+    });
+    // Ocultar menú al hacer clic fuera
+    document.addEventListener('click', (e) => {
+      if (!profilePhotoMenu.contains(e.target) && e.target !== changeProfilePhotoBtn) {
+        profilePhotoMenu.classList.add('hidden');
+      }
+    });
+  }
+
+  // Opción: Subir foto (abre input file)
+  if (optionUploadPhoto && profilePhotoInput) {
+    optionUploadPhoto.addEventListener('click', () => {
+      profilePhotoMenu.classList.add('hidden');
+      profilePhotoInput.click();
+    });
+  }
+
+  // Opción: Tomar foto (abre modal de cámara)
+  if (optionTakePhoto && cameraModal) {
+    optionTakePhoto.addEventListener('click', async () => {
+      profilePhotoMenu.classList.add('hidden');
+      cameraModal.classList.remove('hidden');
+      cameraCanvas.classList.add('hidden');
+      confirmPhotoBtn.classList.add('hidden');
+      retakePhotoBtn.classList.add('hidden');
+      takePhotoBtn.classList.remove('hidden');
+      // Iniciar cámara
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        cameraVideo.srcObject = cameraStream;
+        cameraVideo.play();
+      } catch (err) {
+        showMessage('No se pudo acceder a la cámara: ' + err.message, 'error');
+        cameraModal.classList.add('hidden');
+      }
+    });
+  }
+
+  // Cerrar modal de cámara
+  if (closeCameraModal && cameraModal) {
+    closeCameraModal.addEventListener('click', () => {
+      cameraModal.classList.add('hidden');
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+      }
+      cameraVideo.srcObject = null;
+      cameraCanvas.classList.add('hidden');
+      confirmPhotoBtn.classList.add('hidden');
+      retakePhotoBtn.classList.add('hidden');
+      takePhotoBtn.classList.remove('hidden');
+    });
+  }
+
+  // Tomar foto
+  if (takePhotoBtn && cameraVideo && cameraCanvas) {
+    takePhotoBtn.addEventListener('click', () => {
+      const ctx = cameraCanvas.getContext('2d');
+      cameraCanvas.width = cameraVideo.videoWidth;
+      cameraCanvas.height = cameraVideo.videoHeight;
+      ctx.drawImage(cameraVideo, 0, 0, cameraCanvas.width, cameraCanvas.height);
+      cameraCanvas.classList.remove('hidden');
+      cameraVideo.classList.add('hidden');
+      takePhotoBtn.classList.add('hidden');
+      confirmPhotoBtn.classList.remove('hidden');
+      retakePhotoBtn.classList.remove('hidden');
+      // Convertir a blob para subir luego
+      cameraCanvas.toBlob(blob => {
+        photoBlob = blob;
+      }, 'image/jpeg', 0.95);
+    });
+  }
+
+  // Repetir foto
+  if (retakePhotoBtn && cameraVideo && cameraCanvas) {
+    retakePhotoBtn.addEventListener('click', () => {
+      cameraCanvas.classList.add('hidden');
+      cameraVideo.classList.remove('hidden');
+      takePhotoBtn.classList.remove('hidden');
+      confirmPhotoBtn.classList.add('hidden');
+      retakePhotoBtn.classList.add('hidden');
+      photoBlob = null;
+    });
+  }
+
+  // Confirmar y subir foto tomada
+  if (confirmPhotoBtn) {
+    confirmPhotoBtn.addEventListener('click', async () => {
+      if (!photoBlob) return;
+      const user = window.firebaseAuth.currentUser;
+      if (!user) {
+        showMessage('Debes iniciar sesión para cambiar tu foto de perfil', 'error');
+        return;
+      }
+      // Validar tamaño (2MB)
+      if (photoBlob.size > 2 * 1024 * 1024) {
+        showMessage('La foto es demasiado grande (máx 2MB)', 'error');
+        return;
+      }
+      try {
+        // Subir a Storage
+        const storageRef = window.firebaseStorage.ref(`usuarios_fotos/${user.uid}.jpg`);
+        await storageRef.put(photoBlob);
+        const url = await storageRef.getDownloadURL();
+        // Guardar en Firestore
+        await window.firebaseDB.collection('usuarios').doc(user.uid).set({ photoURL: url }, { merge: true });
+        // Actualizar avatar en pantalla
+        if (profileAvatar) profileAvatar.src = url;
+        showMessage('Foto de perfil actualizada', 'success');
+        // Cerrar modal y detener cámara
+        cameraModal.classList.add('hidden');
+        if (cameraStream) {
+          cameraStream.getTracks().forEach(track => track.stop());
+          cameraStream = null;
+        }
+        cameraVideo.srcObject = null;
+        cameraCanvas.classList.add('hidden');
+        confirmPhotoBtn.classList.add('hidden');
+        retakePhotoBtn.classList.add('hidden');
+        takePhotoBtn.classList.remove('hidden');
+      } catch (err) {
+        showMessage('Error al subir la foto: ' + err.message, 'error');
+      }
+    });
+  }
+
+  // Validación y vista previa para input file
+  if (profilePhotoInput) {
+    profilePhotoInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      // Validar tipo y tamaño
+      if (!file.type.startsWith('image/')) {
+        showMessage('Solo se permiten imágenes', 'error');
+        profilePhotoInput.value = '';
+        return;
+      }
+      if (file.size > 2 * 1024 * 1024) {
+        showMessage('La imagen es demasiado grande (máx 2MB)', 'error');
+        profilePhotoInput.value = '';
+        return;
+      }
+      // Vista previa
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        if (profileAvatar) profileAvatar.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+      // Subir a Firebase Storage y guardar en Firestore
+      const user = window.firebaseAuth.currentUser;
+      if (!user) {
+        showMessage('Debes iniciar sesión para cambiar tu foto de perfil', 'error');
+        return;
+      }
+      try {
+        const storageRef = window.firebaseStorage.ref(`usuarios_fotos/${user.uid}.jpg`);
+        await storageRef.put(file);
+        const url = await storageRef.getDownloadURL();
+        await window.firebaseDB.collection('usuarios').doc(user.uid).set({ photoURL: url }, { merge: true });
+        if (profileAvatar) profileAvatar.src = url;
+        showMessage('Foto de perfil actualizada', 'success');
+      } catch (err) {
+        showMessage('Error al subir la foto: ' + err.message, 'error');
+      }
+    });
+  }
+});

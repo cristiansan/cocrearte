@@ -457,9 +457,21 @@
     <div class="dashboard-container w-full min-h-screen box-border p-2 flex flex-col gap-4">
       <div id="welcomeBlock" class="w-full mt-2 hidden">
         <div class="bg-white dark:bg-darkcard rounded-lg shadow p-6 mb-6 flex justify-between items-center border dark:border-darkborder">
-            <div>
-                <h2 class="text-2xl font-bold text-[#2d3748] dark:text-gray-100" id="welcomeUser">Bienvenido</h2>
-                <p class="text-gray-500" id="userEmail"></p>
+            <div class="flex items-center gap-4">
+                <!-- Avatar de perfil con ícono de cámara -->
+                <div class="relative group">
+                  <img id="profileAvatar" src="https://ui-avatars.com/api/?name=U&background=8b5cf6&color=fff&size=96" alt="Foto de perfil" class="w-24 h-24 rounded-full object-cover border-2 border-primary-600 dark:border-primary-400 bg-gray-200 dark:bg-gray-700">
+                  <button id="changeProfilePhotoBtn" type="button" title="Cambiar foto de perfil" class="absolute bottom-[-8px] right-[-8px] bg-primary-600 hover:bg-primary-700 text-white rounded-full p-1 border-2 border-white dark:border-darkcard shadow transition flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path fill="currentColor" d="M12 9a3 3 0 100 6 3 3 0 000-6zm7-3h-2.586l-1-1A2 2 0 0013.172 4h-2.344a2 2 0 00-1.414.586l-1 1H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2zm-7 10a5 5 0 110-10 5 5 0 010 10z"/>
+                    </svg>
+                  </button>
+                  <input id="profilePhotoInput" type="file" accept="image/*" capture="user" class="hidden" />
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-[#2d3748] dark:text-gray-100" id="welcomeUser">Bienvenido</h2>
+                    <p class="text-gray-500" id="userEmail"></p>
+                </div>
             </div>
             <div class="flex items-center gap-3">
                 <!-- Número de versión - Solo visible para administradores -->
@@ -2077,6 +2089,25 @@
       }
     }
     </style>
+
+    <!-- Menú de opciones para foto de perfil -->
+    <div id="profilePhotoMenu" class="absolute z-50 bg-white dark:bg-darkcard rounded-lg shadow-lg border dark:border-darkborder mt-2 left-0 ml-[10px] hidden w-48">
+      <button id="optionUploadPhoto" class="w-full text-left px-4 py-2 hover:bg-primary-50 dark:hover:bg-gray-700 rounded-t transition text-gray-800 dark:text-white">Subir foto</button>
+      <button id="optionTakePhoto" class="w-full text-left px-4 py-2 hover:bg-primary-50 dark:hover:bg-gray-700 rounded-b transition text-gray-800 dark:text-white">Tomar foto</button>
+    </div>
+
+    <!-- Modal de cámara para tomar foto de perfil -->
+    <div id="cameraModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
+      <div class="bg-white dark:bg-darkcard rounded-2xl shadow-lg p-6 w-full max-w-xs sm:max-w-sm flex flex-col items-center relative">
+        <button id="closeCameraModal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">×</button>
+        <h2 class="text-lg font-bold mb-4 text-gray-900 dark:text-white">Tomar foto de perfil</h2>
+        <video id="cameraVideo" autoplay playsinline class="rounded-lg w-48 h-48 bg-black mb-4 object-cover"></video>
+        <canvas id="cameraCanvas" class="hidden"></canvas>
+        <button id="takePhotoBtn" class="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-6 rounded-lg transition mb-2">Tomar foto</button>
+        <button id="confirmPhotoBtn" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg transition mb-2 hidden">Usar esta foto</button>
+        <button id="retakePhotoBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-6 rounded-lg transition hidden">Repetir</button>
+      </div>
+    </div>
 
 </body>
 </html> 
