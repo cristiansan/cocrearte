@@ -483,6 +483,11 @@ const modalDetalleSesionMultiple = document.getElementById('modalDetalleSesionMu
 const cerrarDetalleSesionMultiple = document.getElementById('cerrarDetalleSesionMultiple');
 const detalleSesionMultipleContent = document.getElementById('detalleSesionMultipleContent');
 
+// Referencias al modal de información de un hermano
+const modalInfoHermano = document.getElementById('modalInfoHermano');
+const formInfoHermano = document.getElementById('formInfoHermano');
+const btnCerrarModalInfoHermano = document.querySelector('#modalInfoHermano button[onclick="cerrarModalInfoHermano()"]');
+
 // Configuración del tema
 function setTheme(dark) {
     if (dark) {
@@ -563,6 +568,35 @@ contactBtn.addEventListener('click', () => {
     alert('Contacto: soporte@cocrearte.com');
 });
 
+// Event listeners para el modal de información de un hermano
+if (formInfoHermano) {
+    formInfoHermano.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const index = parseInt(document.getElementById('hermanoIndex').value, 10);
+        const hermano = {
+            nombre: document.getElementById('hermanoNombre').value,
+            edad: document.getElementById('hermanoEdad').value,
+            ocupacion: document.getElementById('hermanoOcupacion').value,
+            observaciones: document.getElementById('hermanoObservaciones').value
+        };
+
+        if (index > -1) {
+            // Editar
+            hermanosData[index] = hermano;
+        } else {
+            // Agregar
+            hermanosData.push(hermano);
+        }
+
+        renderizarHermanos();
+        cerrarModalInfoHermano();
+    });
+}
+
+if (btnCerrarModalInfoHermano) {
+    btnCerrarModalInfoHermano.addEventListener('click', cerrarModalInfoHermano);
+}
+
 // Mostrar mensajes
 function showMessage(msg, type = 'error') {
     if (type === 'success') {
@@ -598,6 +632,17 @@ function abrirModalNuevaSesion(info) {
     inputFechaSesion.value = local;
     inputNotasSesion.value = '';
     cargarPacientesParaSelect();
+    // Mostrar select de profesional solo si es admin
+    if (isAdmin && profesionalSelectContainer && selectProfesional) {
+        profesionalSelectContainer.style.display = '';
+        // Llenar select de profesionales
+        selectProfesional.innerHTML = '<option value="">Selecciona un profesional</option>';
+        (adminPanelState.profesionales || []).forEach(prof => {
+            selectProfesional.innerHTML += `<option value="${prof.uid}">${prof.displayName || prof.email}</option>`;
+        });
+    } else if (profesionalSelectContainer) {
+        profesionalSelectContainer.style.display = 'none';
+    }
     modalNuevaSesion.classList.remove('hidden');
     modalNuevaSesion.dataset.start = local;
     sesionEditando = null;
@@ -824,6 +869,10 @@ window.hideAddPatientModal = function() {
 
 showAddPatientBtn.addEventListener('click', () => {
     addPatientModal.classList.remove('hidden');
+    addPatientForm.reset();
+    limpiarDatosFamilia('agregar');
+    // Configurar botones de hermanos después de mostrar el modal
+    setTimeout(() => configurarBotonesHermanos(), 100);
 });
 
 // Cargar pacientes desde Firestore
@@ -845,9 +894,6 @@ async function loadPatients(uid) {
         div.innerHTML = `
             <div>
                 <div class="font-bold text-[#2d3748] dark:text-gray-100">${p.nombre || ''}</div>
-                <div class="text-[#4b5563] dark:text-gray-200 text-sm">${p.email || ''}</div>
-                <div class="text-[#4b5563] dark:text-gray-200 text-sm">${p.telefono || ''}</div>
-                <div class="text-[#4b5563] dark:text-gray-200 text-sm">${p.motivo || ''}</div>
             </div>
         `;
         patientsList.appendChild(div);
@@ -872,6 +918,26 @@ addPatientForm.addEventListener('submit', async (e) => {
     const educacion = addPatientForm.patientEducacion.value;
     const instituto = addPatientForm.patientInstituto.value;
     const motivo = addPatientForm.patientMotivo.value;
+
+    // Obtener datos de familia
+    const infoPadre = {
+        nombre: addPatientForm.patientPadreNombre.value,
+        edad: addPatientForm.patientPadreEdad.value,
+        ocupacion: addPatientForm.patientPadreOcupacion.value,
+        estadoCivil: addPatientForm.patientPadreEstadoCivil.value,
+        salud: addPatientForm.patientPadreSalud.value
+    };
+
+    const infoMadre = {
+        nombre: addPatientForm.patientMadreNombre.value,
+        edad: addPatientForm.patientMadreEdad.value,
+        ocupacion: addPatientForm.patientMadreOcupacion.value,
+        estadoCivil: addPatientForm.patientMadreEstadoCivil.value,
+        salud: addPatientForm.patientMadreSalud.value
+    };
+
+    // Obtener datos de hermanos
+    const hermanos = obtenerDatosHermanos('agregar');
 
     // Obtener datos del nomenclador CIE-10 si fueron seleccionados
     const datosCIE10 = obtenerDatosCIE10('agregar');
@@ -900,6 +966,10 @@ addPatientForm.addEventListener('submit', async (e) => {
             instituto,
             // Motivo de consulta
             motivo,
+            // Información de familia
+            infoPadre,
+            infoMadre,
+            infoHermanos: hermanos,
             // Metadatos
             creado: new Date(),
             actualizado: new Date()
@@ -1408,21 +1478,8 @@ async function showAdminPanel() {
         for (const doc of pacientesSnap.docs) {
           const p = doc.data();
           pacientesHtml += `<div class=\"border rounded p-3 bg-gray-50 dark:bg-darkbg cursor-pointer hover:bg-primary-50 dark:hover:bg-darkborder transition\" data-paciente-id=\"${doc.id}\">\n` +
-            `<div class=\"font-bold text-[#2d3748] dark:text-gray-100\">${p.nombre || '(sin nombre)'}</div>\n` +
-            `<div class=\"text-[#4b5563] dark:text-gray-200 text-sm\">${p.email || ''}</div>\n` +
-            `<div class=\"text-[#4b5563] dark:text-gray-200 text-sm\">${p.telefono || ''}</div>\n` +
-            `<div class=\"text-[#4b5563] dark:text-gray-200 text-sm\">${p.motivo || ''}</div>`;
-          const sesionesSnap = await window.firebaseDB.collection('pacientes').doc(doc.id).collection('sesiones').orderBy('fecha', 'desc').get();
-          if (sesionesSnap.empty) {
-            pacientesHtml += '<div class=\"text-xs text-gray-400 mt-2\">Sin sesiones</div>';
-          } else {
-            pacientesHtml += '<ul class=\"ml-2 mt-2 text-xs\">';
-            sesionesSnap.forEach(sdoc => {
-              const s = sdoc.data();
-              pacientesHtml += `<li>📅 ${s.fecha} - ${s.comentario || ''}</li>`;
-            });
-            pacientesHtml += '</ul>';
-          }
+            `<div class=\"font-bold text-[#2d3748] dark:text-gray-100\">${p.nombre || '(sin nombre)'}</div>\n`;
+          // Eliminado: email, teléfono, motivo, sesiones
           pacientesHtml += '</div>';
         }
         pacientesHtml += '</div>';
@@ -2633,32 +2690,33 @@ if (formNuevaSesion) {
         const pacienteId = selectPaciente.value;
         const fecha = inputFechaSesion.value;
         const notas = inputNotasSesion.value;
+        let profesionalId = null;
+        if (isAdmin && profesionalSelectContainer && profesionalSelectContainer.style.display !== 'none' && selectProfesional) {
+            profesionalId = selectProfesional.value;
+        }
         if (!pacienteId || !fecha) return;
         try {
             // Obtener datos del nomenclador CIE-10
             const datosCIE10 = obtenerDatosCIE10('calendar');
             console.log('📋 Datos CIE-10 para sesión de calendario:', datosCIE10);
-            
             if (sesionEditando && sesionEditando.sesionId) {
                 // Editar sesión existente
                 const datosActualizacion = {
                     fecha,
                     comentario: notas
                 };
-                
-                // Agregar datos CIE-10 si están disponibles
+                if (profesionalId) datosActualizacion.profesionalId = profesionalId;
                 if (datosCIE10) {
                     datosActualizacion.nomencladorCIE10 = datosCIE10;
                     console.log('✅ Datos CIE-10 incluidos en actualización');
                 }
-                
                 await window.firebaseDB.collection('pacientes').doc(pacienteId).collection('sesiones').doc(sesionEditando.sesionId).update(datosActualizacion);
-                
                 if (sesionEditando.eventObj) {
                     sesionEditando.eventObj.setStart(fecha);
                     sesionEditando.eventObj.setProp('title', selectPaciente.options[selectPaciente.selectedIndex].text);
                     sesionEditando.eventObj.setExtendedProp('notas', notas);
                     sesionEditando.eventObj.setExtendedProp('pacienteId', pacienteId);
+                    if (profesionalId) sesionEditando.eventObj.setExtendedProp('profesionalId', profesionalId);
                     if (datosCIE10) {
                         sesionEditando.eventObj.setExtendedProp('nomencladorCIE10', datosCIE10);
                     }
@@ -2670,35 +2728,29 @@ if (formNuevaSesion) {
                     comentario: notas,
                     creado: new Date()
                 };
-                
-                // Agregar datos CIE-10 si están disponibles
+                if (profesionalId) datosSession.profesionalId = profesionalId;
                 if (datosCIE10) {
                     datosSession.nomencladorCIE10 = datosCIE10;
                     console.log('✅ Datos CIE-10 incluidos en nueva sesión');
                 }
-                
                 const docRef = await window.firebaseDB.collection('pacientes').doc(pacienteId).collection('sesiones').add(datosSession);
-                
                 // Verificar si es la primera sesión de este paciente
                 const esPrimera = await esPrimeraSesion(pacienteId, fecha);
-                
                 // Agregar evento a la instancia activa
                 const activeCalendar = calendarMultipleInstance || calendarInstance;
                 if (activeCalendar) {
                     const eventProps = { pacienteId, notas, sesionId: docRef.id, esPrimeraSesion: esPrimera };
+                    if (profesionalId) eventProps.profesionalId = profesionalId;
                     if (datosCIE10) {
                         eventProps.nomencladorCIE10 = datosCIE10;
                     }
-                    
                     // Obtener nombre del paciente y profesional para el título
                     const pacienteNombre = selectPaciente.options[selectPaciente.selectedIndex].text;
-                    const profesionalNombre = calendarMultipleInstance ? null : null; // Para agenda individual no incluir profesional
+                    const profesionalNombre = profesionalId ? (selectProfesional.options[selectProfesional.selectedIndex].text) : null;
                     const title = generarTituloSesion(pacienteNombre, profesionalNombre, esPrimera);
-                    
                     // Determinar colores
                     const backgroundColor = esPrimera ? getColorPrimeraSesion() : (calendarMultipleInstance ? '#8b5cf6' : '#8b5cf6');
                     const borderColor = backgroundColor;
-                    
                     activeCalendar.addEvent({
                         title: title,
                         start: fecha,
@@ -2707,7 +2759,6 @@ if (formNuevaSesion) {
                         borderColor: borderColor,
                         extendedProps: eventProps
                     });
-                    
                     console.log(`✅ Evento agregado al calendario: "${title}" - ${esPrimera ? '🌟 PRIMERA SESIÓN' : 'Sesión regular'}`);
                 }
             }
@@ -3714,6 +3765,7 @@ window.hideEditPatientModal = function() {
     
     if (form) {
         form.reset();
+        limpiarDatosFamilia('editar');
         console.log('✅ Formulario reseteado');
     } else {
         console.error('❌ No se encontró el formulario editPatientForm');
@@ -3792,6 +3844,9 @@ window.showEditPatientModal = function(pacienteId, pacienteData) {
     if (institutoField) institutoField.value = pacienteData.instituto || '';
     if (motivoField) motivoField.value = pacienteData.motivo || '';
     
+    // Cargar datos de familia
+    cargarDatosFamilia(pacienteData, 'editar');
+    
     // Precargar datos del nomenclador CIE-10 si existen
     if (pacienteData.nomencladorCIE10) {
         datosNomencladorSeleccionados.editar = pacienteData.nomencladorCIE10;
@@ -3824,6 +3879,9 @@ window.showEditPatientModal = function(pacienteId, pacienteData) {
     modal.style.zIndex = '99999'; // Z-index muy alto para estar por encima de todo
     
     console.log('🔧 Estilos forzados aplicados al modal');
+    
+    // Configurar botones de hermanos después de mostrar el modal
+    setTimeout(() => configurarBotonesHermanos(), 100);
 };
 
 // Event listeners adicionales para el modal de edición
@@ -3896,6 +3954,26 @@ if (editPatientFormElement) {
         const educacion = editPatientFormElement.editPatientEducacion.value;
         const instituto = editPatientFormElement.editPatientInstituto.value;
         const motivo = editPatientFormElement.editPatientMotivo.value;
+
+        // Obtener datos de familia
+        const infoPadre = {
+            nombre: editPatientFormElement.editPatientPadreNombre.value,
+            edad: editPatientFormElement.editPatientPadreEdad.value,
+            ocupacion: editPatientFormElement.editPatientPadreOcupacion.value,
+            estadoCivil: editPatientFormElement.editPatientPadreEstadoCivil.value,
+            salud: editPatientFormElement.editPatientPadreSalud.value
+        };
+
+        const infoMadre = {
+            nombre: editPatientFormElement.editPatientMadreNombre.value,
+            edad: editPatientFormElement.editPatientMadreEdad.value,
+            ocupacion: editPatientFormElement.editPatientMadreOcupacion.value,
+            estadoCivil: editPatientFormElement.editPatientMadreEstadoCivil.value,
+            salud: editPatientFormElement.editPatientMadreSalud.value
+        };
+
+        // Obtener datos de hermanos
+        const hermanos = obtenerDatosHermanos('editar');
         
         // Obtener datos del nomenclador CIE-10 si fueron seleccionados
         const datosCIE10 = obtenerDatosCIE10('editar');
@@ -3931,6 +4009,10 @@ if (editPatientFormElement) {
                 instituto,
                 // Motivo de consulta
                 motivo,
+                // Información de familia
+                infoPadre,
+                infoMadre,
+                infoHermanos: hermanos,
                 // Metadatos
                 actualizado: new Date()
             };
@@ -4779,3 +4861,190 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 });
+
+// === FUNCIONES PARA DATOS DE FAMILIA ===
+
+// Función para obtener datos de hermanos del formulario
+function obtenerDatosHermanos(formType) {
+    const container = document.getElementById(formType === 'agregar' ? 'hermanosContainer' : 'hermanosContainerEditar');
+    if (!container) return [];
+    
+    const hermanos = [];
+    const hermanoDivs = container.querySelectorAll('.hermano-item');
+    
+    hermanoDivs.forEach((div, index) => {
+        const hermano = {
+            nombre: div.querySelector('.hermano-nombre').value,
+            edad: div.querySelector('.hermano-edad').value,
+            ocupacion: div.querySelector('.hermano-ocupacion').value,
+            estadoCivil: div.querySelector('.hermano-estado-civil').value,
+            salud: div.querySelector('.hermano-salud').value
+        };
+        
+        // Solo agregar si tiene al menos nombre
+        if (hermano.nombre.trim()) {
+            hermanos.push(hermano);
+        }
+    });
+    
+    return hermanos;
+}
+
+// Función para agregar un hermano al formulario
+// Variables para el estado de los hermanos
+
+let modoFormulario = 'agregar'; // Puede ser 'agregar' o 'editar'
+
+// Función para abrir el modal de información de un hermano
+function abrirModalInfoHermano(modo, index = -1) {
+    const modal = document.getElementById('modalInfoHermano');
+    const form = document.getElementById('formInfoHermano');
+    
+    if (!modal || !form) return;
+
+    form.reset();
+    document.getElementById('hermanoIndex').value = index;
+
+    if (modo === 'editar' && index > -1 && hermanosData[index]) {
+        const hermano = hermanosData[index];
+        document.getElementById('hermanoNombre').value = hermano.nombre || '';
+        document.getElementById('hermanoEdad').value = hermano.edad || '';
+        document.getElementById('hermanoOcupacion').value = hermano.ocupacion || '';
+        document.getElementById('hermanoObservaciones').value = hermano.observaciones || '';
+    }
+
+    modal.classList.remove('hidden');
+}
+
+// Función para cerrar el modal de información de un hermano
+function cerrarModalInfoHermano() {
+    const modal = document.getElementById('modalInfoHermano');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+// Manejar el envío del formulario de hermano
+document.addEventListener('DOMContentLoaded', function() {
+    const formInfoHermano = document.getElementById('formInfoHermano');
+    if (formInfoHermano) {
+        formInfoHermano.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const index = parseInt(document.getElementById('hermanoIndex').value, 10);
+            const hermano = {
+                nombre: document.getElementById('hermanoNombre').value,
+                edad: document.getElementById('hermanoEdad').value,
+                ocupacion: document.getElementById('hermanoOcupacion').value,
+                observaciones: document.getElementById('hermanoObservaciones').value
+            };
+
+            if (index > -1) {
+                // Editar
+                hermanosData[index] = hermano;
+            } else {
+                // Agregar
+                hermanosData.push(hermano);
+            }
+
+            renderizarHermanos();
+            cerrarModalInfoHermano();
+        });
+    }
+});
+
+// Renderizar la lista de hermanos en el formulario principal
+function renderizarHermanos() {
+    const containerId = modoFormulario === 'agregar' ? 'hermanosContainer' : 'hermanosContainerEditar';
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    container.innerHTML = '';
+    hermanosData.forEach((hermano, index) => {
+        const div = document.createElement('div');
+        div.className = 'flex items-center justify-between p-2 bg-gray-100 dark:bg-gray-700 rounded';
+        div.innerHTML = `
+            <span>${hermano.nombre} (${hermano.edad} años)</span>
+            <div>
+                <button type="button" onclick="abrirModalInfoHermano('editar', ${index})" class="text-blue-500 hover:text-blue-700 mr-2">Editar</button>
+                <button type="button" onclick="eliminarHermano(${index})" class="text-red-500 hover:text-red-700">Eliminar</button>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+// Eliminar un hermano de la lista
+function eliminarHermano(index) {
+    hermanosData.splice(index, 1);
+    renderizarHermanos();
+}
+
+
+
+// Función para eliminar un hermano del formulario
+
+
+function configurarBotonesHermanos() {
+    // Esta función puede ser usada para configurar listeners adicionales si fuera necesario
+}
+
+
+
+// También configurar cuando se abren los modales
+window.configurarBotonesHermanos = configurarBotonesHermanos;
+
+// Hacer las funciones disponibles globalmente
+window.agregarHermano = agregarHermano;
+window.eliminarHermano = eliminarHermano;
+window.limpiarDatosFamilia = limpiarDatosFamilia;
+window.cargarDatosFamilia = cargarDatosFamilia;
+window.obtenerDatosHermanos = obtenerDatosHermanos;
+
+// Función de debug para verificar botones
+window.debugBotonesHermanos = function() {
+    console.log('🔍 === DEBUG BOTONES HERMANOS ===');
+    const btnAgregar = document.getElementById('btnAgregarHermano');
+    const btnAgregarEditar = document.getElementById('btnAgregarHermanoEditar');
+    
+    console.log('Botón agregar encontrado:', !!btnAgregar);
+    console.log('Botón agregar editar encontrado:', !!btnAgregarEditar);
+    
+    if (btnAgregar) {
+        console.log('Event listeners del botón agregar:', btnAgregar.onclick);
+    }
+    
+    if (btnAgregarEditar) {
+        console.log('Event listeners del botón agregar editar:', btnAgregarEditar.onclick);
+    }
+    
+    console.log('Función agregarHermano disponible:', typeof agregarHermano);
+    console.log('Función configurarBotonesHermanos disponible:', typeof configurarBotonesHermanos);
+};
+
+function limpiarDatosFamilia(tipo) {
+    // Limpiar campos de padre
+    const padrePrefix = tipo === 'agregar' ? 'patientPadre' : 'editPatientPadre';
+    const madrePrefix = tipo === 'agregar' ? 'patientMadre' : 'editPatientMadre';
+    const padreCampos = ['Nombre', 'Edad', 'Ocupacion', 'EstadoCivil', 'Salud'];
+    const madreCampos = ['Nombre', 'Edad', 'Ocupacion', 'EstadoCivil', 'Salud'];
+    padreCampos.forEach(campo => {
+        const input = document.getElementById(`${padrePrefix}${campo}`);
+        if (input) input.value = '';
+    });
+    madreCampos.forEach(campo => {
+        const input = document.getElementById(`${madrePrefix}${campo}`);
+        if (input) input.value = '';
+    });
+    // Limpiar hermanos
+    const hermanosContainer = document.getElementById(tipo === 'agregar' ? 'hermanosContainer' : 'hermanosContainerEditar');
+    if (hermanosContainer) hermanosContainer.innerHTML = '';
+    if (typeof hermanosData !== 'undefined') hermanosData = [];
+    if (typeof renderizarHermanos === 'function') renderizarHermanos();
+}
+
+// Placeholder para evitar error si no está definida
+function cargarDatosFamilia(pacienteData, modo) {
+    // Esta función puede ser implementada para cargar datos de familia en el formulario de edición
+    // Por ahora no hace nada
+}
