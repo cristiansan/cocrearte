@@ -5041,10 +5041,13 @@ function limpiarDatosFamilia(tipo) {
     if (hermanosContainer) hermanosContainer.innerHTML = '';
     if (typeof hermanosData !== 'undefined') hermanosData = [];
     if (typeof renderizarHermanos === 'function') renderizarHermanos();
+<<<<<<< HEAD
 }
 
 // Placeholder para evitar error si no está definida
 function cargarDatosFamilia(pacienteData, modo) {
     // Esta función puede ser implementada para cargar datos de familia en el formulario de edición
     // Por ahora no hace nada
+=======
+>>>>>>> a7b1e248c5a04ed4336def3f5fd260ea12f17196
 }
