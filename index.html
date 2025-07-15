@@ -487,6 +487,7 @@
             <button id="tabPacientes" class="tab-calendar bg-primary-700 text-white font-semibold py-2 px-4 rounded-t">Pacientes</button>
             <button id="tabAgendaIndividual" class="tab-calendar bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-t">Agenda individual</button>
             <button id="tabAgendaMultiple" class="tab-calendar bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-t">Agenda múltiple</button>
+            <button id="btnBackupPacientes" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-t hidden">Backup</button>
         </div>
         <div id="calendarTabs" class="hidden">
             <div id="calendarViewButtons" class="flex items-center gap-2 mb-4">
@@ -546,7 +547,7 @@
 
     <!-- Modal para agregar paciente -->
     <div id="addPatientModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-start sm:items-center justify-center z-50 hidden p-2 sm:p-4 overflow-y-auto">
-        <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg w-full max-w-2xl relative border dark:border-darkborder max-h-[95vh] my-4 sm:my-8 flex flex-col">
+        <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg w-full max-w-2xl relative border dark:border-darkborder max-h-[95vh] my-4 sm:my-8 flex flex-col" style="max-width:calc(100vw - 20px); max-height:calc(100vh - 20px); margin:10px;">
             <div class="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-darkborder shrink-0">
                 <h3 class="text-lg sm:text-xl font-bold text-primary-600">Agregar Paciente</h3>
                 <button onclick="hideAddPatientModal()" class="text-gray-400 hover:text-gray-700 text-2xl min-h-[48px] min-w-[48px] flex items-center justify-center">×</button>
@@ -753,8 +754,8 @@
     </div>
 
     <!-- Modal para editar paciente -->
-    <div id="editPatientModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-start sm:items-center justify-center hidden p-2 sm:p-4 overflow-y-auto" style="z-index: 99999;">
-        <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg w-full max-w-2xl relative border dark:border-darkborder max-h-[95vh] my-4 sm:my-8 flex flex-col">
+    <div id="editPatientModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-start sm:items-center justify-center z-50 hidden p-2 sm:p-4 overflow-y-auto">
+        <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg w-full max-w-4xl relative border dark:border-darkborder max-h-[95vh] my-4 sm:my-8 flex flex-col" style="max-width:calc(100vw - 20px); max-height:calc(100vh - 20px); margin:10px;">
             <div class="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-darkborder shrink-0">
                 <h3 class="text-lg sm:text-xl font-bold text-primary-600">Editar Paciente</h3>
                 <button onclick="hideEditPatientModal()" class="text-gray-400 hover:text-gray-700 text-2xl min-h-[48px] min-w-[48px] flex items-center justify-center">×</button>
@@ -2360,6 +2361,42 @@
         <button id="retakePhotoBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-6 rounded-lg transition hidden">Repetir</button>
       </div>
     </div>
+
+    <!-- Modal de Backup de Pacientes -->
+    <div id="modalBackupPacientes" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+      <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg w-full max-w-2xl relative border dark:border-darkborder max-h-[90vh] flex flex-col">
+        <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-darkborder">
+          <h3 class="text-lg font-bold text-primary-600">Backup de Pacientes</h3>
+          <button id="btnCerrarModalBackup" class="text-gray-400 hover:text-gray-700 text-2xl">×</button>
+        </div>
+        <div class="p-4 flex flex-col gap-4 flex-1 overflow-y-auto">
+          <input id="inputBuscarPacienteBackup" type="text" placeholder="Buscar paciente..." class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" />
+          <div id="listaPacientesBackup" class="overflow-y-auto max-h-72 border rounded p-2 bg-gray-50 dark:bg-darkbg"></div>
+          <div class="flex items-center gap-2 mt-2">
+            <input type="checkbox" id="checkTodosBackup" />
+            <label for="checkTodosBackup" class="text-sm">Seleccionar todos</label>
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 p-4 border-t border-gray-200 dark:border-darkborder">
+          <button id="btnDescargarBackup" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded">Descargar</button>
+          <button id="btnCancelarBackup" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    window.addEventListener('DOMContentLoaded', () => {
+        const btnBackup = document.getElementById('btnBackupPacientes');
+        if (btnBackup && window.isAdmin) {
+            btnBackup.classList.remove('hidden');
+        }
+        if (btnBackup) {
+            btnBackup.addEventListener('click', async () => {
+                // ... toda la lógica de descarga directa ...
+            });
+        }
+    });
+    </script>
 
 </body>
 </html> 

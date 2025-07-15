@@ -671,6 +671,7 @@ async function showDashboard(user) {
     // Detectar admin
     const userDoc = await window.firebaseDB.collection('usuarios').doc(user.uid).get();
     isAdmin = userDoc.exists && userDoc.data().isAdmin === true;
+    window.isAdmin = isAdmin;
     // Mostrar foto de perfil si existe
     const profileAvatar = document.getElementById('profileAvatar');
     if (profileAvatar) {
@@ -747,6 +748,15 @@ async function showDashboard(user) {
     setTimeout(async () => {
         await inicializarVersion(user);
     }, 100);
+    // Mostrar el botón Backup solo para admin
+    const btnBackup = document.getElementById('btnBackupPacientes');
+    if (btnBackup) {
+        if (isAdmin) {
+            btnBackup.classList.remove('hidden');
+        } else {
+            btnBackup.classList.add('hidden');
+        }
+    }
 }
 
 // Login
@@ -2703,7 +2713,8 @@ if (formNuevaSesion) {
                 // Editar sesión existente
                 const datosActualizacion = {
                     fecha,
-                    comentario: notas
+                    comentario: notas,
+                    notas: notas // <-- Guardar también como 'notas'
                 };
                 if (profesionalId) datosActualizacion.profesionalId = profesionalId;
                 if (datosCIE10) {
@@ -2726,6 +2737,7 @@ if (formNuevaSesion) {
                 const datosSession = {
                     fecha,
                     comentario: notas,
+                    notas: notas, // <-- Guardar también como 'notas'
                     creado: new Date()
                 };
                 if (profesionalId) datosSession.profesionalId = profesionalId;
@@ -5041,13 +5053,302 @@ function limpiarDatosFamilia(tipo) {
     if (hermanosContainer) hermanosContainer.innerHTML = '';
     if (typeof hermanosData !== 'undefined') hermanosData = [];
     if (typeof renderizarHermanos === 'function') renderizarHermanos();
-<<<<<<< HEAD
 }
 
 // Placeholder para evitar error si no está definida
 function cargarDatosFamilia(pacienteData, modo) {
     // Esta función puede ser implementada para cargar datos de familia en el formulario de edición
     // Por ahora no hace nada
-=======
->>>>>>> a7b1e248c5a04ed4336def3f5fd260ea12f17196
+}
+
+// Mostrar el botón Backup solo para admin
+window.addEventListener('DOMContentLoaded', () => {
+    const btnBackup = document.getElementById('btnBackupPacientes');
+    if (btnBackup && window.isAdmin) {
+        btnBackup.classList.remove('hidden');
+    }
+    if (btnBackup) {
+        btnBackup.addEventListener('click', async () => {
+            // Obtener todos los usuarios (profesionales)
+            const usuariosSnap = await window.firebaseDB.collection('usuarios').get();
+            const profesionales = {};
+            usuariosSnap.forEach(doc => {
+                const data = doc.data();
+                profesionales[doc.id] = data.displayName || data.email || doc.id;
+            });
+            // Obtener todos los pacientes
+            const snapshot = await window.firebaseDB.collection('pacientes').get();
+            const total = snapshot.size;
+            if (total === 0) {
+                alert('No hay pacientes para descargar.');
+                return;
+            }
+            if (!confirm(`Se va a descargar la ficha clínica de ${total} paciente(s). ¿Desea continuar?`)) return;
+            // Agrupar pacientes por profesional
+            const pacientesPorProfesional = {};
+            snapshot.forEach(doc => {
+                const p = doc.data();
+                const owner = p.owner || 'sin_profesional';
+                if (!pacientesPorProfesional[owner]) pacientesPorProfesional[owner] = [];
+                pacientesPorProfesional[owner].push(p);
+            });
+            // Campos de paciente
+            const fields = [
+                'nombre', 'dni', 'fechaNacimiento', 'sexo', 'lugarNacimiento',
+                'email', 'telefono', 'contacto',
+                'educacion', 'instituto', 'motivo',
+                'infoPadre', 'infoMadre', 'infoHermanos',
+                'nomencladorCIE10', 'creado', 'actualizado'
+            ];
+            function formatTimestamp(val) {
+                if (val && typeof val === 'object' && val.seconds) {
+                    const d = new Date(val.seconds * 1000);
+                    return d.toLocaleString('sv-SE', { hour12: false }).replace('T', ' ');
+                }
+                return '';
+            }
+            const csvRows = [];
+            // Por cada profesional
+            Object.entries(pacientesPorProfesional).forEach(([owner, pacientes], idx) => {
+                const nombreProfesional = profesionales[owner] || owner;
+                if (idx > 0) csvRows.push(''); // Línea vacía entre profesionales
+                csvRows.push(`PROFESIONAL: ${nombreProfesional}`);
+                csvRows.push(fields.join(','));
+                pacientes.forEach(p => {
+                    const row = fields.map(f => {
+                        let val = p[f];
+                        if ((f === 'creado' || f === 'actualizado') && val && typeof val === 'object' && val.seconds) {
+                            val = formatTimestamp(val);
+                        } else if (typeof val === 'object' && val !== null) {
+                            val = JSON.stringify(val).replace(/\n/g, ' ');
+                        }
+                        if (val === undefined) val = '';
+                        return '"' + String(val).replace(/"/g, '""') + '"';
+                    });
+                    csvRows.push(row.join(','));
+                });
+            });
+            const csvContent = csvRows.join('\r\n');
+            // Descargar archivo
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'backup_pacientes.csv';
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100);
+        });
+    }
+});
+
+// === BACKUP MODAL LOGIC ===
+const btnBackup = document.getElementById('btnBackupPacientes');
+const modalBackup = document.getElementById('modalBackupPacientes');
+const btnCerrarModalBackup = document.getElementById('btnCerrarModalBackup');
+const btnCancelarBackup = document.getElementById('btnCancelarBackup');
+const btnDescargarBackup = document.getElementById('btnDescargarBackup');
+const inputBuscarPacienteBackup = document.getElementById('inputBuscarPacienteBackup');
+const listaPacientesBackup = document.getElementById('listaPacientesBackup');
+const checkTodosBackup = document.getElementById('checkTodosBackup');
+
+let pacientesBackupData = [];
+let pacientesBackupFiltrados = [];
+let pacientesBackupSeleccionados = new Set();
+
+function renderizarListaPacientesBackup() {
+    listaPacientesBackup.innerHTML = '';
+    if (pacientesBackupFiltrados.length === 0) {
+        listaPacientesBackup.innerHTML = '<div class="text-gray-500 text-center">No se encontraron pacientes.</div>';
+        return;
+    }
+    let lastProf = null;
+    pacientesBackupFiltrados.forEach((p, idx) => {
+        if (p.profesional !== lastProf) {
+            const profDiv = document.createElement('div');
+            profDiv.className = 'font-bold mt-2 mb-1 text-primary-700 dark:text-primary-300';
+            profDiv.textContent = p.profesional;
+            listaPacientesBackup.appendChild(profDiv);
+            lastProf = p.profesional;
+        }
+        const div = document.createElement('div');
+        div.className = 'flex items-center gap-2 mb-1';
+        div.innerHTML = `<input type="checkbox" class="checkPacienteBackup" data-id="${p.id}" ${pacientesBackupSeleccionados.has(p.id) ? 'checked' : ''}> <span>${p.nombre}</span>`;
+        listaPacientesBackup.appendChild(div);
+    });
+    // Listeners para checkboxes
+    listaPacientesBackup.querySelectorAll('.checkPacienteBackup').forEach(chk => {
+        chk.addEventListener('change', (e) => {
+            const id = chk.getAttribute('data-id');
+            if (chk.checked) {
+                pacientesBackupSeleccionados.add(id);
+            } else {
+                pacientesBackupSeleccionados.delete(id);
+            }
+            checkTodosBackup.checked = pacientesBackupFiltrados.length > 0 && pacientesBackupFiltrados.every(p => pacientesBackupSeleccionados.has(p.id));
+        });
+    });
+}
+
+async function cargarPacientesBackup() {
+    // Obtener profesionales
+    const usuariosSnap = await window.firebaseDB.collection('usuarios').get();
+    const profesionales = {};
+    usuariosSnap.forEach(doc => {
+        const data = doc.data();
+        profesionales[doc.id] = data.displayName || data.email || doc.id;
+    });
+    // Obtener pacientes
+    const snapshot = await window.firebaseDB.collection('pacientes').get();
+    pacientesBackupData = [];
+    snapshot.forEach(doc => {
+        const p = doc.data();
+        pacientesBackupData.push({
+            id: doc.id,
+            nombre: p.nombre || '(sin nombre)',
+            profesional: profesionales[p.owner] || p.owner || 'sin profesional',
+            ...p
+        });
+    });
+    pacientesBackupData.sort((a, b) => a.profesional.localeCompare(b.profesional) || a.nombre.localeCompare(b.nombre));
+    pacientesBackupFiltrados = [...pacientesBackupData];
+    pacientesBackupSeleccionados = new Set(pacientesBackupData.map(p => p.id));
+    renderizarListaPacientesBackup();
+    checkTodosBackup.checked = true;
+}
+
+if (btnBackup && modalBackup) {
+    btnBackup.addEventListener('click', async () => {
+        await cargarPacientesBackup();
+        modalBackup.classList.remove('hidden');
+    });
+}
+if (btnCerrarModalBackup) btnCerrarModalBackup.addEventListener('click', () => modalBackup.classList.add('hidden'));
+if (btnCancelarBackup) btnCancelarBackup.addEventListener('click', () => modalBackup.classList.add('hidden'));
+if (inputBuscarPacienteBackup) {
+    inputBuscarPacienteBackup.addEventListener('input', () => {
+        const q = inputBuscarPacienteBackup.value.trim().toLowerCase();
+        pacientesBackupFiltrados = pacientesBackupData.filter(p =>
+            p.nombre.toLowerCase().includes(q) ||
+            (p.profesional && p.profesional.toLowerCase().includes(q))
+        );
+        renderizarListaPacientesBackup();
+    });
+}
+if (checkTodosBackup) {
+    checkTodosBackup.addEventListener('change', () => {
+        if (checkTodosBackup.checked) {
+            pacientesBackupFiltrados.forEach(p => pacientesBackupSeleccionados.add(p.id));
+        } else {
+            pacientesBackupFiltrados.forEach(p => pacientesBackupSeleccionados.delete(p.id));
+        }
+        renderizarListaPacientesBackup();
+    });
+}
+if (btnDescargarBackup) {
+    btnDescargarBackup.addEventListener('click', async () => {
+        if (pacientesBackupSeleccionados.size === 0) {
+            alert('Selecciona al menos un paciente para descargar.');
+            return;
+        }
+        // Obtener profesionales
+        const usuariosSnap = await window.firebaseDB.collection('usuarios').get();
+        const profesionales = {};
+        usuariosSnap.forEach(doc => {
+            const data = doc.data();
+            profesionales[doc.id] = data.displayName || data.email || doc.id;
+        });
+        // Filtrar pacientes seleccionados
+        const pacientesSeleccionados = pacientesBackupData.filter(p => pacientesBackupSeleccionados.has(p.id));
+        // Ordenar por profesional y nombre
+        pacientesSeleccionados.sort((a, b) => a.profesional.localeCompare(b.profesional) || a.nombre.localeCompare(b.nombre));
+        // Campos
+        const fields = [
+            'profesional', 'nombre', 'dni', 'fechaNacimiento', 'sexo', 'lugarNacimiento',
+            'email', 'telefono', 'contacto',
+            'educacion', 'instituto', 'motivo',
+            'infoPadre', 'infoMadre', 'infoHermanos',
+            'nomencladorCIE10', 'creado', 'actualizado',
+            'fechaSesion', 'comentarioSesion', 'notasSesion', 'cie10Sesion', 'archivosSesion'
+        ];
+        function formatTimestamp(val) {
+            if (val && typeof val === 'object' && val.seconds) {
+                const d = new Date(val.seconds * 1000);
+                return d.toLocaleString('sv-SE', { hour12: false }).replace('T', ' ');
+            }
+            return '';
+        }
+        const csvRows = [];
+        let lastProf = null;
+        for (const p of pacientesSeleccionados) {
+            if (p.profesional !== lastProf) {
+                if (csvRows.length > 0) csvRows.push('');
+                csvRows.push(`PROFESIONAL: ${p.profesional}`);
+                csvRows.push(fields.join(','));
+                lastProf = p.profesional;
+            }
+            // Obtener sesiones
+            const sesionesSnap = await window.firebaseDB.collection('pacientes').doc(p.id).collection('sesiones').orderBy('fecha', 'asc').get();
+            // --- SIEMPRE exportar la ficha del paciente (sin datos de sesión) ---
+            const rowFicha = fields.map(f => {
+                let val = p[f];
+                if ((f === 'creado' || f === 'actualizado') && val && typeof val === 'object' && val.seconds) {
+                    val = formatTimestamp(val);
+                } else if (typeof val === 'object' && val !== null) {
+                    val = JSON.stringify(val).replace(/\n/g, ' ');
+                }
+                if (val === undefined) val = '';
+                // Si es campo de sesión, dejar vacío
+                if ([
+                    'fechaSesion', 'comentarioSesion', 'notasSesion', 'cie10Sesion', 'archivosSesion'
+                ].includes(f)) return '';
+                return '"' + String(val).replace(/"/g, '""') + '"';
+            });
+            csvRows.push(rowFicha.join(','));
+            // --- Si hay sesiones, exportar una fila por cada sesión ---
+            if (!sesionesSnap.empty) {
+                sesionesSnap.forEach(sdoc => {
+                    const s = sdoc.data();
+                    const row = fields.map(f => {
+                        if (f === 'profesional') return '"' + String(p.profesional).replace(/"/g, '""') + '"';
+                        if (f === 'fechaSesion') return s.fecha ? '"' + String(s.fecha).replace(/"/g, '""') + '"' : '';
+                        if (f === 'comentarioSesion') return s.comentario ? '"' + String(s.comentario).replace(/"/g, '""') + '"' : '';
+                        if (f === 'notasSesion') return s.notas ? '"' + String(s.notas).replace(/"/g, '""') + '"' : '';
+                        if (f === 'cie10Sesion') return s.nomencladorCIE10 ? '"' + JSON.stringify(s.nomencladorCIE10).replace(/"/g, '""') + '"' : '';
+                        if (f === 'archivosSesion') return s.archivosUrls && s.archivosUrls.length ? '"' + s.archivosUrls.join('; ') + '"' : '';
+                        let val = p[f];
+                        if ((f === 'creado' || f === 'actualizado') && val && typeof val === 'object' && val.seconds) {
+                            val = formatTimestamp(val);
+                        } else if (typeof val === 'object' && val !== null) {
+                            val = JSON.stringify(val).replace(/\n/g, ' ');
+                        }
+                        if (val === undefined) val = '';
+                        // Si es campo de sesión, dejar vacío (excepto los de arriba)
+                        if ([
+                            'fechaSesion', 'comentarioSesion', 'notasSesion', 'cie10Sesion', 'archivosSesion'
+                        ].includes(f)) return '';
+                        return '"' + String(val).replace(/"/g, '""') + '"';
+                    });
+                    csvRows.push(row.join(','));
+                });
+            }
+        }
+        const csvContent = csvRows.join('\r\n');
+        // Descargar archivo
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'backup_pacientes.csv';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }, 100);
+        modalBackup.classList.add('hidden');
+    });
 }
