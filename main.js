@@ -565,7 +565,7 @@ demoBtn2.addEventListener('click', () => {
     alert('Demo en desarrollo. ¡Regístrate para probar la plataforma!');
 });
 contactBtn.addEventListener('click', () => {
-    alert('Contacto: soporte@cocrearte.com');
+    alert('Contacto: cristiansan@gmail.com');
 });
 
 // Event listeners para el modal de información de un hermano
@@ -857,6 +857,9 @@ logoutBtn.addEventListener('click', async () => {
     // Ocultar botón de versión
     actualizarVisibilidadVersion(false);
     
+    // Limpiar Quill
+    if (quillSesionComentario) quillSesionComentario.setContents([]);
+    
     // Mostrar landing page
     document.getElementById('landingPage').classList.remove('hidden');
     location.hash = '';
@@ -1018,6 +1021,9 @@ window.hideFichaPacienteModal = function() {
     if (typeof limpiarArchivos === 'function') {
         limpiarArchivos();
     }
+    
+    // Limpiar Quill
+    if (quillSesionComentario) quillSesionComentario.setContents([]);
     
     fichaPacienteId = null;
     fichaPacienteRef = null;
@@ -1250,7 +1256,8 @@ addSesionForm.addEventListener('submit', async (e) => {
     const ok = await customConfirm('¿Está seguro de guardar esta sesión? No podrá editarla después.');
     if (!ok) return;
     const fecha = addSesionForm.sesionFecha.value;
-    const comentario = addSesionForm.sesionComentario.value;
+    // const comentario = addSesionForm.sesionComentario.value; // Eliminar esto
+    const comentario = quillSesionComentario ? quillSesionComentario.root.innerHTML : '';
     const notas = addSesionForm.sesionNotas.value;
     // Obtener archivos desde la nueva funcionalidad de cámara
     let archivosUrls = [];
@@ -5352,3 +5359,56 @@ if (btnDescargarBackup) {
         modalBackup.classList.add('hidden');
     });
 }
+
+// === QUILL para Observaciones en Nueva Sesión ===
+let quillSesionComentario = null;
+let quillOriginalParent = null;
+let quillOverlay = null;
+document.addEventListener('DOMContentLoaded', function() {
+  const quillDiv = document.getElementById('sesionComentarioQuill');
+  const quillWrapper = document.getElementById('quillEditorWrapper');
+  if (quillDiv && quillWrapper) {
+    quillSesionComentario = new Quill('#sesionComentarioQuill', {
+      theme: 'snow',
+      placeholder: 'Detalle de la sesión',
+      modules: {
+        toolbar: [
+          [{ 'header': [1, 2, false] }],
+          ['bold', 'italic', 'underline', 'strike'],
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          [{ 'align': [] }],
+          ['clean']
+        ]
+      }
+    });
+    // Maximizar/minimizar
+    const btn = document.getElementById('quillMaximizeBtn');
+    quillOriginalParent = quillWrapper.parentNode;
+    btn.addEventListener('click', function() {
+      if (!quillOverlay) {
+        // Crear overlay flotante
+        quillOverlay = document.createElement('div');
+        quillOverlay.className = 'quill-fullscreen-bg';
+        document.body.appendChild(quillOverlay);
+      }
+      if (!quillWrapper.classList.contains('quill-fullscreen-editor')) {
+        // Maximizar: mover wrapper al overlay
+        quillOverlay.appendChild(quillWrapper);
+        quillWrapper.classList.add('quill-fullscreen-editor');
+        btn.textContent = '⤡';
+      } else {
+        // Minimizar: devolver wrapper a su lugar original
+        quillWrapper.classList.remove('quill-fullscreen-editor');
+        if (quillOverlay && quillOverlay.contains(quillWrapper)) {
+          quillOriginalParent.appendChild(quillWrapper);
+        }
+        btn.textContent = '⤢';
+        // Eliminar overlay si está vacío
+        if (quillOverlay && quillOverlay.childNodes.length === 0) {
+          quillOverlay.remove();
+          quillOverlay = null;
+        }
+      }
+    });
+  }
+});

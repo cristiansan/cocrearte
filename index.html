@@ -40,6 +40,137 @@
       }
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- En el <head> del HTML, antes de </head> -->
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <style>
+      .quill-editor-wrapper {
+        position: relative;
+        width: 100%;
+        max-width: 900px;
+        margin: 0 auto;
+      }
+      #sesionComentarioQuill {
+        height: 120px;
+        background: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      #sesionComentarioQuill .ql-editor {
+        color: #222;
+        background: #fff;
+      }
+      .quill-maximize-btn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        z-index: 10;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 2px 8px;
+        cursor: pointer;
+        font-size: 18px;
+        transition: background 0.2s;
+      }
+      .quill-maximize-btn:hover {
+        background: #f3f4f6;
+      }
+      .quill-fullscreen-bg {
+        position: fixed !important;
+        top: 0; left: 0; right: 0; bottom: 0;
+        z-index: 99999;
+        background: #18181b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 !important;
+      }
+      .quill-fullscreen-editor {
+        background: #23272f;
+        border-radius: 16px;
+        box-shadow: 0 4px 32px rgba(0,0,0,0.4);
+        padding: 32px 32px 24px 32px;
+        max-width: 1200px;
+        width: 96vw;
+        min-width: 320px;
+        min-height: 60vh;
+        height: 80vh;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+      .quill-fullscreen-editor .ql-toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 100001;
+        background: #23272f;
+        border-radius: 8px 8px 0 0 !important;
+        width: 100%;
+        margin-bottom: 0;
+      }
+      .quill-fullscreen-editor .ql-container {
+        min-height: 400px;
+        height: 100%;
+        background: #fff;
+        color: #222;
+        border-radius: 0 0 8px 8px !important;
+        width: 100%;
+        flex: 1 1 auto;
+      }
+      .quill-fullscreen-editor .ql-editor {
+        color: #222;
+        background: #fff;
+        font-size: 1.1rem;
+      }
+      .quill-fullscreen-editor .quill-maximize-btn {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        background: #23272f;
+        color: #fff;
+        border: 1px solid #444;
+        z-index: 100003;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      }
+      .quill-fullscreen-editor .quill-maximize-btn:hover {
+        background: #444;
+      }
+      .quill-fullscreen .quill-maximize-btn {
+        position: fixed;
+        top: 24px;
+        right: 40px;
+        background: #23272f;
+        color: #fff;
+        border: 1px solid #444;
+        z-index: 100003;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      }
+      .quill-fullscreen .quill-maximize-btn:hover {
+        background: #444;
+      }
+      /* Asegura que el editor no sea más grande que el área visible menos el margen */
+      .quill-fullscreen #sesionComentarioQuill {
+        width: 100%;
+        max-width: 900px;
+        margin: 0 auto;
+        height: 100%;
+      }
+    </style>
 </head>
 <body class="bg-white dark:bg-darkbg font-sans transition-colors duration-300">
     <div id="landingPage">
@@ -374,7 +505,7 @@
                     </p>
                     <!-- Número de versión - Solo visible para administradores -->
                     <button id="versionBtn" class="hidden text-xs text-gray-500 hover:text-gray-300 transition mt-2 sm:mt-0 cursor-pointer" onclick="abrirModalVersion()">
-                        v2.3.0
+                        v2.3.1
                     </button>
                 </div>
                 <div class="flex space-x-6 mt-4 md:mt-0">
@@ -476,7 +607,7 @@
             <div class="flex items-center gap-3">
                 <!-- Número de versión - Solo visible para administradores -->
                 <button id="versionBtnDashboard" class="hidden text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition cursor-pointer px-2 py-1 rounded" onclick="abrirModalVersion()">
-                    v2.3.0
+                    v2.3.1
                 </button>
                 <button id="logoutBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded transition">Cerrar sesión</button>
             </div>
@@ -1008,7 +1139,10 @@
                             
                             <div>
                                 <label for="sesionComentario" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-1">Observaciones</label>
-                                <textarea id="sesionComentario" name="sesionComentario" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-darkbg dark:text-darktext resize-none" rows="3" placeholder="Detalle de la sesión"></textarea>
+                                <div class="quill-editor-wrapper" id="quillEditorWrapper">
+                                  <button type="button" id="quillMaximizeBtn" class="quill-maximize-btn" title="Maximizar/Minimizar">⤢</button>
+                                  <div id="sesionComentarioQuill"></div>
+                                </div>
                             </div>
                             
 
@@ -2137,13 +2271,27 @@
                     <span class="text-2xl">🚀</span>
                     <div>
                         <h3 class="text-xl font-bold text-primary-700 dark:text-primary-400">Historial de Versiones</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Espacio Cocrearte v2.3.0</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Espacio Cocrearte v2.3.1</p>
                     </div>
                 </div>
                 <button onclick="cerrarModalVersion()" class="text-gray-400 hover:text-gray-700 text-2xl p-1">×</button>
             </div>
             
             <div class="p-6 space-y-6">
+                <!-- Versión 2.3.1 -->
+                <div class="border-l-4 border-green-800 pl-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="bg-green-200 text-green-900 text-sm font-medium px-2 py-1 rounded">v2.3.1</span>
+                    <span class="text-sm text-gray-500">Actual</span>
+                  </div>
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Editor enriquecido en Observaciones</h4>
+                  <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                    <li>• <strong>Observaciones enriquecidas:</strong> Ahora puedes escribir con formato, listas, negrita, subrayado, etc.</li>
+                    <li>• <strong>Maximizar área de edición:</strong> Opción para expandir el editor y escribir más cómodo.</li>
+                    <li>• <strong>Limpieza automática:</strong> El contenido se borra al cerrar el modal o cambiar de usuario.</li>
+                  </ul>
+                </div>
+
                 <!-- Versión 2.3.0 -->
                 <div class="border-l-4 border-green-700 pl-4">
                     <div class="flex items-center gap-2 mb-2">
