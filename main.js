@@ -997,10 +997,23 @@ addPatientForm.addEventListener('submit', async (e) => {
     const instituto = addPatientForm.patientInstituto.value;
     const motivo = addPatientForm.patientMotivo.value;
 
+    // Obtener datos del colegio
+    const infoColegio = {
+        nombre: addPatientForm.patientColegioNombre.value,
+        grado: addPatientForm.patientColegioGrado.value,
+        turno: addPatientForm.patientColegioTurno.value,
+        telefono: addPatientForm.patientColegioTelefono.value,
+        direccion: addPatientForm.patientColegioDireccion.value,
+        observaciones: addPatientForm.patientColegioObservaciones.value
+    };
+
     // Obtener datos de familia
     const infoPadre = {
         nombre: addPatientForm.patientPadreNombre.value,
         edad: addPatientForm.patientPadreEdad.value,
+        dni: addPatientForm.patientPadreDni.value,
+        email: addPatientForm.patientPadreEmail.value,
+        direccion: addPatientForm.patientPadreDireccion.value,
         ocupacion: addPatientForm.patientPadreOcupacion.value,
         estadoCivil: addPatientForm.patientPadreEstadoCivil.value,
         salud: addPatientForm.patientPadreSalud.value
@@ -1009,6 +1022,9 @@ addPatientForm.addEventListener('submit', async (e) => {
     const infoMadre = {
         nombre: addPatientForm.patientMadreNombre.value,
         edad: addPatientForm.patientMadreEdad.value,
+        dni: addPatientForm.patientMadreDni.value,
+        email: addPatientForm.patientMadreEmail.value,
+        direccion: addPatientForm.patientMadreDireccion.value,
         ocupacion: addPatientForm.patientMadreOcupacion.value,
         estadoCivil: addPatientForm.patientMadreEstadoCivil.value,
         salud: addPatientForm.patientMadreSalud.value
@@ -1043,6 +1059,8 @@ addPatientForm.addEventListener('submit', async (e) => {
             // Información educativa
             educacion,
             instituto,
+            // Información del colegio
+            infoColegio,
             // Motivo de consulta
             motivo,
             // Información de familia
@@ -4081,10 +4099,23 @@ if (editPatientFormElement) {
         const instituto = editPatientFormElement.editPatientInstituto.value;
         const motivo = editPatientFormElement.editPatientMotivo.value;
 
+        // Obtener datos del colegio
+        const infoColegio = {
+            nombre: editPatientFormElement.editPatientColegioNombre.value,
+            grado: editPatientFormElement.editPatientColegioGrado.value,
+            turno: editPatientFormElement.editPatientColegioTurno.value,
+            telefono: editPatientFormElement.editPatientColegioTelefono.value,
+            direccion: editPatientFormElement.editPatientColegioDireccion.value,
+            observaciones: editPatientFormElement.editPatientColegioObservaciones.value
+        };
+
         // Obtener datos de familia
         const infoPadre = {
             nombre: editPatientFormElement.editPatientPadreNombre.value,
             edad: editPatientFormElement.editPatientPadreEdad.value,
+            dni: editPatientFormElement.editPatientPadreDni.value,
+            email: editPatientFormElement.editPatientPadreEmail.value,
+            direccion: editPatientFormElement.editPatientPadreDireccion.value,
             ocupacion: editPatientFormElement.editPatientPadreOcupacion.value,
             estadoCivil: editPatientFormElement.editPatientPadreEstadoCivil.value,
             salud: editPatientFormElement.editPatientPadreSalud.value
@@ -4093,6 +4124,9 @@ if (editPatientFormElement) {
         const infoMadre = {
             nombre: editPatientFormElement.editPatientMadreNombre.value,
             edad: editPatientFormElement.editPatientMadreEdad.value,
+            dni: editPatientFormElement.editPatientMadreDni.value,
+            email: editPatientFormElement.editPatientMadreEmail.value,
+            direccion: editPatientFormElement.editPatientMadreDireccion.value,
             ocupacion: editPatientFormElement.editPatientMadreOcupacion.value,
             estadoCivil: editPatientFormElement.editPatientMadreEstadoCivil.value,
             salud: editPatientFormElement.editPatientMadreSalud.value
@@ -4114,7 +4148,7 @@ if (editPatientFormElement) {
             console.log('💾 Actualizando datos del paciente...');
             console.log('📋 Datos a actualizar:', { 
                 nombre, dni, fechaNacimiento, sexo, lugarNacimiento, 
-                email, telefono, contacto, direccion, educacion, instituto, motivo 
+                email, telefono, contacto, direccion, educacion, instituto, infoColegio, motivo 
             });
             console.log('🔍 Referencia del paciente:', pacienteEditandoRef);
             console.log('🔍 ID del paciente:', pacienteEditandoId);
@@ -4134,6 +4168,8 @@ if (editPatientFormElement) {
                 // Información educativa
                 educacion,
                 instituto,
+                // Información del colegio
+                infoColegio,
                 // Motivo de consulta
                 motivo,
                 // Información de familia
@@ -5395,10 +5431,77 @@ function limpiarDatosFamilia(tipo) {
     if (typeof renderizarHermanos === 'function') renderizarHermanos();
 }
 
-// Placeholder para evitar error si no está definida
+// Función para cargar datos de familia en el formulario
 function cargarDatosFamilia(pacienteData, modo) {
-    // Esta función puede ser implementada para cargar datos de familia en el formulario de edición
-    // Por ahora no hace nada
+    console.log('🔄 Cargando datos de familia para modo:', modo);
+    
+    if (!pacienteData) return;
+    
+    const prefijo = modo === 'editar' ? 'edit' : '';
+    
+    // Cargar datos del padre
+    if (pacienteData.infoPadre) {
+        const padre = pacienteData.infoPadre;
+        const nombreField = document.getElementById(`${prefijo}PatientPadreNombre`);
+        const edadField = document.getElementById(`${prefijo}PatientPadreEdad`);
+        const dniField = document.getElementById(`${prefijo}PatientPadreDni`);
+        const emailField = document.getElementById(`${prefijo}PatientPadreEmail`);
+        const direccionField = document.getElementById(`${prefijo}PatientPadreDireccion`);
+        const ocupacionField = document.getElementById(`${prefijo}PatientPadreOcupacion`);
+        const estadoCivilField = document.getElementById(`${prefijo}PatientPadreEstadoCivil`);
+        const saludField = document.getElementById(`${prefijo}PatientPadreSalud`);
+        
+        if (nombreField) nombreField.value = padre.nombre || '';
+        if (edadField) edadField.value = padre.edad || '';
+        if (dniField) dniField.value = padre.dni || '';
+        if (emailField) emailField.value = padre.email || '';
+        if (direccionField) direccionField.value = padre.direccion || '';
+        if (ocupacionField) ocupacionField.value = padre.ocupacion || '';
+        if (estadoCivilField) estadoCivilField.value = padre.estadoCivil || '';
+        if (saludField) saludField.value = padre.salud || '';
+    }
+    
+    // Cargar datos de la madre
+    if (pacienteData.infoMadre) {
+        const madre = pacienteData.infoMadre;
+        const nombreField = document.getElementById(`${prefijo}PatientMadreNombre`);
+        const edadField = document.getElementById(`${prefijo}PatientMadreEdad`);
+        const dniField = document.getElementById(`${prefijo}PatientMadreDni`);
+        const emailField = document.getElementById(`${prefijo}PatientMadreEmail`);
+        const direccionField = document.getElementById(`${prefijo}PatientMadreDireccion`);
+        const ocupacionField = document.getElementById(`${prefijo}PatientMadreOcupacion`);
+        const estadoCivilField = document.getElementById(`${prefijo}PatientMadreEstadoCivil`);
+        const saludField = document.getElementById(`${prefijo}PatientMadreSalud`);
+        
+        if (nombreField) nombreField.value = madre.nombre || '';
+        if (edadField) edadField.value = madre.edad || '';
+        if (dniField) dniField.value = madre.dni || '';
+        if (emailField) emailField.value = madre.email || '';
+        if (direccionField) direccionField.value = madre.direccion || '';
+        if (ocupacionField) ocupacionField.value = madre.ocupacion || '';
+        if (estadoCivilField) estadoCivilField.value = madre.estadoCivil || '';
+        if (saludField) saludField.value = madre.salud || '';
+    }
+    
+    // Cargar datos del colegio
+    if (pacienteData.infoColegio) {
+        const colegio = pacienteData.infoColegio;
+        const nombreField = document.getElementById(`${prefijo}PatientColegioNombre`);
+        const gradoField = document.getElementById(`${prefijo}PatientColegioGrado`);
+        const turnoField = document.getElementById(`${prefijo}PatientColegioTurno`);
+        const telefonoField = document.getElementById(`${prefijo}PatientColegioTelefono`);
+        const direccionField = document.getElementById(`${prefijo}PatientColegioDireccion`);
+        const observacionesField = document.getElementById(`${prefijo}PatientColegioObservaciones`);
+        
+        if (nombreField) nombreField.value = colegio.nombre || '';
+        if (gradoField) gradoField.value = colegio.grado || '';
+        if (turnoField) turnoField.value = colegio.turno || '';
+        if (telefonoField) telefonoField.value = colegio.telefono || '';
+        if (direccionField) direccionField.value = colegio.direccion || '';
+        if (observacionesField) observacionesField.value = colegio.observaciones || '';
+    }
+    
+    console.log('✅ Datos de familia y colegio cargados correctamente');
 }
 
 // (Bloque duplicado eliminado para evitar error de referencia a cargarPacientesBackup)
