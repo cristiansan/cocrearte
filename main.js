@@ -6732,6 +6732,9 @@ document.addEventListener('DOMContentLoaded', function() {
         quillOverlay.appendChild(quillWrapper);
         quillWrapper.classList.add('quill-fullscreen-editor');
         btn.textContent = '⤡';
+        
+        // Agregar botón de dictado en vista maximizada
+        createFullscreenDictateButton();
       } else {
         // Minimizar: devolver wrapper a su lugar original
         quillWrapper.classList.remove('quill-fullscreen-editor');
@@ -6739,6 +6742,16 @@ document.addEventListener('DOMContentLoaded', function() {
           quillOriginalParent.appendChild(quillWrapper);
         }
         btn.textContent = '⤢';
+        
+        // Detener grabación si está activa desde el botón de pantalla completa
+        const fullscreenBtn = document.getElementById('fullscreenDictateBtn');
+        if (currentRecordingButton === fullscreenBtn) {
+            stopRecording();
+        }
+        
+        // Remover botón de dictado de vista maximizada
+        removeFullscreenDictateButton();
+        
         // Eliminar overlay si está vacío
         if (quillOverlay && quillOverlay.childNodes.length === 0) {
           quillOverlay.remove();
@@ -6748,3 +6761,392 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 });
+
+// Función para crear botón de dictado en vista maximizada
+function createFullscreenDictateButton() {
+    // Verificar que no exista ya
+    if (document.getElementById('fullscreenDictateBtn')) return;
+    
+    // Crear contenedor del botón
+    const dictateContainer = document.createElement('div');
+    dictateContainer.id = 'fullscreenDictateContainer';
+    dictateContainer.className = 'fullscreen-dictate-container';
+    
+    // Crear botón de dictado
+    const dictateBtn = document.createElement('button');
+    dictateBtn.type = 'button';
+    dictateBtn.id = 'fullscreenDictateBtn';
+    dictateBtn.className = 'mic-button fullscreen-mic-button flex items-center gap-1 px-3 py-2 text-sm bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors';
+    dictateBtn.innerHTML = '🎤 <span class="mic-text">Dictar</span>';
+    
+    // Crear tooltip
+    const tooltipContainer = document.createElement('div');
+    tooltipContainer.className = 'relative group';
+    
+    const tooltipIcon = document.createElement('div');
+    tooltipIcon.className = 'w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs cursor-help';
+    tooltipIcon.textContent = 'i';
+    
+    const tooltipContent = document.createElement('div');
+    tooltipContent.className = 'absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50';
+    tooltipContent.innerHTML = `
+        Haz clic en "Dictar" para empezar a hablar.<br/>
+        Haz clic en "Detener" para finalizar el dictado.<br/>
+        El texto se insertará automáticamente.
+        <div class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+    `;
+    
+    // Ensamblar elementos
+    tooltipContainer.appendChild(tooltipIcon);
+    tooltipContainer.appendChild(tooltipContent);
+    dictateContainer.appendChild(dictateBtn);
+    dictateContainer.appendChild(tooltipContainer);
+    
+    // Agregar al wrapper maximizado
+    const quillWrapper = document.querySelector('.quill-fullscreen-editor');
+    if (quillWrapper) {
+        quillWrapper.appendChild(dictateContainer);
+        
+        // Agregar event listener
+        dictateBtn.addEventListener('click', function() {
+            if (speechRecognition && currentRecordingButton === dictateBtn) {
+                stopRecording();
+            } else {
+                startRecording(dictateBtn, 'sesionComentarioQuill');
+            }
+        });
+    }
+}
+
+// Función para remover botón de dictado en vista maximizada
+function removeFullscreenDictateButton() {
+    const container = document.getElementById('fullscreenDictateContainer');
+    if (container) {
+        container.remove();
+    }
+}
+
+// === FUNCIONALIDAD DE VOZ A TEXTO ===
+
+// Variables globales para reconocimiento de voz
+let speechRecognition = null;
+let currentRecordingButton = null;
+let currentTargetField = null;
+let recordingIndicator = null;
+
+// Función auxiliar para insertar texto en el editor Quill
+function insertTextIntoQuillEditor(text) {
+    if (!text || text.trim() === '') return;
+    
+    const cleanText = text.trim();
+    console.log('🎤 Insertando en Quill:', cleanText);
+    
+    // Método 1: Usar la instancia global de Quill si está disponible
+    if (window.quillEditor && typeof window.quillEditor.insertText === 'function') {
+        try {
+            const currentLength = window.quillEditor.getLength();
+            const currentText = window.quillEditor.getText().trim();
+            
+            // Insertar al final del contenido con espacio apropiado
+            const insertPosition = currentLength - 1; // -1 porque Quill siempre tiene un \n al final
+            const prefix = currentText ? ' ' : '';
+            window.quillEditor.insertText(insertPosition, prefix + cleanText);
+            console.log('✅ Texto insertado en Quill usando API');
+            return;
+        } catch (error) {
+            console.warn('⚠️ Error usando API de Quill:', error);
+        }
+    }
+    
+    // Método 2: Buscar la instancia de Quill en el DOM
+    const quillContainer = document.getElementById('sesionComentarioQuill');
+    if (quillContainer && quillContainer.__quill) {
+        try {
+            const quill = quillContainer.__quill;
+            const currentLength = quill.getLength();
+            const currentText = quill.getText().trim();
+            
+            const insertPosition = currentLength - 1;
+            const prefix = currentText ? ' ' : '';
+            quill.insertText(insertPosition, prefix + cleanText);
+            console.log('✅ Texto insertado en Quill usando instancia DOM');
+            return;
+        } catch (error) {
+            console.warn('⚠️ Error usando instancia DOM de Quill:', error);
+        }
+    }
+    
+    // Método 3: Fallback directo al DOM
+    const quillEditor = document.querySelector('#sesionComentarioQuill .ql-editor');
+    if (quillEditor) {
+        try {
+            // Obtener el contenido actual
+            const currentHTML = quillEditor.innerHTML;
+            const currentText = quillEditor.textContent || '';
+            
+            // Si está vacío o solo tiene un párrafo vacío
+            if (currentText.trim() === '' || currentHTML === '<p><br></p>') {
+                quillEditor.innerHTML = `<p>${cleanText}</p>`;
+            } else {
+                // Agregar al final del último párrafo
+                const lastP = quillEditor.querySelector('p:last-child');
+                if (lastP) {
+                    const lastPText = lastP.textContent || '';
+                    if (lastPText.trim()) {
+                        lastP.innerHTML = lastPText.trim() + ' ' + cleanText;
+                    } else {
+                        lastP.innerHTML = cleanText;
+                    }
+                } else {
+                    // Si no hay párrafos, crear uno nuevo
+                    quillEditor.innerHTML += `<p>${cleanText}</p>`;
+                }
+            }
+            console.log('✅ Texto insertado en Quill usando fallback DOM');
+            return;
+        } catch (error) {
+            console.warn('⚠️ Error en fallback DOM:', error);
+        }
+    }
+    
+    console.error('❌ No se pudo insertar texto en el editor Quill');
+}
+
+// Inicializar reconocimiento de voz
+function initSpeechRecognition() {
+    // Verificar soporte del navegador
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        console.warn('🎤 Reconocimiento de voz no soportado en este navegador');
+        return false;
+    }
+
+    // Usar la API disponible
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    speechRecognition = new SpeechRecognition();
+
+    // Configuración del reconocimiento
+    speechRecognition.continuous = true;
+    speechRecognition.interimResults = true;
+    speechRecognition.lang = 'es-ES'; // Español de España
+    speechRecognition.maxAlternatives = 1;
+
+    // Event listeners
+    speechRecognition.onstart = function() {
+        console.log('🎤 Reconocimiento de voz iniciado');
+        updateRecordingState('listening');
+        showRecordingIndicator('Escuchando...');
+    };
+
+    speechRecognition.onresult = function(event) {
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+                finalTranscript += transcript;
+                console.log('🎤 Texto final reconocido:', transcript);
+            } else {
+                interimTranscript += transcript;
+            }
+        }
+
+        // Solo actualizar el campo si hay texto final (evita repeticiones)
+        if (finalTranscript.trim() !== '' && currentTargetField) {
+            console.log('🎤 Insertando texto final:', finalTranscript.trim());
+            if (currentTargetField.id === 'sesionComentarioQuill') {
+                insertTextIntoQuillEditor(finalTranscript.trim());
+            } else {
+                // Para textarea normal
+                const currentValue = currentTargetField.value || '';
+                const newValue = currentValue.trim() + (currentValue.trim() ? ' ' : '') + finalTranscript.trim();
+                currentTargetField.value = newValue;
+                console.log('🎤 Valor actualizado en textarea:', newValue);
+            }
+        }
+
+        // Mostrar solo texto intermedio en el indicador (sin insertarlo)
+        if (interimTranscript && !finalTranscript) {
+            showRecordingIndicator(`Escuchando: "${interimTranscript.substring(0, 30)}${interimTranscript.length > 30 ? '...' : ''}"`);
+        }
+    };
+
+    speechRecognition.onerror = function(event) {
+        console.error('❌ Error en reconocimiento de voz:', event.error);
+        let errorMessage = 'Error de reconocimiento';
+        
+        switch(event.error) {
+            case 'network':
+                errorMessage = 'Error de red';
+                break;
+            case 'not-allowed':
+                errorMessage = 'Micrófono no permitido';
+                break;
+            case 'no-speech':
+                errorMessage = 'No se detectó voz';
+                break;
+            case 'audio-capture':
+                errorMessage = 'Error de micrófono';
+                break;
+            case 'service-not-allowed':
+                errorMessage = 'Servicio no disponible';
+                break;
+        }
+        
+        showRecordingIndicator(`❌ ${errorMessage}`, 'error');
+        updateRecordingState('error');
+        
+        setTimeout(() => {
+            stopRecording();
+        }, 2000);
+    };
+
+    speechRecognition.onend = function() {
+        console.log('🎤 Reconocimiento de voz terminado');
+        stopRecording();
+    };
+
+    return true;
+}
+
+// Iniciar grabación
+function startRecording(button, targetFieldId) {
+    if (!speechRecognition) {
+        if (!initSpeechRecognition()) {
+            alert('❌ Tu navegador no soporta reconocimiento de voz.\n\nRecomendamos usar Chrome, Edge o Safari para esta funcionalidad.');
+            return;
+        }
+    }
+
+    // Detener grabación anterior si existe
+    if (currentRecordingButton) {
+        stopRecording();
+    }
+
+    currentRecordingButton = button;
+    
+    if (targetFieldId === 'sesionComentarioQuill') {
+        // Para el editor Quill, usar un objeto especial
+        currentTargetField = { id: 'sesionComentarioQuill' };
+    } else {
+        currentTargetField = document.getElementById(targetFieldId);
+        if (!currentTargetField) {
+            console.error('❌ Campo de destino no encontrado:', targetFieldId);
+            return;
+        }
+    }
+
+    try {
+        updateRecordingState('recording');
+        speechRecognition.start();
+    } catch (error) {
+        console.error('❌ Error iniciando reconocimiento:', error);
+        alert('❌ Error iniciando el reconocimiento de voz. Inténtalo de nuevo.');
+        updateRecordingState('idle');
+    }
+}
+
+// Detener grabación
+function stopRecording() {
+    if (speechRecognition) {
+        speechRecognition.stop();
+    }
+    
+    updateRecordingState('idle');
+    hideRecordingIndicator();
+    
+    currentRecordingButton = null;
+    currentTargetField = null;
+}
+
+// Actualizar estado visual del botón
+function updateRecordingState(state) {
+    if (!currentRecordingButton) return;
+
+    const button = currentRecordingButton;
+    const micText = button.querySelector('.mic-text');
+
+    // Limpiar clases anteriores
+    button.classList.remove('recording', 'listening', 'processing');
+
+    switch (state) {
+        case 'recording':
+            button.classList.add('recording');
+            if (micText) micText.textContent = 'Iniciando...';
+            break;
+        case 'listening':
+            button.classList.add('listening');
+            if (micText) micText.textContent = 'Escuchando';
+            break;
+        case 'processing':
+            button.classList.add('processing');
+            if (micText) micText.textContent = 'Procesando';
+            break;
+        case 'error':
+            if (micText) micText.textContent = 'Error';
+            break;
+        default:
+            if (micText) micText.textContent = 'Dictar';
+    }
+}
+
+// Mostrar indicador de grabación
+function showRecordingIndicator(text, type = 'recording') {
+    hideRecordingIndicator();
+    
+    recordingIndicator = document.createElement('div');
+    recordingIndicator.className = 'recording-indicator';
+    recordingIndicator.textContent = text;
+    
+    if (type === 'error') {
+        recordingIndicator.style.background = 'rgba(220, 38, 38, 0.95)';
+    } else {
+        recordingIndicator.style.background = 'rgba(5, 150, 105, 0.95)';
+    }
+    
+    document.body.appendChild(recordingIndicator);
+}
+
+// Ocultar indicador de grabación
+function hideRecordingIndicator() {
+    if (recordingIndicator) {
+        recordingIndicator.remove();
+        recordingIndicator = null;
+    }
+}
+
+// Event listeners para botones de micrófono
+document.addEventListener('DOMContentLoaded', function() {
+    // Botón de micrófono para comentarios/observaciones
+    const btnMicComentario = document.getElementById('btnMicComentario');
+    if (btnMicComentario) {
+        btnMicComentario.addEventListener('click', function() {
+            if (currentRecordingButton === this) {
+                stopRecording();
+            } else {
+                startRecording(this, 'sesionComentarioQuill');
+            }
+        });
+    }
+
+    // Botón de micrófono para notas
+    const btnMicNotas = document.getElementById('btnMicNotas');
+    if (btnMicNotas) {
+        btnMicNotas.addEventListener('click', function() {
+            if (currentRecordingButton === this) {
+                stopRecording();
+            } else {
+                startRecording(this, 'sesionNotas');
+            }
+        });
+    }
+
+    // Detener grabación con Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && currentRecordingButton) {
+            stopRecording();
+        }
+    });
+});
+
+console.log('🎤 Sistema de voz a texto inicializado');
