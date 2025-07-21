@@ -171,6 +171,14 @@
         height: 100%;
       }
     </style>
+    <style>
+    // ... existing code ...
+    .force-light, .force-light * {
+      background: #fff !important;
+      color: #1e293b !important;
+      border-color: #e5e7eb !important;
+    }
+    </style>
 </head>
 <body class="bg-white dark:bg-darkbg font-sans transition-colors duration-300">
     <div id="landingPage">
@@ -505,7 +513,7 @@
                     </p>
                     <!-- Número de versión - Solo visible para administradores -->
                     <button id="versionBtn" class="hidden text-xs text-gray-500 hover:text-gray-300 transition mt-2 sm:mt-0 cursor-pointer" onclick="abrirModalVersion()">
-                        v2.3.2
+                        v2.3.3
                     </button>
                 </div>
                 <div class="flex space-x-6 mt-4 md:mt-0">
@@ -607,7 +615,7 @@
             <div class="flex items-center gap-3">
                 <!-- Número de versión - Solo visible para administradores -->
                 <button id="versionBtnDashboard" class="hidden text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition cursor-pointer px-2 py-1 rounded" onclick="abrirModalVersion()">
-                    v2.3.2
+                    v2.3.3
                 </button>
                 <button id="logoutBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded transition">Cerrar sesión</button>
             </div>
@@ -1314,7 +1322,7 @@
       </div>
     </div>
     <!-- FullCalendar CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
     
     <!-- Estilos personalizados para FullCalendar en modo oscuro y responsividad -->
     <style>
@@ -2273,22 +2281,41 @@
                     <span class="text-2xl">🚀</span>
                     <div>
                         <h3 class="text-xl font-bold text-primary-700 dark:text-primary-400">Historial de Versiones</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Espacio Cocrearte v2.3.2</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Espacio Cocrearte v2.3.3</p>
                     </div>
                 </div>
                 <button onclick="cerrarModalVersion()" class="text-gray-400 hover:text-gray-700 text-2xl p-1">×</button>
             </div>
             
             <div class="p-6 space-y-6">
-                <!-- Versión 2.3.2 -->
-                <div class="border-l-4 border-green-600 pl-4 mb-4">
+                <!-- Versión 2.3.3 -->
+                <div class="border-l-4 border-blue-600 pl-4 mb-4">
                   <div class="flex items-center gap-2 mb-2">
-                    <span class="bg-green-300 text-green-900 text-sm font-medium px-2 py-1 rounded">v2.3.2</span>
+                    <span class="bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded">v2.3.3</span>
+                    <span class="text-sm text-gray-500">Actual</span>
                   </div>
-                  <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-2">Backup clínico completo y mejoras</h4>
-                  <ul class="space-y-1 text-sm text-gray-700 dark:text-gray-300">
-                    <li>• Backup de pacientes ahora incluye todas las sesiones clínicas (comentarios, notas, CIE-10 y archivos) en el archivo descargado.</li>
-                    <li>• Cada sesión se exporta como una fila independiente en el CSV.</li>
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Modal de Backup Mejorado</h4>
+                  <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                    <li>• <strong>Visualización de Datos:</strong> Nuevo botón "Ver" para previsualizar pacientes y sesiones sin descargar</li>
+                    <li>• <strong>Opciones Sin Notas:</strong> Botones "Ver (sin notas)" y "Descargar (sin notas)" para excluir información sensible</li>
+                    <li>• <strong>Indicador de Carga:</strong> Animación "Cargando datos..." en todos los botones del modal de backup</li>
+                    <li>• <strong>Organización Mejorada:</strong> Pacientes ordenados alfabéticamente y sesiones por fecha (más reciente primero)</li>
+                    <li>• <strong>Navegación Jerárquica:</strong> Acordeón desplegable: Profesional → Paciente → Sesiones</li>
+                    <li>• <strong>Interfaz Responsive:</strong> Modal de visualización adaptado para dispositivos móviles</li>
+                  </ul>
+                </div>
+
+                <!-- Versión 2.3.2 -->
+                <div class="border-l-4 border-green-900 pl-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="bg-green-200 text-green-900 text-sm font-medium px-2 py-1 rounded">v2.3.2</span>
+                  </div>
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Backup Completo de Pacientes</h4>
+                  <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                    <li>• <strong>Backup Completo:</strong> Exportación de todos los datos de pacientes y sesiones a CSV</li>
+                    <li>• <strong>Agrupación por Profesional:</strong> Los datos se organizan por terapeuta en el archivo</li>
+                    <li>• <strong>Datos de Sesiones:</strong> Incluye fecha, comentarios, notas, CIE-10 y archivos adjuntos</li>
+                    <li>• <strong>Información Familiar:</strong> Datos de padre, madre y hermanos incluidos en el backup</li>
                     <li>• Si un paciente no tiene sesiones, igual se exporta una fila con sus datos y campos de sesión vacíos.</li>
                     <li>• Corrección de errores menores en el backup y mejoras de estabilidad.</li>
                   </ul>
@@ -2297,7 +2324,6 @@
                 <div class="border-l-4 border-green-800 pl-4">
                   <div class="flex items-center gap-2 mb-2">
                     <span class="bg-green-200 text-green-900 text-sm font-medium px-2 py-1 rounded">v2.3.1</span>
-                    <span class="text-sm text-gray-500">Actual</span>
                   </div>
                   <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Editor enriquecido en Observaciones</h4>
                   <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
@@ -2541,7 +2567,10 @@
           </div>
         </div>
         <div class="flex justify-end gap-2 p-4 border-t border-gray-200 dark:border-darkborder">
+          <button id="btnVerBackup" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">Ver</button>
+          <button id="btnVerBackupSinNotas" class="bg-blue-400 hover:bg-blue-500 text-white font-semibold py-2 px-4 rounded">Ver (sin notas)</button>
           <button id="btnDescargarBackup" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded">Descargar</button>
+          <button id="btnDescargarBackupSinNotas" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded">Descargar (sin notas)</button>
           <button id="btnCancelarBackup" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded">Cancelar</button>
         </div>
       </div>
@@ -2560,6 +2589,33 @@
         }
     });
     </script>
+
+    <!-- Modal de Visualización de Backup -->
+    <div id="modalVerBackup" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+      <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg w-full max-w-3xl relative border dark:border-darkborder max-h-[90vh] flex flex-col">
+        <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-darkborder">
+          <h3 class="text-lg font-bold text-primary-600">Visualización de Backup</h3>
+          <button id="btnCerrarModalVerBackup" class="text-gray-400 hover:text-gray-700 text-2xl">×</button>
+        </div>
+        <div class="p-4 flex-1 overflow-y-auto">
+          <div id="contenidoVerBackup" class="overflow-x-auto"></div>
+        </div>
+        <div class="flex justify-end gap-2 p-4 border-t border-gray-200 dark:border-darkborder">
+          <button id="btnCerrarVerBackup" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded">Cerrar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loader para modal de visualización de backup -->
+    <div id="loaderVerBackup" class="fixed inset-0 flex items-center justify-center z-[99999] bg-black bg-opacity-30 hidden">
+      <div class="flex flex-col items-center">
+        <svg class="animate-spin h-12 w-12 text-primary-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+        </svg>
+        <span class="text-primary-700 font-semibold text-lg">Cargando datos...</span>
+      </div>
+    </div>
 
 </body>
 </html> 

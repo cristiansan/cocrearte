@@ -5072,14 +5072,32 @@ function cargarDatosFamilia(pacienteData, modo) {
 
 // === BACKUP MODAL LOGIC ===
 window.addEventListener('DOMContentLoaded', () => {
+    console.log('[DEBUG] DOMContentLoaded ejecutándose para backup modal');
     const btnBackup = document.getElementById('btnBackupPacientes');
     const modalBackup = document.getElementById('modalBackupPacientes');
     const btnCerrarModalBackup = document.getElementById('btnCerrarModalBackup');
     const btnCancelarBackup = document.getElementById('btnCancelarBackup');
     const btnDescargarBackup = document.getElementById('btnDescargarBackup');
+    const btnVerBackup = document.getElementById('btnVerBackup');
+    const btnVerBackupSinNotas = document.getElementById('btnVerBackupSinNotas');
+    const btnDescargarBackupSinNotas = document.getElementById('btnDescargarBackupSinNotas');
     const inputBuscarPacienteBackup = document.getElementById('inputBuscarPacienteBackup');
     const listaPacientesBackup = document.getElementById('listaPacientesBackup');
     const checkTodosBackup = document.getElementById('checkTodosBackup');
+    const modalVerBackup = document.getElementById('modalVerBackup');
+    const btnCerrarModalVerBackup = document.getElementById('btnCerrarModalVerBackup');
+    const btnCerrarVerBackup = document.getElementById('btnCerrarVerBackup');
+    const contenidoVerBackup = document.getElementById('contenidoVerBackup');
+
+    console.log('[DEBUG] Elementos encontrados:', {
+        btnBackup: !!btnBackup,
+        modalBackup: !!modalBackup,
+        btnVerBackup: !!btnVerBackup,
+        btnVerBackupSinNotas: !!btnVerBackupSinNotas,
+        btnDescargarBackupSinNotas: !!btnDescargarBackupSinNotas,
+        modalVerBackup: !!modalVerBackup,
+        contenidoVerBackup: !!contenidoVerBackup
+    });
 
     let pacientesBackupData = [];
     let pacientesBackupFiltrados = [];
@@ -5188,7 +5206,10 @@ window.addEventListener('DOMContentLoaded', () => {
     if (btnDescargarBackup) {
         btnDescargarBackup.addEventListener('click', async () => {
             console.log('Click en Descargar Backup');
+            const loader = document.getElementById('loaderVerBackup');
+            if (loader) loader.classList.remove('hidden');
             if (pacientesBackupSeleccionados.size === 0) {
+                if (loader) loader.classList.add('hidden');
                 alert('Selecciona al menos un paciente para descargar.');
                 return;
             }
@@ -5302,6 +5323,334 @@ window.addEventListener('DOMContentLoaded', () => {
                 URL.revokeObjectURL(url);
             }, 100);
             modalBackup.classList.add('hidden');
+            if (loader) loader.classList.add('hidden');
+        });
+    }
+    if (btnVerBackup) {
+        btnVerBackup.addEventListener('click', async () => {
+            const loader = document.getElementById('loaderVerBackup');
+            if (loader) loader.classList.remove('hidden');
+            if (pacientesBackupSeleccionados.size === 0) {
+                if (loader) loader.classList.add('hidden');
+                alert('Selecciona al menos un paciente para ver.');
+                return;
+            }
+            // Obtener profesionales
+            const usuariosSnap = await window.firebaseDB.collection('usuarios').get();
+            const profesionales = {};
+            usuariosSnap.forEach(doc => {
+                const data = doc.data();
+                profesionales[doc.id] = data.displayName || data.email || doc.id;
+            });
+            // Filtrar pacientes seleccionados
+            const pacientesSeleccionados = pacientesBackupData.filter(p => pacientesBackupSeleccionados.has(p.id));
+            // Agrupar por profesional
+            const pacientesPorProfesional = {};
+            pacientesSeleccionados.forEach(p => {
+                if (!pacientesPorProfesional[p.profesional]) pacientesPorProfesional[p.profesional] = [];
+                pacientesPorProfesional[p.profesional].push(p);
+            });
+            // Renderizar agrupado por profesional con acordeón de pacientes y sesiones
+            let html = '<div class="bg-white text-gray-900">';
+            let profIdx = 0;
+            for (const [profesional, pacientes] of Object.entries(pacientesPorProfesional)) {
+                const profId = `ver-prof-${profIdx}`;
+                html += `<div class='mb-4 border rounded'>`;
+                html += `<button class='w-full text-left px-4 py-2 font-bold bg-blue-100 hover:bg-blue-200 border-b' style='color:#1e293b' onclick=\"document.getElementById('${profId}').classList.toggle('hidden')\">${profesional}</button>`;
+                html += `<div id='${profId}' class='p-2'>`;
+                // Cargar sesiones de todos los pacientes y ordenarlos alfabéticamente por nombre
+                let pacientesConSesiones = [];
+                for (const p of pacientes) {
+                    let sesiones = [];
+                    try {
+                        const sesionesSnap = await window.firebaseDB.collection('pacientes').doc(p.id).collection('sesiones').get();
+                        sesionesSnap.forEach(doc => {
+                            const s = doc.data();
+                            sesiones.push({
+                                fechaSesion: s.fecha || '',
+                                comentarioSesion: s.comentario || '',
+                                notasSesion: s.notas || ''
+                            });
+                        });
+                    } catch (e) {
+                        sesiones = [];
+                    }
+                    // Ordenar sesiones por fecha descendente
+                    sesiones.sort((a, b) => {
+                        const fa = a.fechaSesion ? new Date(a.fechaSesion.seconds ? a.fechaSesion.seconds * 1000 : a.fechaSesion).getTime() : 0;
+                        const fb = b.fechaSesion ? new Date(b.fechaSesion.seconds ? b.fechaSesion.seconds * 1000 : b.fechaSesion).getTime() : 0;
+                        return fb - fa;
+                    });
+                    pacientesConSesiones.push({ paciente: p, sesiones });
+                }
+                // Ordenar pacientes alfabéticamente por nombre
+                pacientesConSesiones.sort((a, b) => {
+                    const na = (a.paciente.nombre || '').toLowerCase();
+                    const nb = (b.paciente.nombre || '').toLowerCase();
+                    if (na < nb) return -1;
+                    if (na > nb) return 1;
+                    return 0;
+                });
+                // Renderizar acordeón de pacientes
+                let pacIdx = 0;
+                for (const { paciente: p, sesiones } of pacientesConSesiones) {
+                    const pacId = `${profId}-pac-${pacIdx}`;
+                    html += `<div class='mb-2 border rounded'>`;
+                    html += `<button class='w-full text-left px-4 py-2 font-semibold bg-gray-100 hover:bg-gray-200 border-b' onclick=\"document.getElementById('${pacId}').classList.toggle('hidden')\">${p.nombre || ''}</button>`;
+                    html += `<div id='${pacId}' class='p-2 hidden'>`;
+                    if (sesiones.length > 0) {
+                        sesiones.forEach(sesion => {
+                            html += `<div class='mb-2 p-2 border rounded bg-gray-50'>`;
+                            html += `<div><span class='font-semibold'>Fecha:</span> ${sesion.fechaSesion ? new Date(sesion.fechaSesion.seconds ? sesion.fechaSesion.seconds * 1000 : sesion.fechaSesion).toLocaleDateString() : '-'}</div>`;
+                            html += `<div><span class='font-semibold'>Comentarios:</span> ${sesion.comentarioSesion || '-'}</div>`;
+                            html += `<div><span class='font-semibold'>Notas:</span> ${sesion.notasSesion || '-'}</div>`;
+                            html += `</div>`;
+                        });
+                    } else {
+                        html += `<div class='mb-2 p-2 border rounded bg-gray-50'>`;
+                        html += `<div><span class='font-semibold'>Fecha:</span> -</div>`;
+                        html += `<div><span class='font-semibold'>Comentarios:</span> -</div>`;
+                        html += `<div><span class='font-semibold'>Notas:</span> -</div>`;
+                        html += `</div>`;
+                    }
+                    html += `</div></div>`;
+                    pacIdx++;
+                }
+                html += `</div></div>`;
+                profIdx++;
+            }
+            html += '</div>';
+            contenidoVerBackup.innerHTML = html;
+            modalVerBackup.classList.remove('hidden');
+            // Asegurar que todos los paneles estén colapsados por defecto
+            for (let i = 0; i < profIdx; i++) {
+                const el = document.getElementById(`ver-prof-${i}`);
+                if (el) el.classList.add('hidden');
+            }
+            // Forzar fondo claro y texto oscuro
+            modalVerBackup.classList.remove('dark');
+            modalVerBackup.classList.add('force-light');
+            if (loader) loader.classList.add('hidden');
+        });
+    }
+    if (btnCerrarModalVerBackup) btnCerrarModalVerBackup.addEventListener('click', () => modalVerBackup.classList.add('hidden'));
+    if (btnCerrarVerBackup) btnCerrarVerBackup.addEventListener('click', () => modalVerBackup.classList.add('hidden'));
+    if (btnVerBackupSinNotas) {
+        btnVerBackupSinNotas.addEventListener('click', async () => {
+            console.log('[DEBUG] Click en Ver (sin notas)');
+            const loader = document.getElementById('loaderVerBackup');
+            if (loader) loader.classList.remove('hidden');
+            // Ocultar y limpiar el modal de visualización antes de mostrar nuevo contenido
+            if (modalVerBackup) {
+                modalVerBackup.classList.add('hidden');
+                contenidoVerBackup.innerHTML = '';
+            }
+            if (pacientesBackupSeleccionados.size === 0) {
+                if (loader) loader.classList.add('hidden');
+                alert('Selecciona al menos un paciente para ver.');
+                return;
+            }
+            // Obtener profesionales
+            const usuariosSnap = await window.firebaseDB.collection('usuarios').get();
+            const profesionales = {};
+            usuariosSnap.forEach(doc => {
+                const data = doc.data();
+                profesionales[doc.id] = data.displayName || data.email || doc.id;
+            });
+            // Filtrar pacientes seleccionados
+            const pacientesSeleccionados = pacientesBackupData.filter(p => pacientesBackupSeleccionados.has(p.id));
+            // Agrupar por profesional
+            const pacientesPorProfesional = {};
+            pacientesSeleccionados.forEach(p => {
+                if (!pacientesPorProfesional[p.profesional]) pacientesPorProfesional[p.profesional] = [];
+                pacientesPorProfesional[p.profesional].push(p);
+            });
+            // Renderizar agrupado por profesional con acordeón de pacientes y sesiones (sin notas)
+            let html = '<div class="bg-white text-gray-900">';
+            let profIdx = 0;
+            for (const [profesional, pacientes] of Object.entries(pacientesPorProfesional)) {
+                const profId = `ver-prof-sin-notas-${profIdx}`;
+                html += `<div class='mb-4 border rounded'>`;
+                html += `<button class='w-full text-left px-4 py-2 font-bold bg-blue-100 hover:bg-blue-200 border-b' style='color:#1e293b' onclick=\"document.getElementById('${profId}').classList.toggle('hidden')\">${profesional}</button>`;
+                html += `<div id='${profId}' class='p-2'>`;
+                // Cargar sesiones de todos los pacientes y ordenarlos alfabéticamente por nombre
+                let pacientesConSesiones = [];
+                for (const p of pacientes) {
+                    let sesiones = [];
+                    try {
+                        const sesionesSnap = await window.firebaseDB.collection('pacientes').doc(p.id).collection('sesiones').get();
+                        sesionesSnap.forEach(doc => {
+                            const s = doc.data();
+                            sesiones.push({
+                                fechaSesion: s.fecha || '',
+                                comentarioSesion: s.comentario || ''
+                            });
+                        });
+                    } catch (e) {
+                        sesiones = [];
+                    }
+                    // Ordenar sesiones por fecha descendente
+                    sesiones.sort((a, b) => {
+                        const fa = a.fechaSesion ? new Date(a.fechaSesion.seconds ? a.fechaSesion.seconds * 1000 : a.fechaSesion).getTime() : 0;
+                        const fb = b.fechaSesion ? new Date(b.fechaSesion.seconds ? b.fechaSesion.seconds * 1000 : b.fechaSesion).getTime() : 0;
+                        return fb - fa;
+                    });
+                    pacientesConSesiones.push({ paciente: p, sesiones });
+                }
+                // Ordenar pacientes alfabéticamente por nombre
+                pacientesConSesiones.sort((a, b) => {
+                    const na = (a.paciente.nombre || '').toLowerCase();
+                    const nb = (b.paciente.nombre || '').toLowerCase();
+                    if (na < nb) return -1;
+                    if (na > nb) return 1;
+                    return 0;
+                });
+                // Renderizar acordeón de pacientes
+                let pacIdx = 0;
+                for (const { paciente: p, sesiones } of pacientesConSesiones) {
+                    const pacId = `${profId}-pac-${pacIdx}`;
+                    html += `<div class='mb-2 border rounded'>`;
+                    html += `<button class='w-full text-left px-4 py-2 font-semibold bg-gray-100 hover:bg-gray-200 border-b' onclick=\"document.getElementById('${pacId}').classList.toggle('hidden')\">${p.nombre || ''}</button>`;
+                    html += `<div id='${pacId}' class='p-2 hidden'>`;
+                    if (sesiones.length > 0) {
+                        sesiones.forEach(sesion => {
+                            html += `<div class='mb-2 p-2 border rounded bg-gray-50'>`;
+                            html += `<div><span class='font-semibold'>Fecha:</span> ${sesion.fechaSesion ? new Date(sesion.fechaSesion.seconds ? sesion.fechaSesion.seconds * 1000 : sesion.fechaSesion).toLocaleDateString() : '-'}</div>`;
+                            html += `<div><span class='font-semibold'>Comentarios:</span> ${sesion.comentarioSesion || '-'}</div>`;
+                            html += `</div>`;
+                        });
+                    } else {
+                        html += `<div class='mb-2 p-2 border rounded bg-gray-50'>`;
+                        html += `<div><span class='font-semibold'>Fecha:</span> -</div>`;
+                        html += `<div><span class='font-semibold'>Comentarios:</span> -</div>`;
+                        html += `</div>`;
+                    }
+                    html += `</div></div>`;
+                    pacIdx++;
+                }
+                html += `</div></div>`;
+                profIdx++;
+            }
+            html += '</div>';
+            contenidoVerBackup.innerHTML = html;
+            modalVerBackup.classList.remove('hidden');
+            // Asegurar que todos los paneles estén colapsados por defecto
+            for (let i = 0; i < profIdx; i++) {
+                const el = document.getElementById(`ver-prof-sin-notas-${i}`);
+                if (el) el.classList.add('hidden');
+            }
+            // Forzar fondo claro y texto oscuro
+            modalVerBackup.classList.remove('dark');
+            modalVerBackup.classList.add('force-light');
+            if (loader) loader.classList.add('hidden');
+        });
+    }
+    if (btnDescargarBackupSinNotas) {
+        btnDescargarBackupSinNotas.addEventListener('click', async () => {
+            const loader = document.getElementById('loaderVerBackup');
+            if (loader) loader.classList.remove('hidden');
+            if (pacientesBackupSeleccionados.size === 0) {
+                if (loader) loader.classList.add('hidden');
+                alert('Selecciona al menos un paciente para descargar.');
+                return;
+            }
+            // Obtener profesionales
+            const usuariosSnap = await window.firebaseDB.collection('usuarios').get();
+            const profesionales = {};
+            usuariosSnap.forEach(doc => {
+                const data = doc.data();
+                profesionales[doc.id] = data.displayName || data.email || doc.id;
+            });
+            // Filtrar pacientes seleccionados
+            const pacientesSeleccionados = pacientesBackupData.filter(p => pacientesBackupSeleccionados.has(p.id));
+            // Agrupar por profesional
+            const pacientesPorProfesional = {};
+            pacientesSeleccionados.forEach(p => {
+                if (!pacientesPorProfesional[p.owner]) pacientesPorProfesional[p.owner] = [];
+                pacientesPorProfesional[p.owner].push(p);
+            });
+            // Campos sin notas
+            const fields = [
+                'profesional', 'nombre', 'dni', 'fechaNacimiento', 'sexo', 'lugarNacimiento',
+                'email', 'telefono', 'contacto',
+                'educacion', 'instituto', 'motivo',
+                'nomencladorCIE10', 'creado', 'actualizado',
+                'fechaSesion', 'comentarioSesion', 'cie10Sesion', 'archivosSesion'
+            ];
+            let csvRows = [];
+            for (const [owner, pacientes] of Object.entries(pacientesPorProfesional)) {
+                const nombreProfesional = profesionales[owner] || owner;
+                if (csvRows.length > 0) csvRows.push(''); // Línea vacía entre profesionales
+                csvRows.push(`PROFESIONAL: ${nombreProfesional}`);
+                csvRows.push(fields.join(','));
+                for (const p of pacientes) {
+                    // Obtener sesiones del paciente
+                    let sesiones = [];
+                    try {
+                        const sesionesSnap = await window.firebaseDB.collection('pacientes').doc(p.id).collection('sesiones').get();
+                        sesionesSnap.forEach(doc => {
+                            const s = doc.data();
+                            sesiones.push({
+                                fechaSesion: s.fecha || '',
+                                comentarioSesion: s.comentario || '',
+                                cie10Sesion: s.nomencladorCIE10 ? (s.nomencladorCIE10.codigo + ' - ' + s.nomencladorCIE10.descripcion) : '',
+                                archivosSesion: s.archivosUrls ? JSON.stringify(s.archivosUrls) : ''
+                            });
+                        });
+                    } catch (e) {
+                        sesiones = [];
+                    }
+                    if (sesiones.length === 0) {
+                        // Paciente sin sesiones: fila con datos vacíos de sesión
+                        const row = fields.map(f => {
+                            let val = p[f];
+                            if ((f === 'creado' || f === 'actualizado') && val && typeof val === 'object' && val.seconds) {
+                                val = new Date(val.seconds * 1000).toLocaleString();
+                            } else if (typeof val === 'object' && val !== null) {
+                                val = JSON.stringify(val).replace(/\n/g, ' ');
+                            }
+                            if (val === undefined) val = '';
+                            return '"' + String(val).replace(/"/g, '""') + '"';
+                        });
+                        csvRows.push(row.join(','));
+                    } else {
+                        // Una fila por cada sesión
+                        for (const sesion of sesiones) {
+                            const row = fields.map(f => {
+                                let val = p[f];
+                                if ((f === 'creado' || f === 'actualizado') && val && typeof val === 'object' && val.seconds) {
+                                    val = new Date(val.seconds * 1000).toLocaleString();
+                                } else if (typeof val === 'object' && val !== null) {
+                                    val = JSON.stringify(val).replace(/\n/g, ' ');
+                                }
+                                if (val === undefined) val = '';
+                                // Sobrescribir con datos de sesión si corresponde
+                                if (f === 'fechaSesion') val = sesion.fechaSesion;
+                                if (f === 'comentarioSesion') val = sesion.comentarioSesion;
+                                if (f === 'cie10Sesion') val = sesion.cie10Sesion;
+                                if (f === 'archivosSesion') val = sesion.archivosSesion;
+                                return '"' + String(val).replace(/"/g, '""') + '"';
+                            });
+                            csvRows.push(row.join(','));
+                        }
+                    }
+                }
+            }
+            const csvContent = csvRows.join('\r\n');
+            // Descargar archivo
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'backup_pacientes_sin_notas.csv';
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100);
+            modalBackup.classList.add('hidden');
+            if (loader) loader.classList.add('hidden');
         });
     }
 });

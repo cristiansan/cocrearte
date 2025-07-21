@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Listado de Sesiones de Psicólogos</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f7f7f7;
+      color: #222;
+    }
+    header {
+      background: #4f8cff;
+      color: #fff;
+      padding: 1rem;
+      text-align: center;
+    }
+    main {
+      max-width: 900px;
+      margin: 2rem auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      padding: 2rem 1rem;
+    }
+    .file-input {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+    .file-input label {
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+    #results {
+      margin-top: 2rem;
+    }
+    .profesional {
+      margin-bottom: 2rem;
+      border-bottom: 1px solid #e0e0e0;
+      padding-bottom: 1rem;
+    }
+    .profesional h2 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.3rem;
+      color: #4f8cff;
+    }
+    .sesion {
+      margin-bottom: 1rem;
+      padding: 0.7rem 1rem;
+      background: #f2f6ff;
+      border-radius: 6px;
+    }
+    .sesion strong {
+      color: #333;
+    }
+    @media (max-width: 600px) {
+      main {
+        padding: 1rem 0.3rem;
+      }
+      .sesion {
+        padding: 0.5rem 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Listado de Sesiones de Psicólogos</h1>
+  </header>
+  <main>
+    <div class="file-input">
+      <label for="csvFile">Selecciona un archivo CSV:</label>
+      <input type="file" id="csvFile" accept=".csv" />
+    </div>
+    <div id="results"></div>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html> 
