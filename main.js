@@ -475,6 +475,7 @@ const modalNuevaSesion = document.getElementById('modalNuevaSesion');
 const formNuevaSesion = document.getElementById('formNuevaSesion');
 const selectPaciente = document.getElementById('selectPaciente');
 const inputFechaSesion = document.getElementById('inputFechaSesion');
+const inputPresentismoSesion = document.getElementById('inputPresentismoSesion');
 const inputNotasSesion = document.getElementById('inputNotasSesion');
 const cancelNuevaSesion = document.getElementById('cancelNuevaSesion');
 
@@ -630,6 +631,7 @@ function abrirModalNuevaSesion(info) {
     const pad = n => n.toString().padStart(2, '0');
     const local = date.getFullYear() + '-' + pad(date.getMonth()+1) + '-' + pad(date.getDate()) + 'T' + pad(date.getHours()) + ':' + pad(date.getMinutes());
     inputFechaSesion.value = local;
+    inputPresentismoSesion.value = '';
     inputNotasSesion.value = '';
     cargarPacientesParaSelect();
     // Mostrar select de profesional solo si es admin
@@ -1154,18 +1156,23 @@ async function loadSesiones() {
         });
     });
     
-    // Ordenar por fecha ascendente para identificar la primera
-    sesionesArray.sort((a, b) => a.fecha - b.fecha);
+    // Filtrar solo sesiones que tienen comentarios (no solo notas)
+    const sesionesConComentarios = sesionesArray.filter(sesion => {
+        return tieneComentariosValidos(sesion.data.comentario);
+    });
+    
+    // Ordenar por fecha ascendente para identificar la primera sesión con comentarios
+    sesionesConComentarios.sort((a, b) => a.fecha - b.fecha);
     
     // Reordenar por fecha descendente para mostrar (más reciente primero)
     const sesionesParaMostrar = [...sesionesArray].sort((a, b) => b.fecha - a.fecha);
     
-    // Identificar la primera sesión (la más antigua)
-    const primeraSesionId = sesionesArray.length > 0 ? sesionesArray[0].id : null;
+    // Identificar la primera sesión con comentarios (la más antigua que tenga comentarios)
+    const primeraSesionConComentariosId = sesionesConComentarios.length > 0 ? sesionesConComentarios[0].id : null;
     
     sesionesParaMostrar.forEach(sesionInfo => {
         const s = sesionInfo.data;
-        const esPrimera = sesionInfo.id === primeraSesionId;
+        const esPrimera = sesionInfo.id === primeraSesionConComentariosId;
         
         const div = document.createElement('div');
         
@@ -1192,6 +1199,7 @@ async function loadSesiones() {
         
         htmlContent += `
             <div class="text-sm font-bold text-[#2d3748] dark:text-gray-100"><span class="font-semibold">Fecha:</span> ${s.fecha || ''}</div>
+            ${s.presentismo ? `<div class="text-xs mt-1"><span class="font-semibold">Presentismo:</span> ${obtenerTextoPresentismo(s.presentismo)}</div>` : ''}
             <div class="text-gray-900 dark:text-gray-200">${s.comentario || ''}</div>
             ${s.notas ? `<div class="text-xs mt-2 text-[#4b5563] dark:text-gray-400"><span class="font-semibold">Notas:</span> ${s.notas}</div>` : ''}
         `;
@@ -1256,6 +1264,7 @@ addSesionForm.addEventListener('submit', async (e) => {
     const ok = await customConfirm('¿Está seguro de guardar esta sesión? No podrá editarla después.');
     if (!ok) return;
     const fecha = addSesionForm.sesionFecha.value;
+    const presentismo = addSesionForm.sesionPresentismo.value;
     // const comentario = addSesionForm.sesionComentario.value; // Eliminar esto
     const comentario = quillSesionComentario ? quillSesionComentario.root.innerHTML : '';
     const notas = addSesionForm.sesionNotas.value;
@@ -1326,6 +1335,7 @@ O usa un servidor local diferente como Live Server en VS Code.`);
             fecha,
             comentario,
             notas,
+            presentismo,
             archivosUrls,
             creado: new Date()
         };
@@ -2151,6 +2161,7 @@ async function cargarEventosFiltrados() {
                         profesionalName: profesional.title,
                         pacienteNombre: pacienteData.nombre || pacienteData.email,
                         notas: sesionData.comentario,
+                        presentismo: sesionData.presentismo,
                         sesionId: sesionInfo.id,
                         fecha: sesionData.fecha,
                         esPrimeraSesion: esPrimera
@@ -2523,6 +2534,7 @@ function mostrarAgendaIndividual() {
                                 extendedProps: {
                                     pacienteId: pacDoc.id,
                                     notas: s.comentario,
+                                    presentismo: s.presentismo,
                                     sesionId: sesionInfo.id,
                                     esPrimeraSesion: esPrimera
                                 }
@@ -2541,6 +2553,7 @@ function mostrarAgendaIndividual() {
             eventClick: function(info) {
                 const event = info.event;
                 inputFechaSesion.value = event.start ? event.start.toISOString().slice(0,16) : '';
+                inputPresentismoSesion.value = event.extendedProps.presentismo || '';
                 inputNotasSesion.value = event.extendedProps.notas || '';
                 cargarPacientesParaSelect().then(() => {
                     selectPaciente.value = event.extendedProps.pacienteId || '';
@@ -2706,6 +2719,7 @@ if (formNuevaSesion) {
         e.preventDefault();
         const pacienteId = selectPaciente.value;
         const fecha = inputFechaSesion.value;
+        const presentismo = inputPresentismoSesion.value;
         const notas = inputNotasSesion.value;
         let profesionalId = null;
         if (isAdmin && profesionalSelectContainer && profesionalSelectContainer.style.display !== 'none' && selectProfesional) {
@@ -2721,7 +2735,8 @@ if (formNuevaSesion) {
                 const datosActualizacion = {
                     fecha,
                     comentario: notas,
-                    notas: notas // <-- Guardar también como 'notas'
+                    notas: notas, // <-- Guardar también como 'notas'
+                    presentismo: presentismo
                 };
                 if (profesionalId) datosActualizacion.profesionalId = profesionalId;
                 if (datosCIE10) {
@@ -2733,10 +2748,14 @@ if (formNuevaSesion) {
                     sesionEditando.eventObj.setStart(fecha);
                     sesionEditando.eventObj.setProp('title', selectPaciente.options[selectPaciente.selectedIndex].text);
                     sesionEditando.eventObj.setExtendedProp('notas', notas);
+                    sesionEditando.eventObj.setExtendedProp('presentismo', presentismo);
                     sesionEditando.eventObj.setExtendedProp('pacienteId', pacienteId);
                     if (profesionalId) sesionEditando.eventObj.setExtendedProp('profesionalId', profesionalId);
                     if (datosCIE10) {
                         sesionEditando.eventObj.setExtendedProp('nomencladorCIE10', datosCIE10);
+                    }
+                    if (presentismo) {
+                        sesionEditando.eventObj.setExtendedProp('presentismo', presentismo);
                     }
                 }
             } else {
@@ -2745,6 +2764,7 @@ if (formNuevaSesion) {
                     fecha,
                     comentario: notas,
                     notas: notas, // <-- Guardar también como 'notas'
+                    presentismo: presentismo,
                     creado: new Date()
                 };
                 if (profesionalId) datosSession.profesionalId = profesionalId;
@@ -2758,10 +2778,13 @@ if (formNuevaSesion) {
                 // Agregar evento a la instancia activa
                 const activeCalendar = calendarMultipleInstance || calendarInstance;
                 if (activeCalendar) {
-                    const eventProps = { pacienteId, notas, sesionId: docRef.id, esPrimeraSesion: esPrimera };
+                    const eventProps = { pacienteId, notas, presentismo, sesionId: docRef.id, esPrimeraSesion: esPrimera };
                     if (profesionalId) eventProps.profesionalId = profesionalId;
                     if (datosCIE10) {
                         eventProps.nomencladorCIE10 = datosCIE10;
+                    }
+                    if (presentismo) {
+                        eventProps.presentismo = presentismo;
                     }
                     // Obtener nombre del paciente y profesional para el título
                     const pacienteNombre = selectPaciente.options[selectPaciente.selectedIndex].text;
@@ -4170,6 +4193,25 @@ if (editPatientFormElement) {
     });
 }
 
+// Función para obtener el texto del presentismo
+function obtenerTextoPresentismo(presentismo) {
+    const presentismoMap = {
+        'presente': '🟢 Presente',
+        'ausente': '🔴 Ausente',
+        'desiste': '🟠 Desiste tratamiento',
+        'no-admitido': '⚫ No Admitido / Derivación externa',
+        'reprogramar': '⚪ Reprogramar',
+        'segunda-entrevista': '⚫ Requiere segunda entrevista admisión',
+        'vacaciones': '🔵 Vacaciones'
+    };
+    return presentismoMap[presentismo] || presentismo;
+}
+
+// Función para verificar si una sesión tiene comentarios válidos
+function tieneComentariosValidos(comentario) {
+    return comentario && comentario.trim() !== '' && comentario.trim() !== '<p><br></p>';
+}
+
 // Función para determinar si es la primera sesión de un paciente
 async function esPrimeraSesion(pacienteId, fechaSesion) {
     try {
@@ -4184,13 +4226,32 @@ async function esPrimeraSesion(pacienteId, fechaSesion) {
             return true; // Si no hay sesiones, la próxima será la primera
         }
         
-        // Obtener la fecha de la primera sesión
-        const primeraSesion = sesionesSnap.docs[0].data();
-        const fechaPrimera = new Date(primeraSesion.fecha).getTime();
+        // Filtrar solo sesiones que tienen comentarios (no solo notas)
+        const sesionesConComentarios = [];
+        sesionesSnap.forEach(doc => {
+            const sesionData = doc.data();
+                    // Solo considerar sesiones que tienen comentarios (no vacíos)
+        if (tieneComentariosValidos(sesionData.comentario)) {
+                sesionesConComentarios.push({
+                    id: doc.id,
+                    data: sesionData,
+                    fecha: new Date(sesionData.fecha).getTime()
+                });
+            }
+        });
+        
+        // Si no hay sesiones con comentarios, la próxima será la primera
+        if (sesionesConComentarios.length === 0) {
+            return true;
+        }
+        
+        // Ordenar por fecha y obtener la primera sesión con comentarios
+        sesionesConComentarios.sort((a, b) => a.fecha - b.fecha);
+        const primeraSesionConComentarios = sesionesConComentarios[0];
         const fechaActual = new Date(fechaSesion).getTime();
         
-        // Es primera sesión si es la fecha más temprana
-        return fechaActual === fechaPrimera;
+        // Es primera sesión si es la fecha más temprana de las que tienen comentarios
+        return fechaActual === primeraSesionConComentarios.fecha;
     } catch (error) {
         console.error('Error verificando primera sesión:', error);
         return false;

@@ -172,11 +172,55 @@
       }
     </style>
     <style>
-    // ... existing code ...
     .force-light, .force-light * {
       background: #fff !important;
       color: #1e293b !important;
       border-color: #e5e7eb !important;
+    }
+    
+    /* Estilos para el campo de presentismo */
+    #sesionPresentismo option[value="presente"] {
+      color: #10b981;
+    }
+    #sesionPresentismo option[value="ausente"] {
+      color: #ef4444;
+    }
+    #sesionPresentismo option[value="desiste"] {
+      color: #f97316;
+    }
+    #sesionPresentismo option[value="no-admitido"] {
+      color: #000000;
+    }
+    #sesionPresentismo option[value="reprogramar"] {
+      color: #6b7280;
+    }
+    #sesionPresentismo option[value="segunda-entrevista"] {
+      color: #000000;
+    }
+    #sesionPresentismo option[value="vacaciones"] {
+      color: #0ea5e9;
+    }
+    
+    #inputPresentismoSesion option[value="presente"] {
+      color: #10b981;
+    }
+    #inputPresentismoSesion option[value="ausente"] {
+      color: #ef4444;
+    }
+    #inputPresentismoSesion option[value="desiste"] {
+      color: #f97316;
+    }
+    #inputPresentismoSesion option[value="no-admitido"] {
+      color: #000000;
+    }
+    #inputPresentismoSesion option[value="reprogramar"] {
+      color: #6b7280;
+    }
+    #inputPresentismoSesion option[value="segunda-entrevista"] {
+      color: #000000;
+    }
+    #inputPresentismoSesion option[value="vacaciones"] {
+      color: #0ea5e9;
     }
     </style>
 </head>
@@ -509,11 +553,11 @@
             <div class="border-t border-gray-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
                     <p class="text-gray-400 text-sm">
-                        © 2024 Espacio Cocrearte. Todos los derechos reservados.
+                        © 2025 Espacio Cocrearte. Todos los derechos reservados.
                     </p>
                     <!-- Número de versión - Solo visible para administradores -->
                     <button id="versionBtn" class="hidden text-xs text-gray-500 hover:text-gray-300 transition mt-2 sm:mt-0 cursor-pointer" onclick="abrirModalVersion()">
-                        v2.3.3
+                        v2.3.5
                     </button>
                 </div>
                 <div class="flex space-x-6 mt-4 md:mt-0">
@@ -615,7 +659,7 @@
             <div class="flex items-center gap-3">
                 <!-- Número de versión - Solo visible para administradores -->
                 <button id="versionBtnDashboard" class="hidden text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition cursor-pointer px-2 py-1 rounded" onclick="abrirModalVersion()">
-                    v2.3.3
+                    v2.3.5
                 </button>
                 <button id="logoutBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded transition">Cerrar sesión</button>
             </div>
@@ -1139,9 +1183,22 @@
                         <h4 class="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Nueva Sesión</h4>
                         <form id="addSesionForm" class="space-y-4 border border-gray-200 dark:border-darkborder rounded-lg p-4">
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div class="sm:col-span-2">
+                                <div>
                                     <label for="sesionFecha" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-1">Fecha</label>
                                     <input id="sesionFecha" name="sesionFecha" type="date" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-darkbg dark:text-darktext">
+                                </div>
+                                <div>
+                                    <label for="sesionPresentismo" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-1">Presentismo</label>
+                                    <select id="sesionPresentismo" name="sesionPresentismo" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-darkbg dark:text-darktext">
+                                        <option value="">Seleccionar</option>
+                                        <option value="presente" data-color="#10b981">🟢 Presente</option>
+                                        <option value="ausente" data-color="#ef4444">🔴 Ausente</option>
+                                        <option value="desiste" data-color="#f97316">🟠 Desiste tratamiento</option>
+                                        <option value="no-admitido" data-color="#000000">⚫ No Admitido / Derivación externa</option>
+                                        <option value="reprogramar" data-color="#6b7280">⚪ Reprogramar</option>
+                                        <option value="segunda-entrevista" data-color="#000000">⚫ Requiere segunda entrevista admisión</option>
+                                        <option value="vacaciones" data-color="#0ea5e9">🔵 Vacaciones</option>
+                                    </select>
                                 </div>
                             </div>
                             
@@ -1156,8 +1213,8 @@
 
                             
                             <div>
-                                <label for="sesionNotas" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-1">Notas adicionales</label>
-                                <textarea id="sesionNotas" name="sesionNotas" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-darkbg dark:text-darktext resize-none" rows="3" placeholder="Notas adicionales (opcional)"></textarea>
+                                <label for="sesionNotas" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-1">Notas adicionales (para mi)</label>
+                                <textarea id="sesionNotas" name="sesionNotas" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-darkbg dark:text-darktext resize-none" rows="3" placeholder="Notas adicionales (para mi)"></textarea>
                             </div>
                             
                             <div>
@@ -1242,6 +1299,19 @@
           <div>
             <label for="inputFechaSesion" class="block text-sm font-medium mb-2">Fecha y hora</label>
             <input id="inputFechaSesion" name="fecha" type="datetime-local" class="w-full px-3 py-3 border rounded-lg text-base">
+          </div>
+          <div>
+            <label for="inputPresentismoSesion" class="block text-sm font-medium mb-2">Presentismo</label>
+            <select id="inputPresentismoSesion" name="presentismo" class="w-full px-3 py-3 border rounded-lg text-base">
+              <option value="">Seleccionar</option>
+              <option value="presente" data-color="#10b981">🟢 Presente</option>
+              <option value="ausente" data-color="#ef4444">🔴 Ausente</option>
+              <option value="desiste" data-color="#f97316">🟠 Desiste tratamiento</option>
+              <option value="no-admitido" data-color="#000000">⚫ No Admitido / Derivación externa</option>
+              <option value="reprogramar" data-color="#6b7280">⚪ Reprogramar</option>
+              <option value="segunda-entrevista" data-color="#000000">⚫ Requiere segunda entrevista admisión</option>
+              <option value="vacaciones" data-color="#0ea5e9">🔵 Vacaciones</option>
+            </select>
           </div>
           <div>
             <label for="inputNotasSesion" class="block text-sm font-medium mb-2">Notas</label>
@@ -2281,18 +2351,39 @@
                     <span class="text-2xl">🚀</span>
                     <div>
                         <h3 class="text-xl font-bold text-primary-700 dark:text-primary-400">Historial de Versiones</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Espacio Cocrearte v2.3.3</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Espacio Cocrearte v2.3.5</p>
                     </div>
                 </div>
                 <button onclick="cerrarModalVersion()" class="text-gray-400 hover:text-gray-700 text-2xl p-1">×</button>
             </div>
             
             <div class="p-6 space-y-6">
-                <!-- Versión 2.3.3 -->
+                <!-- Versión 2.3.5 -->
                 <div class="border-l-4 border-blue-600 pl-4 mb-4">
                   <div class="flex items-center gap-2 mb-2">
-                    <span class="bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded">v2.3.3</span>
+                    <span class="bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded">v2.3.5</span>
                     <span class="text-sm text-gray-500">Actual</span>
+                  </div>
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Lógica de Primera Sesión Mejorada</h4>
+                  <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                    <li>• <strong>Primera Sesión Inteligente:</strong> Solo se marca como "Primera Sesión" cuando se cargan comentarios por primera vez</li>
+                    <li>• <strong>Filtrado por Comentarios:</strong> Las sesiones que solo tienen notas no se consideran como primera sesión</li>
+                    <li>• <strong>Campo de Notas Personalizado:</strong> Cambio de "Notas adicionales" a "Notas adicionales (para mi)"</li>
+                    <li>• <strong>Validación Mejorada:</strong> Se ignoran comentarios vacíos o con solo espacios en blanco</li>
+                    <li>• <strong>Consistencia:</strong> La lógica se aplica tanto en ficha clínica como en calendario</li>
+                  </ul>
+                </div>
+
+                <!-- Versión 2.3.4 -->
+                <div class="border-l-4 border-green-900 pl-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="bg-green-200 text-green-900 text-sm font-medium px-2 py-1 rounded">v2.3.4</span>
+                  </div>
+
+                <!-- Versión 2.3.3 -->
+                <div class="border-l-4 border-green-900 pl-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="bg-green-200 text-green-900 text-sm font-medium px-2 py-1 rounded">v2.3.3</span>
                   </div>
                   <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Modal de Backup Mejorado</h4>
                   <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
