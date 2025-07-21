@@ -992,6 +992,7 @@ addPatientForm.addEventListener('submit', async (e) => {
     const email = addPatientForm.patientEmail.value;
     const telefono = addPatientForm.patientTelefono.value;
     const contacto = addPatientForm.patientContacto.value;
+    const direccion = addPatientForm.patientDireccion.value;
     const educacion = addPatientForm.patientEducacion.value;
     const instituto = addPatientForm.patientInstituto.value;
     const motivo = addPatientForm.patientMotivo.value;
@@ -1038,6 +1039,7 @@ addPatientForm.addEventListener('submit', async (e) => {
             email,
             telefono,
             contacto,
+            direccion,
             // Información educativa
             educacion,
             instituto,
@@ -3933,6 +3935,7 @@ window.showEditPatientModal = function(pacienteId, pacienteData) {
     const emailField = document.getElementById('editPatientEmail');
     const telefonoField = document.getElementById('editPatientTelefono');
     const contactoField = document.getElementById('editPatientContacto');
+    const direccionField = document.getElementById('editPatientDireccion');
     const educacionField = document.getElementById('editPatientEducacion');
     const institutoField = document.getElementById('editPatientInstituto');
     const motivoField = document.getElementById('editPatientMotivo');
@@ -3946,6 +3949,7 @@ window.showEditPatientModal = function(pacienteId, pacienteData) {
         email: !!emailField,
         telefono: !!telefonoField,
         contacto: !!contactoField,
+        direccion: !!direccionField,
         educacion: !!educacionField,
         instituto: !!institutoField,
         motivo: !!motivoField
@@ -3960,6 +3964,7 @@ window.showEditPatientModal = function(pacienteId, pacienteData) {
     if (emailField) emailField.value = pacienteData.email || '';
     if (telefonoField) telefonoField.value = pacienteData.telefono || '';
     if (contactoField) contactoField.value = pacienteData.contacto || '';
+    if (direccionField) direccionField.value = pacienteData.direccion || '';
     if (educacionField) educacionField.value = pacienteData.educacion || '';
     if (institutoField) institutoField.value = pacienteData.instituto || '';
     if (motivoField) motivoField.value = pacienteData.motivo || '';
@@ -4071,6 +4076,7 @@ if (editPatientFormElement) {
         const email = editPatientFormElement.editPatientEmail.value;
         const telefono = editPatientFormElement.editPatientTelefono.value;
         const contacto = editPatientFormElement.editPatientContacto.value;
+        const direccion = editPatientFormElement.editPatientDireccion.value;
         const educacion = editPatientFormElement.editPatientEducacion.value;
         const instituto = editPatientFormElement.editPatientInstituto.value;
         const motivo = editPatientFormElement.editPatientMotivo.value;
@@ -4108,7 +4114,7 @@ if (editPatientFormElement) {
             console.log('💾 Actualizando datos del paciente...');
             console.log('📋 Datos a actualizar:', { 
                 nombre, dni, fechaNacimiento, sexo, lugarNacimiento, 
-                email, telefono, contacto, educacion, instituto, motivo 
+                email, telefono, contacto, direccion, educacion, instituto, motivo 
             });
             console.log('🔍 Referencia del paciente:', pacienteEditandoRef);
             console.log('🔍 ID del paciente:', pacienteEditandoId);
@@ -4124,6 +4130,7 @@ if (editPatientFormElement) {
                 email,
                 telefono,
                 contacto,
+                direccion,
                 // Información educativa
                 educacion,
                 instituto,

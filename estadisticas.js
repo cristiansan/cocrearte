@@ -852,6 +852,7 @@ async function cargarUbicacionesPacientes() {
             
             // Verificar si es un paciente de prueba basado en el propietario
             if (profesionalesPruebaIds.includes(data.owner)) {
+                console.log(`⚠️ Saltando paciente de prueba: ${data.nombre || 'Sin nombre'}`);
                 continue; // Saltar pacientes de prueba
             }
             
@@ -859,12 +860,19 @@ async function cargarUbicacionesPacientes() {
                 id: doc.id,
                 nombre: data.nombre || 'Sin nombre',
                 direccion: data.direccion || '',
+                email: data.email || '',
+                telefono: data.telefono || '',
+                owner: data.owner,
                 ...data
             };
             
+            console.log(`📋 Procesando paciente: ${paciente.nombre}, Dirección: "${paciente.direccion}"`);
+            
             if (paciente.direccion && paciente.direccion.trim() !== '') {
+                console.log(`✅ Paciente con dirección válida: ${paciente.nombre} - ${paciente.direccion}`);
                 pacientesConDireccion.push(paciente);
             } else {
+                console.log(`❌ Paciente sin dirección: ${paciente.nombre}`);
                 pacientesSinDireccion.push(paciente);
             }
         }
@@ -882,11 +890,18 @@ async function cargarUbicacionesPacientes() {
         let marcadoresAgregados = [];
         
         if (pacientesConDireccion.length === 0) {
-            console.log('📍 No hay pacientes con direcciones válidas, agregando ejemplos de demostración...');
+            console.log('📍 No hay pacientes con direcciones válidas en la base de datos.');
+            console.log('💡 Para ver pacientes reales en el mapa:');
+            console.log('   1. Ve a la lista de pacientes');
+            console.log('   2. Edita un paciente');
+            console.log('   3. Agrega su dirección en el campo "Dirección"');
+            console.log('   4. Regresa a estadísticas para ver el mapa actualizado');
+            console.log('📍 Mientras tanto, mostrando ejemplos de demostración...');
+            
             const ejemplos = [
-                { nombre: 'Juan Pérez', direccion: 'Buenos Aires, Argentina', lat: -34.6037, lon: -58.3816 },
-                { nombre: 'María García', direccion: 'Córdoba, Argentina', lat: -31.4201, lon: -64.1888 },
-                { nombre: 'Carlos López', direccion: 'Rosario, Argentina', lat: -32.9442, lon: -60.6505 }
+                { nombre: 'Ejemplo: Juan Pérez', direccion: 'Buenos Aires, Argentina', lat: -34.6037, lon: -58.3816 },
+                { nombre: 'Ejemplo: María García', direccion: 'Córdoba, Argentina', lat: -31.4201, lon: -64.1888 },
+                { nombre: 'Ejemplo: Carlos López', direccion: 'Rosario, Argentina', lat: -32.9442, lon: -60.6505 }
             ];
             
             ejemplos.forEach(ejemplo => {
@@ -902,7 +917,10 @@ async function cargarUbicacionesPacientes() {
                     <div class="p-3 min-w-[200px]">
                         <h3 class="font-bold text-gray-900 text-base mb-1">${ejemplo.nombre}</h3>
                         <p class="text-sm text-gray-600 mb-2">${ejemplo.direccion}</p>
-                        <p class="text-xs text-blue-500 font-medium">📍 Datos de ejemplo</p>
+                        <div class="bg-blue-50 border border-blue-200 rounded p-2 mt-2">
+                            <p class="text-xs text-blue-700 font-medium">📍 Datos de demostración</p>
+                            <p class="text-xs text-blue-600">Agrega direcciones reales a tus pacientes para verlos aquí</p>
+                        </div>
                     </div>
                 `);
                 
@@ -917,27 +935,71 @@ async function cargarUbicacionesPacientes() {
             });
             
             // Actualizar estadísticas con ejemplos
-            document.getElementById('pacientesUbicados').textContent = '3';
+            document.getElementById('pacientesUbicados').textContent = '3 (ejemplos)';
             document.getElementById('pacientesSinDireccion').textContent = pacientesSinDireccion.length;
-            document.getElementById('porcentajeCobertura').textContent = '100% (demo)';
+            document.getElementById('porcentajeCobertura').textContent = 'Demo';
+            
+            // Mostrar mensaje informativo en el panel
+            const listaPacientes = document.getElementById('listaPacientesMapa');
+            if (listaPacientes) {
+                listaPacientes.innerHTML = `
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
+                        <div class="flex items-start gap-2">
+                            <svg class="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <div>
+                                <p class="text-sm font-medium text-yellow-800">Mostrando datos de ejemplo</p>
+                                <p class="text-xs text-yellow-700 mt-1">Para ver pacientes reales:</p>
+                                <ol class="text-xs text-yellow-700 mt-1 pl-3 list-decimal">
+                                    <li>Edita un paciente existente</li>
+                                    <li>Agrega su dirección completa</li>
+                                    <li>Regresa a estadísticas</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    ${ejemplos.map(ejemplo => `
+                        <div class="flex items-center gap-2 py-1 opacity-60">
+                            <div class="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+                            <div class="flex-1 min-w-0">
+                                <p class="font-medium text-gray-900 dark:text-white truncate">${ejemplo.nombre}</p>
+                                <p class="text-gray-500 dark:text-gray-400 truncate">${ejemplo.direccion}</p>
+                            </div>
+                        </div>
+                    `).join('')}
+                `;
+            }
         } else {
-                         // Geocodificar direcciones reales y agregar marcadores
-             for (const paciente of pacientesConDireccion) {
-                 try {
-                     const marcador = await geocodificarYAgregarMarcador(paciente);
-                     if (marcador) {
-                         marcadoresAgregados.push({
-                             nombre: paciente.nombre,
-                             direccion: paciente.direccion
-                         });
-                     }
-                     // Pequeña pausa para no sobrecargar la API
-                     await new Promise(resolve => setTimeout(resolve, 200));
-                 } catch (error) {
-                     console.warn(`⚠️ No se pudo geocodificar: ${paciente.nombre} - ${paciente.direccion}`);
-                 }
-             }
-         }
+            console.log(`🎉 ¡Encontrados ${pacientesConDireccion.length} pacientes con direcciones válidas!`);
+            console.log('📍 Comenzando geocodificación de direcciones reales...');
+            
+            // Geocodificar direcciones reales y agregar marcadores
+            let marcadoresExitosos = 0;
+            for (const paciente of pacientesConDireccion) {
+                try {
+                    console.log(`🔍 Geocodificando: ${paciente.nombre} - ${paciente.direccion}`);
+                    const marcador = await geocodificarYAgregarMarcador(paciente);
+                    if (marcador) {
+                        marcadoresExitosos++;
+                        marcadoresAgregados.push({
+                            nombre: paciente.nombre,
+                            direccion: paciente.direccion,
+                            esReal: true
+                        });
+                        console.log(`✅ Marcador agregado para: ${paciente.nombre}`);
+                    } else {
+                        console.warn(`❌ No se pudo geocodificar: ${paciente.nombre} - ${paciente.direccion}`);
+                    }
+                    // Pequeña pausa para no sobrecargar la API
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                } catch (error) {
+                    console.error(`⚠️ Error geocodificando ${paciente.nombre}:`, error);
+                }
+            }
+            
+            console.log(`📊 Resultado: ${marcadoresExitosos}/${pacientesConDireccion.length} direcciones geocodificadas exitosamente`);
+        }
          
          // Actualizar lista de pacientes en el panel
          actualizarListaPacientesMapa(marcadoresAgregados);
@@ -1005,15 +1067,48 @@ function actualizarListaPacientesMapa(pacientes) {
         return;
     }
     
-    lista.innerHTML = pacientes.map((paciente, index) => `
-        <div class="flex items-center gap-2 py-1">
-            <div class="w-2 h-2 bg-red-500 rounded-full flex-shrink-0"></div>
-            <div class="flex-1 min-w-0">
-                <p class="font-medium text-gray-900 dark:text-white truncate">${paciente.nombre}</p>
-                <p class="text-gray-500 dark:text-gray-400 truncate">${paciente.direccion}</p>
+    // Separar pacientes reales de ejemplos
+    const pacientesReales = pacientes.filter(p => p.esReal);
+    const ejemplos = pacientes.filter(p => !p.esReal);
+    
+    let html = '';
+    
+    // Mostrar mensaje de éxito si hay pacientes reales
+    if (pacientesReales.length > 0) {
+        html += `
+            <div class="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
+                <div class="flex items-start gap-2">
+                    <svg class="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <div>
+                        <p class="text-sm font-medium text-green-800">¡Pacientes reales ubicados!</p>
+                        <p class="text-xs text-green-700 mt-1">${pacientesReales.length} ${pacientesReales.length === 1 ? 'paciente encontrado' : 'pacientes encontrados'} con direcciones válidas</p>
+                    </div>
+                </div>
             </div>
-        </div>
-    `).join('');
+        `;
+    }
+    
+    // Mostrar lista de pacientes
+    html += pacientes.map((paciente, index) => {
+        const esReal = paciente.esReal;
+        const colorPunto = esReal ? 'bg-green-500' : 'bg-blue-500';
+        const opacidad = esReal ? '' : 'opacity-60';
+        
+        return `
+            <div class="flex items-center gap-2 py-1 ${opacidad}">
+                <div class="w-2 h-2 ${colorPunto} rounded-full flex-shrink-0"></div>
+                <div class="flex-1 min-w-0">
+                    <p class="font-medium text-gray-900 dark:text-white truncate">${paciente.nombre}</p>
+                    <p class="text-gray-500 dark:text-gray-400 truncate">${paciente.direccion}</p>
+                    ${esReal ? '<p class="text-xs text-green-600 font-medium">✓ Paciente real</p>' : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    lista.innerHTML = html;
 }
 
 // Funciones para manejar el progreso de carga
