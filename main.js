@@ -456,6 +456,8 @@ let fichaPacienteRef = null;
 // Toggle modo oscuro
 const themeToggle = document.getElementById('themeToggle');
 const themeIcon = document.getElementById('themeIcon');
+const themeToggleDashboard = document.getElementById('themeToggleDashboard');
+const themeIconDashboard = document.getElementById('themeIconDashboard');
 
 // Modal de confirmación personalizado
 const customConfirmModal = document.getElementById('customConfirmModal');
@@ -493,11 +495,13 @@ const btnCerrarModalInfoHermano = document.querySelector('#modalInfoHermano butt
 function setTheme(dark) {
     if (dark) {
         document.documentElement.classList.add('dark');
-        themeIcon.textContent = '☀️';
+        if (themeIcon) themeIcon.textContent = '☀️';
+        if (themeIconDashboard) themeIconDashboard.textContent = '☀️';
         localStorage.setItem('theme', 'dark');
     } else {
         document.documentElement.classList.remove('dark');
-        themeIcon.textContent = '🌙';
+        if (themeIcon) themeIcon.textContent = '🌙';
+        if (themeIconDashboard) themeIconDashboard.textContent = '🌙';
         localStorage.setItem('theme', 'light');
     }
 }
@@ -513,10 +517,19 @@ function setTheme(dark) {
 })();
 
 // Event listeners para el tema
-themeToggle.addEventListener('click', () => {
-    const isDark = document.documentElement.classList.contains('dark');
-    setTheme(!isDark);
-});
+if (themeToggle) {
+    themeToggle.addEventListener('click', () => {
+        const isDark = document.documentElement.classList.contains('dark');
+        setTheme(!isDark);
+    });
+}
+
+if (themeToggleDashboard) {
+    themeToggleDashboard.addEventListener('click', () => {
+        const isDark = document.documentElement.classList.contains('dark');
+        setTheme(!isDark);
+    });
+}
 
 // Funciones para el modal de autenticación
 function showAuthModal() {
@@ -538,6 +551,14 @@ function showLoginForm() {
 function showRegisterForm() {
     registerFormContainer.classList.remove('hidden');
     loginFormContainer.classList.add('hidden');
+}
+
+// Función para sincronizar el estado del tema en el dashboard
+function sincronizarTemaDashboard() {
+    const isDark = document.documentElement.classList.contains('dark');
+    if (themeIconDashboard) {
+        themeIconDashboard.textContent = isDark ? '☀️' : '🌙';
+    }
 }
 
 // Event listeners para botones de la landing page
@@ -759,6 +780,14 @@ async function showDashboard(user) {
             btnBackup.classList.add('hidden');
         }
     }
+    
+    // Sincronizar el estado del tema en el dashboard
+    sincronizarTemaDashboard();
+    
+    // Inicializar funcionalidad de foto de perfil
+    setTimeout(() => {
+        inicializarFotoPerfil();
+    }, 200);
 }
 
 // Login
@@ -901,11 +930,29 @@ async function loadPatients(uid) {
         noPatientsMsg.classList.remove('hidden');
         return;
     }
+    
+    // Convertir los documentos en un array y ordenar alfabéticamente por nombre
+    const pacientes = [];
     snapshot.forEach(doc => {
         const p = doc.data();
+        pacientes.push({
+            id: doc.id,
+            data: p
+        });
+    });
+    
+    // Ordenar alfabéticamente por nombre (case-insensitive)
+    pacientes.sort((a, b) => {
+        const nombreA = (a.data.nombre || '').toLowerCase();
+        const nombreB = (b.data.nombre || '').toLowerCase();
+        return nombreA.localeCompare(nombreB);
+    });
+    
+    // Renderizar los pacientes ordenados
+    pacientes.forEach(({ id, data: p }) => {
         const div = document.createElement('div');
         div.className = 'border rounded p-4 flex flex-col md:flex-row md:items-center md:justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-darkborder transition';
-        div.setAttribute('data-paciente-id', doc.id);
+        div.setAttribute('data-paciente-id', id);
         div.innerHTML = `
             <div>
                 <div class="font-bold text-[#2d3748] dark:text-gray-100">${p.nombre || ''}</div>
@@ -1497,14 +1544,30 @@ async function showAdminPanel() {
       </div>`;
       // Luego, cuando termines de cargar los pacientes, reemplaza SOLO el contenido de #adminPacContent
       let pacientesHtml = '';
-      const pacientesSnap = await window.firebaseDB.collection('pacientes').where('owner', '==', adminPanelState.selectedUser).orderBy('creado', 'desc').get();
+      const pacientesSnap = await window.firebaseDB.collection('pacientes').where('owner', '==', adminPanelState.selectedUser).get();
       if (pacientesSnap.empty) {
         pacientesHtml = '<div class="text-gray-500">No hay pacientes registrados para este profesional.</div>';
       } else {
-        pacientesHtml = '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
-        for (const doc of pacientesSnap.docs) {
+        // Convertir los documentos en un array y ordenar alfabéticamente por nombre
+        const pacientes = [];
+        pacientesSnap.forEach(doc => {
           const p = doc.data();
-          pacientesHtml += `<div class=\"border rounded p-3 bg-gray-50 dark:bg-darkbg cursor-pointer hover:bg-primary-50 dark:hover:bg-darkborder transition\" data-paciente-id=\"${doc.id}\">\n` +
+          pacientes.push({
+            id: doc.id,
+            data: p
+          });
+        });
+        
+        // Ordenar alfabéticamente por nombre (case-insensitive)
+        pacientes.sort((a, b) => {
+          const nombreA = (a.data.nombre || '').toLowerCase();
+          const nombreB = (b.data.nombre || '').toLowerCase();
+          return nombreA.localeCompare(nombreB);
+        });
+        
+        pacientesHtml = '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+        for (const { id, data: p } of pacientes) {
+          pacientesHtml += `<div class=\"border rounded p-3 bg-gray-50 dark:bg-darkbg cursor-pointer hover:bg-primary-50 dark:hover:bg-darkborder transition\" data-paciente-id=\"${id}\">\n` +
             `<div class=\"font-bold text-[#2d3748] dark:text-gray-100\">${p.nombre || '(sin nombre)'}</div>\n`;
           // Eliminado: email, teléfono, motivo, sesiones
           pacientesHtml += '</div>';
@@ -4681,10 +4744,71 @@ function actualizarVisibilidadVersion(esAdmin) {
 
 // Función para abrir el modal de versión
 window.abrirModalVersion = function() {
-    const modal = document.getElementById('modalVersion');
-    if (modal) {
-        modal.classList.remove('hidden');
-        console.log('🚀 Modal de versión abierto');
+    console.log('🚀 abrirModalVersion() ejecutándose');
+    console.log('🚀 Stack trace:', new Error().stack);
+    
+    // Cerrar TODOS los modales agresivamente
+    const modalBackup = document.getElementById('modalBackupPacientes');
+    if (modalBackup) {
+        console.log('🚀 Cerrando modal de backup AGRESIVAMENTE antes de abrir modal de versión');
+        modalBackup.classList.add('hidden');
+        modalBackup.style.display = 'none !important';
+        modalBackup.style.visibility = 'hidden !important';
+        modalBackup.style.opacity = '0 !important';
+        modalBackup.style.zIndex = '-1';
+        
+        // Forzar que el modal se mueva fuera de la vista
+        modalBackup.style.transform = 'translate(-9999px, -9999px)';
+        modalBackup.style.pointerEvents = 'none';
+    }
+    
+    // Cerrar modal de ver backup si existe
+    const modalVerBackup = document.getElementById('modalVerBackup');
+    if (modalVerBackup) {
+        modalVerBackup.classList.add('hidden');
+        modalVerBackup.style.display = 'none';
+        modalVerBackup.style.visibility = 'hidden';
+        modalVerBackup.style.opacity = '0';
+    }
+    
+    // Cerrar loader si existe
+    const loaderVerBackup = document.getElementById('loaderVerBackup');
+    if (loaderVerBackup) {
+        loaderVerBackup.classList.add('hidden');
+        loaderVerBackup.style.display = 'none';
+        loaderVerBackup.style.visibility = 'hidden';
+        loaderVerBackup.style.opacity = '0';
+    }
+    
+    // Cerrar menú de foto de perfil si está abierto
+    const profilePhotoMenu = document.getElementById('profilePhotoMenu');
+    if (profilePhotoMenu && !profilePhotoMenu.classList.contains('hidden')) {
+        console.log('🚀 Cerrando menú de foto de perfil antes de abrir modal de versión');
+        profilePhotoMenu.classList.add('hidden');
+        profilePhotoMenu.style.display = 'none';
+        profilePhotoMenu.style.visibility = 'hidden';
+        profilePhotoMenu.style.opacity = '0';
+    }
+    
+    // Esperar un poco antes de abrir el modal de versión para asegurar que todo esté cerrado
+    setTimeout(() => {
+        const modal = document.getElementById('modalVersion');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.style.zIndex = '99999';
+            console.log('🚀 Modal de versión abierto');
+        } else {
+            console.error('🚀 Modal de versión no encontrado');
+        }
+    }, 50);
+    
+    // Verificar si el botón de backup está siendo activado
+    const btnBackup = document.getElementById('btnBackupPacientes');
+    if (btnBackup) {
+        console.log('🚀 Estado del botón de backup después de abrir modal de versiones:', {
+            visible: !btnBackup.classList.contains('hidden'),
+            display: window.getComputedStyle(btnBackup).display
+        });
     }
 };
 
@@ -4694,6 +4818,18 @@ window.cerrarModalVersion = function() {
     if (modal) {
         modal.classList.add('hidden');
         console.log('🚀 Modal de versión cerrado');
+        
+        // Restaurar estado normal del modal de backup (sin mostrarlo, solo limpiar estilos agresivos)
+        const modalBackup = document.getElementById('modalBackupPacientes');
+        if (modalBackup) {
+            modalBackup.classList.add('hidden');
+            modalBackup.style.display = 'none';
+            modalBackup.style.visibility = 'hidden';
+            modalBackup.style.opacity = '0';
+            modalBackup.style.zIndex = '';
+            modalBackup.style.transform = '';
+            modalBackup.style.pointerEvents = '';
+        }
     }
 };
 
@@ -4747,7 +4883,8 @@ document.addEventListener('click', function(e) {
 console.log('🚀 Funciones de versión cargadas correctamente');
 
 // === FOTO DE PERFIL DEL TERAPEUTA ===
-document.addEventListener('DOMContentLoaded', function() {
+function inicializarFotoPerfil() {
+  console.log('[DEBUG] Inicializando funcionalidad de foto de perfil...');
   const profileAvatar = document.getElementById('profileAvatar');
   const changeProfilePhotoBtn = document.getElementById('changeProfilePhotoBtn');
   const profilePhotoInput = document.getElementById('profilePhotoInput');
@@ -4761,41 +4898,147 @@ document.addEventListener('DOMContentLoaded', function() {
   const takePhotoBtn = document.getElementById('takePhotoBtn');
   const confirmPhotoBtn = document.getElementById('confirmPhotoBtn');
   const retakePhotoBtn = document.getElementById('retakePhotoBtn');
+  
+  console.log('[DEBUG] Elementos encontrados:', {
+    profileAvatar: !!profileAvatar,
+    changeProfilePhotoBtn: !!changeProfilePhotoBtn,
+    profilePhotoInput: !!profilePhotoInput,
+    profilePhotoMenu: !!profilePhotoMenu,
+    optionUploadPhoto: !!optionUploadPhoto,
+    optionTakePhoto: !!optionTakePhoto,
+    cameraModal: !!cameraModal,
+    closeCameraModal: !!closeCameraModal,
+    cameraVideo: !!cameraVideo,
+    cameraCanvas: !!cameraCanvas,
+    takePhotoBtn: !!takePhotoBtn,
+    confirmPhotoBtn: !!confirmPhotoBtn,
+    retakePhotoBtn: !!retakePhotoBtn
+  });
 
   let cameraStream = null;
   let photoBlob = null;
 
   // Mostrar menú al hacer clic en el ícono de cámara
   if (changeProfilePhotoBtn && profilePhotoMenu) {
+    console.log('[DEBUG] Configurando event listener para changeProfilePhotoBtn');
     changeProfilePhotoBtn.addEventListener('click', (e) => {
+      console.log('[DEBUG] Click en botón de cambiar foto detectado');
       e.stopPropagation();
+      
+      const isCurrentlyHidden = profilePhotoMenu.classList.contains('hidden');
       profilePhotoMenu.classList.toggle('hidden');
-      // Posicionar el menú debajo del botón
-      const rect = changeProfilePhotoBtn.getBoundingClientRect();
-      profilePhotoMenu.style.top = rect.bottom + 8 + 'px';
-      profilePhotoMenu.style.right = '0px';
+      console.log('[DEBUG] Menu visibility toggled, hidden?', profilePhotoMenu.classList.contains('hidden'));
+      
+      if (isCurrentlyHidden) {
+        // Mostrar el menú
+        // Posicionar el menú debajo del botón y asegurar visibilidad
+        const rect = changeProfilePhotoBtn.getBoundingClientRect();
+        profilePhotoMenu.style.position = 'fixed';
+        profilePhotoMenu.style.top = rect.bottom + 8 + 'px';
+        profilePhotoMenu.style.left = rect.left + 'px';
+        profilePhotoMenu.style.zIndex = '99999';
+        profilePhotoMenu.style.display = 'block';
+        profilePhotoMenu.style.visibility = 'visible';
+        profilePhotoMenu.style.opacity = '1';
+        
+        // Aplicar estilos apropiados para tema oscuro
+        const isDarkMode = document.documentElement.classList.contains('dark') || document.body.classList.contains('dark');
+        profilePhotoMenu.style.backgroundColor = isDarkMode ? '#232b3b' : 'white';
+        profilePhotoMenu.style.border = isDarkMode ? '1px solid #313a4d' : '1px solid #e5e7eb';
+        profilePhotoMenu.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
+        profilePhotoMenu.style.borderRadius = '8px';
+        profilePhotoMenu.style.minWidth = '192px'; // w-48 = 192px
+        
+        // Mover el menú al final del body para asegurar visibilidad
+        document.body.appendChild(profilePhotoMenu);
+        
+        // Asegurar que los botones tengan los colores correctos
+        const uploadBtn = profilePhotoMenu.querySelector('#optionUploadPhoto');
+        const takePhotoBtn = profilePhotoMenu.querySelector('#optionTakePhoto');
+        
+        if (uploadBtn) {
+          uploadBtn.style.color = isDarkMode ? 'white' : '#1f2937';
+          uploadBtn.style.backgroundColor = 'transparent';
+        }
+        
+        if (takePhotoBtn) {
+          takePhotoBtn.style.color = isDarkMode ? 'white' : '#1f2937';
+          takePhotoBtn.style.backgroundColor = 'transparent';
+        }
+      } else {
+        // Ocultar el menú
+        profilePhotoMenu.style.display = 'none';
+        profilePhotoMenu.style.visibility = 'hidden';
+        profilePhotoMenu.style.opacity = '0';
+      }
+      
+      console.log('[DEBUG] Menu positioned at:', {
+        top: profilePhotoMenu.style.top,
+        left: profilePhotoMenu.style.left,
+        display: profilePhotoMenu.style.display,
+        zIndex: profilePhotoMenu.style.zIndex
+      });
     });
     // Ocultar menú al hacer clic fuera
     document.addEventListener('click', (e) => {
       if (!profilePhotoMenu.contains(e.target) && e.target !== changeProfilePhotoBtn) {
         profilePhotoMenu.classList.add('hidden');
+        profilePhotoMenu.style.display = 'none';
+        profilePhotoMenu.style.visibility = 'hidden';
+        profilePhotoMenu.style.opacity = '0';
       }
     });
   }
 
   // Opción: Subir foto (abre input file)
   if (optionUploadPhoto && profilePhotoInput) {
+    console.log('[DEBUG] Configurando event listener para optionUploadPhoto');
     optionUploadPhoto.addEventListener('click', () => {
+      console.log('[DEBUG] Click en Subir foto detectado');
       profilePhotoMenu.classList.add('hidden');
+      profilePhotoMenu.style.display = 'none';
+      profilePhotoMenu.style.visibility = 'hidden';
+      profilePhotoMenu.style.opacity = '0';
       profilePhotoInput.click();
     });
+  } else {
+    console.log('[DEBUG] optionUploadPhoto o profilePhotoInput no encontrados');
   }
+  
+  // Debug específico para optionTakePhoto
+  console.log('[DEBUG] optionTakePhoto element:', optionTakePhoto);
+  console.log('[DEBUG] cameraModal element:', cameraModal);
 
   // Opción: Tomar foto (abre modal de cámara)
+  console.log('[DEBUG] Elementos de cámara encontrados:', {
+    optionTakePhoto: !!optionTakePhoto,
+    cameraModal: !!cameraModal,
+    profilePhotoMenu: !!profilePhotoMenu
+  });
+  
   if (optionTakePhoto && cameraModal) {
+    console.log('[DEBUG] Configurando event listener para optionTakePhoto');
     optionTakePhoto.addEventListener('click', async () => {
+      console.log('[DEBUG] Click en Tomar foto detectado');
       profilePhotoMenu.classList.add('hidden');
+      profilePhotoMenu.style.display = 'none';
+      profilePhotoMenu.style.visibility = 'hidden';
+      profilePhotoMenu.style.opacity = '0';
       cameraModal.classList.remove('hidden');
+      cameraModal.style.display = 'flex';
+      cameraModal.style.visibility = 'visible';
+      cameraModal.style.opacity = '1';
+      cameraModal.style.zIndex = '99999';
+      
+      // Forzar repaint: quitar y volver a agregar el modal al body
+      const parentCamera = cameraModal.parentNode;
+      parentCamera.removeChild(cameraModal);
+      document.body.appendChild(cameraModal);
+      
+      console.log('[DEBUG] Modal de cámara después de mostrar:', cameraModal.classList.toString());
+      console.log('[DEBUG] Modal de cámara display:', window.getComputedStyle(cameraModal).display);
+      console.log('[DEBUG] Modal de cámara z-index:', window.getComputedStyle(cameraModal).zIndex);
+      
       cameraCanvas.classList.add('hidden');
       confirmPhotoBtn.classList.add('hidden');
       retakePhotoBtn.classList.add('hidden');
@@ -4808,6 +5051,9 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch (err) {
         showMessage('No se pudo acceder a la cámara: ' + err.message, 'error');
         cameraModal.classList.add('hidden');
+        cameraModal.style.display = 'none';
+        cameraModal.style.visibility = 'hidden';
+        cameraModal.style.opacity = '0';
       }
     });
   }
@@ -4816,6 +5062,10 @@ document.addEventListener('DOMContentLoaded', function() {
   if (closeCameraModal && cameraModal) {
     closeCameraModal.addEventListener('click', () => {
       cameraModal.classList.add('hidden');
+      cameraModal.style.display = 'none';
+      cameraModal.style.visibility = 'hidden';
+      cameraModal.style.opacity = '0';
+      
       if (cameraStream) {
         cameraStream.getTracks().forEach(track => track.stop());
         cameraStream = null;
@@ -4940,7 +5190,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
-});
+}
 
 // === FUNCIONES PARA DATOS DE FAMILIA ===
 
@@ -5172,35 +5422,102 @@ window.addEventListener('DOMContentLoaded', () => {
         }
         listaPacientesBackup.innerHTML = '';
         if (pacientesBackupFiltrados.length === 0) {
-            listaPacientesBackup.innerHTML = '<div class="text-gray-500 text-center">No se encontraron pacientes.</div>';
+            listaPacientesBackup.innerHTML = '<div class="text-gray-300 dark:text-gray-300 text-center">No se encontraron pacientes.</div>';
             return;
         }
-        let lastProf = null;
-        pacientesBackupFiltrados.forEach((p, idx) => {
-            if (p.profesional !== lastProf) {
-                const profDiv = document.createElement('div');
-                profDiv.className = 'font-bold mt-2 mb-1 text-primary-700 dark:text-primary-300';
-                profDiv.textContent = p.profesional;
-                listaPacientesBackup.appendChild(profDiv);
-                lastProf = p.profesional;
+        
+        // Agrupar pacientes por profesional
+        const pacientesPorProfesional = {};
+        pacientesBackupFiltrados.forEach(p => {
+            if (!pacientesPorProfesional[p.profesional]) {
+                pacientesPorProfesional[p.profesional] = [];
             }
-            const div = document.createElement('div');
-            div.className = 'flex items-center gap-2 mb-1';
-            div.innerHTML = `<input type="checkbox" class="checkPacienteBackup" data-id="${p.id}" ${pacientesBackupSeleccionados.has(p.id) ? 'checked' : ''}> <span>${p.nombre}</span>`;
-            listaPacientesBackup.appendChild(div);
+            pacientesPorProfesional[p.profesional].push(p);
         });
-        // Listeners para checkboxes
+        
+        // Renderizar por profesional con checkbox
+        Object.entries(pacientesPorProfesional).forEach(([profesional, pacientes]) => {
+            // Verificar si todos los pacientes del profesional están seleccionados
+            const todosPacientesSeleccionados = pacientes.every(p => pacientesBackupSeleccionados.has(p.id));
+            
+            // Div del profesional con checkbox
+            const profDiv = document.createElement('div');
+            profDiv.className = 'flex items-center gap-2 mt-3 mb-2';
+            profDiv.innerHTML = `
+                <input type="checkbox" class="checkProfesionalBackup" data-profesional="${profesional}" ${todosPacientesSeleccionados ? 'checked' : ''}>
+                <span class="font-bold text-primary-700 dark:text-primary-300">${profesional}</span>
+            `;
+            listaPacientesBackup.appendChild(profDiv);
+            
+            // Pacientes del profesional (con indentación)
+            pacientes.forEach(p => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center gap-2 mb-1 ml-6';
+                div.innerHTML = `<input type="checkbox" class="checkPacienteBackup" data-id="${p.id}" data-profesional="${profesional}" ${pacientesBackupSeleccionados.has(p.id) ? 'checked' : ''}> <span class="text-gray-100 dark:text-gray-100">${p.nombre}</span>`;
+                listaPacientesBackup.appendChild(div);
+            });
+        });
+        
+        // Listeners para checkboxes de profesionales
+        listaPacientesBackup.querySelectorAll('.checkProfesionalBackup').forEach(chkProf => {
+            chkProf.addEventListener('change', (e) => {
+                const profesional = chkProf.getAttribute('data-profesional');
+                const pacientesDelProfesional = pacientesBackupFiltrados.filter(p => p.profesional === profesional);
+                
+                if (chkProf.checked) {
+                    // Seleccionar todos los pacientes del profesional
+                    pacientesDelProfesional.forEach(p => {
+                        pacientesBackupSeleccionados.add(p.id);
+                    });
+                } else {
+                    // Deseleccionar todos los pacientes del profesional
+                    pacientesDelProfesional.forEach(p => {
+                        pacientesBackupSeleccionados.delete(p.id);
+                    });
+                }
+                
+                // Actualizar checkboxes de pacientes
+                listaPacientesBackup.querySelectorAll(`.checkPacienteBackup[data-profesional="${profesional}"]`).forEach(chkPac => {
+                    chkPac.checked = chkProf.checked;
+                });
+                
+                // Actualizar checkbox "Seleccionar todos"
+                actualizarCheckboxTodos();
+            });
+        });
+        
+        // Listeners para checkboxes de pacientes
         listaPacientesBackup.querySelectorAll('.checkPacienteBackup').forEach(chk => {
             chk.addEventListener('change', (e) => {
                 const id = chk.getAttribute('data-id');
+                const profesional = chk.getAttribute('data-profesional');
+                
                 if (chk.checked) {
                     pacientesBackupSeleccionados.add(id);
                 } else {
                     pacientesBackupSeleccionados.delete(id);
                 }
-                checkTodosBackup.checked = pacientesBackupFiltrados.length > 0 && pacientesBackupFiltrados.every(p => pacientesBackupSeleccionados.has(p.id));
+                
+                // Actualizar checkbox del profesional
+                const pacientesDelProfesional = pacientesBackupFiltrados.filter(p => p.profesional === profesional);
+                const todosPacientesSeleccionados = pacientesDelProfesional.every(p => pacientesBackupSeleccionados.has(p.id));
+                const checkProfesional = listaPacientesBackup.querySelector(`.checkProfesionalBackup[data-profesional="${profesional}"]`);
+                if (checkProfesional) {
+                    checkProfesional.checked = todosPacientesSeleccionados;
+                }
+                
+                // Actualizar checkbox "Seleccionar todos"
+                actualizarCheckboxTodos();
             });
         });
+    }
+    
+    // Función auxiliar para actualizar el checkbox "Seleccionar todos"
+    function actualizarCheckboxTodos() {
+        const checkTodosBackup = document.getElementById('checkTodosBackup');
+        if (checkTodosBackup) {
+            checkTodosBackup.checked = pacientesBackupFiltrados.length > 0 && pacientesBackupFiltrados.every(p => pacientesBackupSeleccionados.has(p.id));
+        }
     }
 
     async function cargarPacientesBackup() {
@@ -5225,25 +5542,183 @@ window.addEventListener('DOMContentLoaded', () => {
         });
         pacientesBackupData.sort((a, b) => a.profesional.localeCompare(b.profesional) || a.nombre.localeCompare(b.nombre));
         pacientesBackupFiltrados = [...pacientesBackupData];
-        pacientesBackupSeleccionados = new Set(pacientesBackupData.map(p => p.id));
+        pacientesBackupSeleccionados = new Set(); // Iniciar vacío (todos deseleccionados)
         renderizarListaPacientesBackup();
         const checkTodosBackup = document.getElementById('checkTodosBackup');
         if (checkTodosBackup) {
-            checkTodosBackup.checked = true;
+            checkTodosBackup.checked = false;
         } else {
             console.error('No se encontró el checkbox checkTodosBackup');
         }
     }
 
     if (btnBackup && modalBackup) {
-        btnBackup.addEventListener('click', async () => {
-            console.log('Click en backup');
-            await cargarPacientesBackup();
-            modalBackup.classList.remove('hidden');
+        console.log('[DEBUG] Configurando event listener para btnBackup');
+
+        btnBackup.addEventListener('click', async (e) => {
+            console.log('[DEBUG] Click en backup detectado');
+            console.log('[DEBUG] Event target:', e.target);
+            console.log('[DEBUG] Event currentTarget:', e.currentTarget);
+            console.log('[DEBUG] Event type:', e.type);
+            console.log('[DEBUG] Event bubbles:', e.bubbles);
+            console.log('[DEBUG] Stack trace:', new Error().stack);
+            console.log('[DEBUG] ¿Es un clic directo en btnBackup?', e.target === btnBackup);
+            console.log('[DEBUG] ¿Es un clic en versionBtnDashboard?', e.target.id === 'versionBtnDashboard');
+            try {
+                await cargarPacientesBackup();
+                console.log('[DEBUG] Pacientes cargados, mostrando modal');
+                console.log('[DEBUG] Modal antes de mostrar:', modalBackup.classList.toString());
+                modalBackup.classList.remove('hidden');
+                modalBackup.style.display = 'flex';
+                modalBackup.style.zIndex = '99999';
+                // Forzar reflow/repaint
+                modalBackup.offsetHeight; // Accede a la propiedad para forzar reflow
+                modalBackup.style.visibility = 'visible';
+                modalBackup.style.opacity = '1';
+                
+                // Forzar repaint: quitar y volver a agregar el modal al body
+                const parent = modalBackup.parentNode;
+                parent.removeChild(modalBackup);
+                document.body.appendChild(modalBackup);
+                
+                // Reconfigurar event listeners después de mover el modal
+                const btnCerrarModalBackup = document.getElementById('btnCerrarModalBackup');
+                const btnCancelarBackup = document.getElementById('btnCancelarBackup');
+                const btnVerBackup = document.getElementById('btnVerBackup');
+                const btnVerBackupSinNotas = document.getElementById('btnVerBackupSinNotas');
+                const btnDescargarBackup = document.getElementById('btnDescargarBackup');
+                const btnDescargarBackupSinNotas = document.getElementById('btnDescargarBackupSinNotas');
+                
+                if (btnCerrarModalBackup) {
+                    btnCerrarModalBackup.removeEventListener('click', cerrarModalBackup);
+                    btnCerrarModalBackup.addEventListener('click', cerrarModalBackup);
+                }
+                
+                if (btnCancelarBackup) {
+                    btnCancelarBackup.removeEventListener('click', cerrarModalBackup);
+                    btnCancelarBackup.addEventListener('click', cerrarModalBackup);
+                }
+                
+                // Reconfigurar botones de Ver y Descargar
+                if (btnVerBackup) {
+                    const existingListeners = btnVerBackup.cloneNode(true);
+                    btnVerBackup.parentNode.replaceChild(existingListeners, btnVerBackup);
+                    document.getElementById('btnVerBackup').addEventListener('click', async () => {
+                        await mostrarVistaBackup(false); // false = con notas
+                    });
+                }
+                
+                if (btnVerBackupSinNotas) {
+                    const existingListeners = btnVerBackupSinNotas.cloneNode(true);
+                    btnVerBackupSinNotas.parentNode.replaceChild(existingListeners, btnVerBackupSinNotas);
+                    document.getElementById('btnVerBackupSinNotas').addEventListener('click', async () => {
+                        await mostrarVistaBackup(true); // true = sin notas
+                    });
+                }
+                
+                if (btnDescargarBackup) {
+                    const existingListeners = btnDescargarBackup.cloneNode(true);
+                    btnDescargarBackup.parentNode.replaceChild(existingListeners, btnDescargarBackup);
+                    document.getElementById('btnDescargarBackup').addEventListener('click', async () => {
+                        await descargarBackup(false); // false = con notas
+                    });
+                }
+                
+                if (btnDescargarBackupSinNotas) {
+                    const existingListeners = btnDescargarBackupSinNotas.cloneNode(true);
+                    btnDescargarBackupSinNotas.parentNode.replaceChild(existingListeners, btnDescargarBackupSinNotas);
+                    document.getElementById('btnDescargarBackupSinNotas').addEventListener('click', async () => {
+                        await descargarBackup(true); // true = sin notas
+                    });
+                }
+                
+                // Cerrar cualquier otro modal que esté abierto
+                const modalVersion = document.getElementById('modalVersion');
+                if (modalVersion && !modalVersion.classList.contains('hidden')) {
+                    console.log('[DEBUG] Cerrando modal de versiones antes de abrir backup');
+                    modalVersion.classList.add('hidden');
+                }
+                
+                // Cerrar modal de sesión si está abierto
+                const modalSesion = document.getElementById('modalSesion');
+                if (modalSesion && !modalSesion.classList.contains('hidden')) {
+                    console.log('[DEBUG] Cerrando modal de sesión antes de abrir backup');
+                    modalSesion.classList.add('hidden');
+                }
+                
+                // Cerrar modal de paciente si está abierto
+                const modalPaciente = document.getElementById('modalPaciente');
+                if (modalPaciente && !modalPaciente.classList.contains('hidden')) {
+                    console.log('[DEBUG] Cerrando modal de paciente antes de abrir backup');
+                    modalPaciente.classList.add('hidden');
+                }
+                console.log('[DEBUG] Modal después de mostrar:', modalBackup.classList.toString());
+                console.log('[DEBUG] Modal visible:', !modalBackup.classList.contains('hidden'));
+                console.log('[DEBUG] Modal display:', window.getComputedStyle(modalBackup).display);
+                console.log('[DEBUG] Modal z-index:', window.getComputedStyle(modalBackup).zIndex);
+                
+                // Verificación final después de mover el modal al final del body
+                setTimeout(() => {
+                    const isVisible = !modalBackup.classList.contains('hidden') && 
+                                    window.getComputedStyle(modalBackup).display !== 'none';
+                    console.log('[DEBUG] Verificación final - Modal visible:', isVisible);
+                    
+                    if (!isVisible) {
+                        console.error('[DEBUG] Modal aún no visible, forzando...');
+                        modalBackup.style.display = 'flex';
+                        modalBackup.style.visibility = 'visible';
+                        modalBackup.style.opacity = '1';
+                    } else {
+                        console.log('[DEBUG] ✅ Modal visible correctamente');
+                    }
+                }, 100);
+            } catch (error) {
+                console.error('[DEBUG] Error al cargar backup:', error);
+            }
+        });
+    } else {
+        console.error('[DEBUG] No se encontraron elementos necesarios:', {
+            btnBackup: !!btnBackup,
+            modalBackup: !!modalBackup
         });
     }
-    if (btnCerrarModalBackup) btnCerrarModalBackup.addEventListener('click', () => modalBackup.classList.add('hidden'));
-    if (btnCancelarBackup) btnCancelarBackup.addEventListener('click', () => modalBackup.classList.add('hidden'));
+            // Función para cerrar el modal de backup
+        function cerrarModalBackup() {
+            console.log('[DEBUG] Cerrando modal de backup');
+            modalBackup.classList.add('hidden');
+            modalBackup.style.display = 'none';
+            modalBackup.style.visibility = 'hidden';
+            modalBackup.style.opacity = '0';
+            console.log('[DEBUG] Modal después de cerrar:', modalBackup.classList.contains('hidden'));
+            // Limpiar búsqueda y selecciones
+            const inputBuscar = document.getElementById('inputBuscarPacienteBackup');
+            if (inputBuscar) inputBuscar.value = '';
+            const checkTodos = document.getElementById('checkTodosBackup');
+            if (checkTodos) checkTodos.checked = false;
+        }
+        
+        // Remover event listeners anteriores para evitar duplicados
+        if (btnCerrarModalBackup) {
+            btnCerrarModalBackup.removeEventListener('click', cerrarModalBackup);
+            btnCerrarModalBackup.addEventListener('click', cerrarModalBackup);
+            console.log('[DEBUG] Event listener agregado a btnCerrarModalBackup');
+        }
+        
+        if (btnCancelarBackup) {
+            btnCancelarBackup.removeEventListener('click', cerrarModalBackup);
+            btnCancelarBackup.addEventListener('click', cerrarModalBackup);
+            console.log('[DEBUG] Event listener agregado a btnCancelarBackup');
+        }
+        
+        // Cerrar modal con tecla Escape
+        const escapeHandler = (e) => {
+            if (e.key === 'Escape' && !modalBackup.classList.contains('hidden')) {
+                console.log('[DEBUG] Cerrando modal de backup (Escape)');
+                cerrarModalBackup();
+            }
+        };
+        document.removeEventListener('keydown', escapeHandler);
+        document.addEventListener('keydown', escapeHandler);
     if (inputBuscarPacienteBackup) {
         inputBuscarPacienteBackup.addEventListener('input', () => {
             const q = inputBuscarPacienteBackup.value.trim().toLowerCase();
@@ -5268,12 +5743,33 @@ window.addEventListener('DOMContentLoaded', () => {
         btnDescargarBackup.addEventListener('click', async () => {
             console.log('Click en Descargar Backup');
             const loader = document.getElementById('loaderVerBackup');
-            if (loader) loader.classList.remove('hidden');
+            
             if (pacientesBackupSeleccionados.size === 0) {
-                if (loader) loader.classList.add('hidden');
                 alert('Selecciona al menos un paciente para descargar.');
                 return;
             }
+            
+            // Mostrar loader con tiempo estimativo
+            if (loader) {
+                loader.classList.remove('hidden');
+                loader.style.display = 'flex';
+                loader.style.visibility = 'visible';
+                loader.style.opacity = '1';
+                loader.style.zIndex = '100000';
+                
+                // Forzar repaint del loader
+                loader.offsetHeight;
+                
+                // Mover el loader al final del body para asegurar visibilidad
+                const parentLoader = loader.parentNode;
+                parentLoader.removeChild(loader);
+                document.body.appendChild(loader);
+                
+                // Iniciar contador de tiempo estimativo
+                iniciarContadorTiempo();
+            }
+            
+            try {
             // Obtener profesionales
             const usuariosSnap = await window.firebaseDB.collection('usuarios').get();
             const profesionales = {};
@@ -5384,118 +5880,442 @@ window.addEventListener('DOMContentLoaded', () => {
                 URL.revokeObjectURL(url);
             }, 100);
             modalBackup.classList.add('hidden');
-            if (loader) loader.classList.add('hidden');
+            
+            } catch (error) {
+                console.error('Error al descargar backup:', error);
+                alert('Error al generar el archivo. Por favor, inténtalo de nuevo.');
+            } finally {
+                // Detener el contador de tiempo
+                detenerContadorTiempo();
+                
+                if (loader) {
+                    loader.classList.add('hidden');
+                    loader.style.display = 'none';
+                    loader.style.visibility = 'hidden';
+                    loader.style.opacity = '0';
+                }
+            }
         });
     }
-    if (btnVerBackup) {
-        btnVerBackup.addEventListener('click', async () => {
-            const loader = document.getElementById('loaderVerBackup');
-            if (loader) loader.classList.remove('hidden');
-            if (pacientesBackupSeleccionados.size === 0) {
-                if (loader) loader.classList.add('hidden');
-                alert('Selecciona al menos un paciente para ver.');
-                return;
-            }
-            // Obtener profesionales
-            const usuariosSnap = await window.firebaseDB.collection('usuarios').get();
-            const profesionales = {};
-            usuariosSnap.forEach(doc => {
-                const data = doc.data();
-                profesionales[doc.id] = data.displayName || data.email || doc.id;
-            });
-            // Filtrar pacientes seleccionados
-            const pacientesSeleccionados = pacientesBackupData.filter(p => pacientesBackupSeleccionados.has(p.id));
-            // Agrupar por profesional
-            const pacientesPorProfesional = {};
-            pacientesSeleccionados.forEach(p => {
-                if (!pacientesPorProfesional[p.profesional]) pacientesPorProfesional[p.profesional] = [];
-                pacientesPorProfesional[p.profesional].push(p);
-            });
-            // Renderizar agrupado por profesional con acordeón de pacientes y sesiones
-            let html = '<div class="bg-white text-gray-900">';
-            let profIdx = 0;
-            for (const [profesional, pacientes] of Object.entries(pacientesPorProfesional)) {
-                const profId = `ver-prof-${profIdx}`;
-                html += `<div class='mb-4 border rounded'>`;
-                html += `<button class='w-full text-left px-4 py-2 font-bold bg-blue-100 hover:bg-blue-200 border-b' style='color:#1e293b' onclick=\"document.getElementById('${profId}').classList.toggle('hidden')\">${profesional}</button>`;
-                html += `<div id='${profId}' class='p-2'>`;
-                // Cargar sesiones de todos los pacientes y ordenarlos alfabéticamente por nombre
-                let pacientesConSesiones = [];
-                for (const p of pacientes) {
-                    let sesiones = [];
-                    try {
-                        const sesionesSnap = await window.firebaseDB.collection('pacientes').doc(p.id).collection('sesiones').get();
-                        sesionesSnap.forEach(doc => {
-                            const s = doc.data();
-                            sesiones.push({
-                                fechaSesion: s.fecha || '',
-                                comentarioSesion: s.comentario || '',
-                                notasSesion: s.notas || ''
-                            });
-                        });
-                    } catch (e) {
-                        sesiones = [];
-                    }
-                    // Ordenar sesiones por fecha descendente
-                    sesiones.sort((a, b) => {
-                        const fa = a.fechaSesion ? new Date(a.fechaSesion.seconds ? a.fechaSesion.seconds * 1000 : a.fechaSesion).getTime() : 0;
-                        const fb = b.fechaSesion ? new Date(b.fechaSesion.seconds ? b.fechaSesion.seconds * 1000 : b.fechaSesion).getTime() : 0;
-                        return fb - fa;
-                    });
-                    pacientesConSesiones.push({ paciente: p, sesiones });
-                }
-                // Ordenar pacientes alfabéticamente por nombre
-                pacientesConSesiones.sort((a, b) => {
-                    const na = (a.paciente.nombre || '').toLowerCase();
-                    const nb = (b.paciente.nombre || '').toLowerCase();
-                    if (na < nb) return -1;
-                    if (na > nb) return 1;
-                    return 0;
-                });
-                // Renderizar acordeón de pacientes
-                let pacIdx = 0;
-                for (const { paciente: p, sesiones } of pacientesConSesiones) {
-                    const pacId = `${profId}-pac-${pacIdx}`;
-                    html += `<div class='mb-2 border rounded'>`;
-                    html += `<button class='w-full text-left px-4 py-2 font-semibold bg-gray-100 hover:bg-gray-200 border-b' onclick=\"document.getElementById('${pacId}').classList.toggle('hidden')\">${p.nombre || ''}</button>`;
-                    html += `<div id='${pacId}' class='p-2 hidden'>`;
-                    if (sesiones.length > 0) {
-                        sesiones.forEach(sesion => {
-                            html += `<div class='mb-2 p-2 border rounded bg-gray-50'>`;
-                            html += `<div><span class='font-semibold'>Fecha:</span> ${sesion.fechaSesion ? new Date(sesion.fechaSesion.seconds ? sesion.fechaSesion.seconds * 1000 : sesion.fechaSesion).toLocaleDateString() : '-'}</div>`;
-                            html += `<div><span class='font-semibold'>Comentarios:</span> ${sesion.comentarioSesion || '-'}</div>`;
-                            html += `<div><span class='font-semibold'>Notas:</span> ${sesion.notasSesion || '-'}</div>`;
-                            html += `</div>`;
-                        });
-                    } else {
-                        html += `<div class='mb-2 p-2 border rounded bg-gray-50'>`;
-                        html += `<div><span class='font-semibold'>Fecha:</span> -</div>`;
-                        html += `<div><span class='font-semibold'>Comentarios:</span> -</div>`;
-                        html += `<div><span class='font-semibold'>Notas:</span> -</div>`;
-                        html += `</div>`;
-                    }
-                    html += `</div></div>`;
-                    pacIdx++;
-                }
-                html += `</div></div>`;
-                profIdx++;
-            }
-            html += '</div>';
-            contenidoVerBackup.innerHTML = html;
-            modalVerBackup.classList.remove('hidden');
-            // Asegurar que todos los paneles estén colapsados por defecto
-            for (let i = 0; i < profIdx; i++) {
-                const el = document.getElementById(`ver-prof-${i}`);
-                if (el) el.classList.add('hidden');
-            }
-            // Forzar fondo claro y texto oscuro
-            modalVerBackup.classList.remove('dark');
-            modalVerBackup.classList.add('force-light');
-            if (loader) loader.classList.add('hidden');
-        });
-    }
-    if (btnCerrarModalVerBackup) btnCerrarModalVerBackup.addEventListener('click', () => modalVerBackup.classList.add('hidden'));
-    if (btnCerrarVerBackup) btnCerrarVerBackup.addEventListener('click', () => modalVerBackup.classList.add('hidden'));
+         // Función para descargar backup
+     async function descargarBackup(sinNotas = false) {
+         const loader = document.getElementById('loaderVerBackup');
+         
+         if (pacientesBackupSeleccionados.size === 0) {
+             alert('Selecciona al menos un paciente para descargar.');
+             return;
+         }
+         
+         // Mostrar loader con tiempo estimativo
+         if (loader) {
+             loader.classList.remove('hidden');
+             loader.style.display = 'flex';
+             loader.style.visibility = 'visible';
+             loader.style.opacity = '1';
+             loader.style.zIndex = '100000';
+             
+             // Forzar repaint del loader
+             loader.offsetHeight;
+             
+             // Mover el loader al final del body para asegurar visibilidad
+             const parentLoader = loader.parentNode;
+             parentLoader.removeChild(loader);
+             document.body.appendChild(loader);
+             
+             // Iniciar contador de tiempo estimativo
+             iniciarContadorTiempo();
+         }
+         
+         try {
+             // Obtener profesionales
+             const usuariosSnap = await window.firebaseDB.collection('usuarios').get();
+             const profesionales = {};
+             usuariosSnap.forEach(doc => {
+                 const data = doc.data();
+                 profesionales[doc.id] = data.displayName || data.email || doc.id;
+             });
+             
+             // Filtrar pacientes seleccionados
+             const pacientesSeleccionados = pacientesBackupData.filter(p => pacientesBackupSeleccionados.has(p.id));
+             
+             // Ordenar por profesional y nombre
+             pacientesSeleccionados.sort((a, b) => a.profesional.localeCompare(b.profesional) || a.nombre.localeCompare(b.nombre));
+             
+             // Agrupar por profesional
+             const pacientesPorProfesional = {};
+             pacientesSeleccionados.forEach(p => {
+                 if (!pacientesPorProfesional[p.owner]) pacientesPorProfesional[p.owner] = [];
+                 pacientesPorProfesional[p.owner].push(p);
+             });
+             
+             // Campos para el CSV
+             const fields = [
+                 'profesional', 'nombre', 'dni', 'fechaNacimiento', 'sexo', 'lugarNacimiento',
+                 'email', 'telefono', 'contacto',
+                 'educacion', 'instituto', 'motivo',
+                 'infoPadre', 'infoMadre', 'infoHermanos',
+                 'nomencladorCIE10', 'creado', 'actualizado',
+                 'fechaSesion', 'comentarioSesion'
+             ];
+             
+             // Agregar campo de notas solo si no es "sin notas"
+             if (!sinNotas) {
+                 fields.push('notasSesion');
+             }
+             
+             fields.push('cie10Sesion', 'archivosSesion');
+             
+             function formatTimestamp(val) {
+                 if (val && typeof val === 'object' && val.seconds) {
+                     const d = new Date(val.seconds * 1000);
+                     return d.toLocaleString('sv-SE', { hour12: false }).replace('T', ' ');
+                 }
+                 return '';
+             }
+             
+             const csvRows = [];
+             
+             // Por cada profesional
+             for (const [owner, pacientes] of Object.entries(pacientesPorProfesional)) {
+                 const nombreProfesional = profesionales[owner] || owner;
+                 if (csvRows.length > 0) csvRows.push(''); // Línea vacía entre profesionales
+                 csvRows.push(`PROFESIONAL: ${nombreProfesional}`);
+                 csvRows.push(fields.join(','));
+                 
+                 for (const p of pacientes) {
+                     // Obtener sesiones del paciente
+                     let sesiones = [];
+                     try {
+                         const sesionesSnap = await window.firebaseDB.collection('pacientes').doc(p.id).collection('sesiones').get();
+                         sesiones = [];
+                         sesionesSnap.forEach(doc => {
+                             const s = doc.data();
+                             const sesionData = {
+                                 fechaSesion: s.fecha || '',
+                                 comentarioSesion: s.comentario || '',
+                                 cie10Sesion: s.nomencladorCIE10 ? (s.nomencladorCIE10.codigo + ' - ' + s.nomencladorCIE10.descripcion) : '',
+                                 archivosSesion: s.archivosUrls ? s.archivosUrls.join(' | ') : ''
+                             };
+                             
+                             // Solo agregar notas si no es "sin notas"
+                             if (!sinNotas) {
+                                 sesionData.notasSesion = s.notas || '';
+                             }
+                             
+                             sesiones.push(sesionData);
+                         });
+                     } catch (e) {
+                         sesiones = [];
+                     }
+                     
+                     if (sesiones.length === 0) {
+                         // Paciente sin sesiones: fila con datos vacíos de sesión
+                         const row = fields.map(f => {
+                             let val = p[f];
+                             if ((f === 'creado' || f === 'actualizado') && val && typeof val === 'object' && val.seconds) {
+                                 val = formatTimestamp(val);
+                             } else if (typeof val === 'object' && val !== null) {
+                                 val = JSON.stringify(val).replace(/\n/g, ' ');
+                             }
+                             if (val === undefined) val = '';
+                             return '"' + String(val).replace(/"/g, '""') + '"';
+                         });
+                         csvRows.push(row.join(','));
+                     } else {
+                         // Una fila por cada sesión
+                         for (const sesion of sesiones) {
+                             const row = fields.map(f => {
+                                 let val = p[f];
+                                 if ((f === 'creado' || f === 'actualizado') && val && typeof val === 'object' && val.seconds) {
+                                     val = formatTimestamp(val);
+                                 } else if (typeof val === 'object' && val !== null) {
+                                     val = JSON.stringify(val).replace(/\n/g, ' ');
+                                 }
+                                 if (val === undefined) val = '';
+                                 
+                                 // Sobrescribir con datos de sesión si corresponde
+                                 if (f === 'fechaSesion') val = sesion.fechaSesion;
+                                 if (f === 'comentarioSesion') val = sesion.comentarioSesion;
+                                 if (f === 'notasSesion' && !sinNotas) val = sesion.notasSesion;
+                                 if (f === 'cie10Sesion') val = sesion.cie10Sesion;
+                                 if (f === 'archivosSesion') val = sesion.archivosSesion;
+                                 
+                                 return '"' + String(val).replace(/"/g, '""') + '"';
+                             });
+                             csvRows.push(row.join(','));
+                         }
+                     }
+                 }
+             }
+             
+             const csvContent = csvRows.join('\r\n');
+             
+             // Descargar archivo
+             const blob = new Blob([csvContent], { type: 'text/csv' });
+             const url = URL.createObjectURL(blob);
+             const a = document.createElement('a');
+             a.href = url;
+             a.download = sinNotas ? 'backup_pacientes_sin_notas.csv' : 'backup_pacientes.csv';
+             document.body.appendChild(a);
+             a.click();
+             setTimeout(() => {
+                 document.body.removeChild(a);
+                 URL.revokeObjectURL(url);
+             }, 100);
+             
+         } catch (error) {
+             console.error('Error al descargar backup:', error);
+             alert('Error al generar el archivo. Por favor, inténtalo de nuevo.');
+         } finally {
+             // Detener el contador de tiempo
+             detenerContadorTiempo();
+             
+             if (loader) {
+                 loader.classList.add('hidden');
+                 loader.style.display = 'none';
+                 loader.style.visibility = 'hidden';
+                 loader.style.opacity = '0';
+             }
+         }
+     }
+     
+     // Función para mostrar vista de backup
+     async function mostrarVistaBackup(sinNotas = false) {
+         const loader = document.getElementById('loaderVerBackup');
+         const modalVerBackup = document.getElementById('modalVerBackup');
+         const contenidoVerBackup = document.getElementById('contenidoVerBackup');
+         
+         // No cerrar el modal de backup, mantenerlo abierto
+         
+         if (loader) {
+             loader.classList.remove('hidden');
+             loader.style.display = 'flex';
+             loader.style.visibility = 'visible';
+             loader.style.opacity = '1';
+             loader.style.zIndex = '100000';
+             
+             // Forzar repaint del loader
+             loader.offsetHeight;
+             
+             // Mover el loader al final del body para asegurar visibilidad
+             const parentLoader = loader.parentNode;
+             parentLoader.removeChild(loader);
+             document.body.appendChild(loader);
+             
+             // Iniciar contador de tiempo estimativo
+             iniciarContadorTiempo();
+         }
+         
+         if (pacientesBackupSeleccionados.size === 0) {
+             if (loader) {
+                 loader.classList.add('hidden');
+                 loader.style.display = 'none';
+             }
+             alert('Selecciona al menos un paciente para ver.');
+             return;
+         }
+        
+                 try {
+             // Obtener profesionales
+             const usuariosSnap = await window.firebaseDB.collection('usuarios').get();
+         const profesionales = {};
+         usuariosSnap.forEach(doc => {
+             const data = doc.data();
+             profesionales[doc.id] = data.displayName || data.email || doc.id;
+         });
+         
+         // Filtrar pacientes seleccionados
+         const pacientesSeleccionados = pacientesBackupData.filter(p => pacientesBackupSeleccionados.has(p.id));
+         
+         // Agrupar por profesional
+         const pacientesPorProfesional = {};
+         pacientesSeleccionados.forEach(p => {
+             if (!pacientesPorProfesional[p.profesional]) pacientesPorProfesional[p.profesional] = [];
+             pacientesPorProfesional[p.profesional].push(p);
+         });
+         
+         // Renderizar agrupado por profesional con acordeón de pacientes y sesiones
+         let html = '<div class="bg-gray-800 text-gray-100">';
+         let profIdx = 0;
+         for (const [profesional, pacientes] of Object.entries(pacientesPorProfesional)) {
+             const profId = `ver-prof-${profIdx}`;
+             html += `<div class='mb-4 border border-gray-600 rounded'>`;
+             html += `<button class='w-full text-left px-4 py-2 font-bold bg-gray-700 hover:bg-gray-600 border-b border-gray-600 text-gray-100' onclick=\"document.getElementById('${profId}').classList.toggle('hidden')\">${profesional}</button>`;
+             html += `<div id='${profId}' class='p-2'>`;
+             
+             // Cargar sesiones de todos los pacientes y ordenarlos alfabéticamente por nombre
+             let pacientesConSesiones = [];
+             for (const p of pacientes) {
+                 let sesiones = [];
+                 try {
+                     const sesionesSnap = await window.firebaseDB.collection('pacientes').doc(p.id).collection('sesiones').get();
+                     sesionesSnap.forEach(doc => {
+                         const s = doc.data();
+                         sesiones.push({
+                             fechaSesion: s.fecha || '',
+                             comentarioSesion: s.comentario || '',
+                             notasSesion: sinNotas ? '' : (s.notas || '')
+                         });
+                     });
+                 } catch (e) {
+                     sesiones = [];
+                 }
+                 
+                 // Ordenar sesiones por fecha descendente
+                 sesiones.sort((a, b) => {
+                     const fa = a.fechaSesion ? new Date(a.fechaSesion.seconds ? a.fechaSesion.seconds * 1000 : a.fechaSesion).getTime() : 0;
+                     const fb = b.fechaSesion ? new Date(b.fechaSesion.seconds ? b.fechaSesion.seconds * 1000 : b.fechaSesion).getTime() : 0;
+                     return fb - fa;
+                 });
+                 pacientesConSesiones.push({ paciente: p, sesiones });
+             }
+             
+             // Ordenar pacientes alfabéticamente por nombre
+             pacientesConSesiones.sort((a, b) => {
+                 const na = (a.paciente.nombre || '').toLowerCase();
+                 const nb = (b.paciente.nombre || '').toLowerCase();
+                 if (na < nb) return -1;
+                 if (na > nb) return 1;
+                 return 0;
+             });
+             
+             // Renderizar acordeón de pacientes
+             let pacIdx = 0;
+             for (const { paciente: p, sesiones } of pacientesConSesiones) {
+                 const pacId = `${profId}-pac-${pacIdx}`;
+                 html += `<div class='mb-2 border border-gray-600 rounded'>`;
+                 html += `<button class='w-full text-left px-4 py-2 font-semibold bg-gray-600 hover:bg-gray-500 border-b border-gray-600 text-gray-100' onclick=\"document.getElementById('${pacId}').classList.toggle('hidden')\">${p.nombre || ''}</button>`;
+                 html += `<div id='${pacId}' class='p-2 hidden'>`;
+                 
+                                      if (sesiones.length > 0) {
+                         sesiones.forEach(sesion => {
+                             html += `<div class='mb-2 p-2 border border-gray-500 rounded bg-gray-700'>`;
+                             html += `<div><span class='font-semibold text-gray-300'>Fecha:</span> <span class='text-gray-100'>${sesion.fechaSesion ? new Date(sesion.fechaSesion.seconds ? sesion.fechaSesion.seconds * 1000 : sesion.fechaSesion).toLocaleDateString() : '-'}</span></div>`;
+                             html += `<div><span class='font-semibold text-gray-300'>Comentarios:</span> <span class='text-gray-100'>${sesion.comentarioSesion || '-'}</span></div>`;
+                             if (!sinNotas) {
+                                 html += `<div><span class='font-semibold text-gray-300'>Notas:</span> <span class='text-gray-100'>${sesion.notasSesion || '-'}</span></div>`;
+                             }
+                             html += `</div>`;
+                         });
+                     } else {
+                         html += `<div class='mb-2 p-2 border border-gray-500 rounded bg-gray-700'>`;
+                         html += `<div><span class='font-semibold text-gray-300'>Fecha:</span> <span class='text-gray-100'>-</span></div>`;
+                         html += `<div><span class='font-semibold text-gray-300'>Comentarios:</span> <span class='text-gray-100'>-</span></div>`;
+                         if (!sinNotas) {
+                             html += `<div><span class='font-semibold text-gray-300'>Notas:</span> <span class='text-gray-100'>-</span></div>`;
+                         }
+                         html += `</div>`;
+                     }
+                 html += `</div></div>`;
+                 pacIdx++;
+             }
+             html += `</div></div>`;
+             profIdx++;
+         }
+         html += '</div>';
+         
+         contenidoVerBackup.innerHTML = html;
+         modalVerBackup.classList.remove('hidden');
+         modalVerBackup.style.display = 'flex';
+         modalVerBackup.style.visibility = 'visible';
+         modalVerBackup.style.opacity = '1';
+         modalVerBackup.style.zIndex = '99999';
+         
+         // Forzar repaint: quitar y volver a agregar el modal al body
+         const parentVer = modalVerBackup.parentNode;
+         parentVer.removeChild(modalVerBackup);
+         document.body.appendChild(modalVerBackup);
+         
+         // Reconfigurar event listeners del modal de visualización
+         const btnCerrarModalVerBackup = document.getElementById('btnCerrarModalVerBackup');
+         const btnCerrarVerBackup = document.getElementById('btnCerrarVerBackup');
+         
+         if (btnCerrarModalVerBackup) {
+             btnCerrarModalVerBackup.removeEventListener('click', cerrarModalVerBackup);
+             btnCerrarModalVerBackup.addEventListener('click', cerrarModalVerBackup);
+         }
+         
+         if (btnCerrarVerBackup) {
+             btnCerrarVerBackup.removeEventListener('click', cerrarModalVerBackup);
+             btnCerrarVerBackup.addEventListener('click', cerrarModalVerBackup);
+         }
+         
+         // Forzar repaint del modal de visualización
+         modalVerBackup.offsetHeight;
+         
+         // Asegurar que todos los paneles estén colapsados por defecto
+         for (let i = 0; i < profIdx; i++) {
+             const el = document.getElementById(`ver-prof-${i}`);
+             if (el) el.classList.add('hidden');
+         }
+         
+         // Aplicar tema oscuro
+         modalVerBackup.classList.add('dark');
+         modalVerBackup.classList.remove('force-light');
+         
+         } catch (error) {
+             console.error('Error al mostrar vista de backup:', error);
+             alert('Error al cargar los datos. Por favor, inténtalo de nuevo.');
+         } finally {
+             // Detener el contador de tiempo
+             detenerContadorTiempo();
+             
+             if (loader) {
+                 loader.classList.add('hidden');
+                 loader.style.display = 'none';
+                 loader.style.visibility = 'hidden';
+                 loader.style.opacity = '0';
+             }
+         }
+          }
+     
+     // Función para cerrar el modal de visualización de backup
+     function cerrarModalVerBackup() {
+         const modalVerBackup = document.getElementById('modalVerBackup');
+         if (modalVerBackup) {
+             modalVerBackup.classList.add('hidden');
+             modalVerBackup.style.display = 'none';
+             modalVerBackup.style.visibility = 'hidden';
+             modalVerBackup.style.opacity = '0';
+         }
+     }
+     
+     // Variables para el contador de tiempo
+     let contadorTiempo;
+     let tiempoInicio;
+     
+     // Función para iniciar el contador de tiempo estimativo
+     function iniciarContadorTiempo() {
+         const tiempoEstimativo = document.getElementById('tiempoEstimativo');
+         if (!tiempoEstimativo) return;
+         
+         tiempoInicio = Date.now();
+         let segundos = 0;
+         
+         // Estimar tiempo basado en cantidad de pacientes seleccionados
+         const cantidadPacientes = pacientesBackupSeleccionados.size;
+         const tiempoEstimadoTotal = Math.max(3, Math.min(15, cantidadPacientes * 0.5)); // Entre 3 y 15 segundos
+         
+         contadorTiempo = setInterval(() => {
+             segundos++;
+             const progreso = Math.min(100, (segundos / tiempoEstimadoTotal) * 100);
+             
+             if (segundos < tiempoEstimadoTotal) {
+                 const tiempoRestante = Math.ceil(tiempoEstimadoTotal - segundos);
+                 tiempoEstimativo.textContent = `Tiempo estimado restante: ${tiempoRestante}s (${Math.round(progreso)}%)`;
+             } else {
+                 tiempoEstimativo.textContent = `Finalizando carga... (${Math.round(progreso)}%)`;
+             }
+         }, 1000);
+     }
+     
+     // Función para detener el contador de tiempo
+     function detenerContadorTiempo() {
+         if (contadorTiempo) {
+             clearInterval(contadorTiempo);
+             contadorTiempo = null;
+         }
+     }
     if (btnVerBackupSinNotas) {
         btnVerBackupSinNotas.addEventListener('click', async () => {
             console.log('[DEBUG] Click en Ver (sin notas)');
@@ -5609,12 +6429,33 @@ window.addEventListener('DOMContentLoaded', () => {
     if (btnDescargarBackupSinNotas) {
         btnDescargarBackupSinNotas.addEventListener('click', async () => {
             const loader = document.getElementById('loaderVerBackup');
-            if (loader) loader.classList.remove('hidden');
+            
             if (pacientesBackupSeleccionados.size === 0) {
-                if (loader) loader.classList.add('hidden');
                 alert('Selecciona al menos un paciente para descargar.');
                 return;
             }
+            
+            // Mostrar loader con tiempo estimativo
+            if (loader) {
+                loader.classList.remove('hidden');
+                loader.style.display = 'flex';
+                loader.style.visibility = 'visible';
+                loader.style.opacity = '1';
+                loader.style.zIndex = '100000';
+                
+                // Forzar repaint del loader
+                loader.offsetHeight;
+                
+                // Mover el loader al final del body para asegurar visibilidad
+                const parentLoader = loader.parentNode;
+                parentLoader.removeChild(loader);
+                document.body.appendChild(loader);
+                
+                // Iniciar contador de tiempo estimativo
+                iniciarContadorTiempo();
+            }
+            
+            try {
             // Obtener profesionales
             const usuariosSnap = await window.firebaseDB.collection('usuarios').get();
             const profesionales = {};
@@ -5711,7 +6552,21 @@ window.addEventListener('DOMContentLoaded', () => {
                 URL.revokeObjectURL(url);
             }, 100);
             modalBackup.classList.add('hidden');
-            if (loader) loader.classList.add('hidden');
+            
+            } catch (error) {
+                console.error('Error al descargar backup sin notas:', error);
+                alert('Error al generar el archivo. Por favor, inténtalo de nuevo.');
+            } finally {
+                // Detener el contador de tiempo
+                detenerContadorTiempo();
+                
+                if (loader) {
+                    loader.classList.add('hidden');
+                    loader.style.display = 'none';
+                    loader.style.visibility = 'hidden';
+                    loader.style.opacity = '0';
+                }
+            }
         });
     }
 });
@@ -5768,7 +6623,3 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 });
-
-const modal = document.getElementById('modalBackupPacientes');
-console.log('Modal existe:', !!modal);
-if (modal) modal.classList.remove('hidden');

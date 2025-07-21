@@ -657,9 +657,13 @@
                 </div>
             </div>
             <div class="flex items-center gap-3">
+                <!-- Botón de cambio de tema - Visible para todos los usuarios -->
+                <button id="themeToggleDashboard" title="Cambiar tema" class="p-2 rounded-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                    <span id="themeIconDashboard" class="text-lg">🌙</span>
+                </button>
                 <!-- Número de versión - Solo visible para administradores -->
                 <button id="versionBtnDashboard" class="hidden text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition cursor-pointer px-2 py-1 rounded" onclick="abrirModalVersion()">
-                    v2.3.5
+                    v0.1.9
                 </button>
                 <button id="logoutBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded transition">Cerrar sesión</button>
             </div>
@@ -2351,18 +2355,48 @@
                     <span class="text-2xl">🚀</span>
                     <div>
                         <h3 class="text-xl font-bold text-primary-700 dark:text-primary-400">Historial de Versiones</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Espacio Cocrearte v2.3.5</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Espacio Cocrearte v0.1.9</p>
                     </div>
                 </div>
                 <button onclick="cerrarModalVersion()" class="text-gray-400 hover:text-gray-700 text-2xl p-1">×</button>
             </div>
             
             <div class="p-6 space-y-6">
-                <!-- Versión 2.3.5 -->
+                <!-- Versión 0.1.9 -->
                 <div class="border-l-4 border-blue-600 pl-4 mb-4">
                   <div class="flex items-center gap-2 mb-2">
-                    <span class="bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded">v2.3.5</span>
+                    <span class="bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded">v0.1.9</span>
                     <span class="text-sm text-gray-500">Actual</span>
+                  </div>
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Selección por Profesionales en Backup</h4>
+                  <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                    <li>• <strong>Checkboxes de Profesionales:</strong> Cada profesional tiene su propio checkbox en el modal de backup</li>
+                    <li>• <strong>Selección Automática:</strong> Al marcar un profesional se seleccionan todos sus pacientes</li>
+                    <li>• <strong>Sincronización Bidireccional:</strong> Los checkboxes se actualizan automáticamente entre profesionales y pacientes</li>
+                    <li>• <strong>Estructura Jerárquica:</strong> Pacientes indentados bajo su profesional correspondiente</li>
+                    <li>• <strong>Gestión Eficiente:</strong> Facilita la selección masiva de pacientes por profesional</li>
+                  </ul>
+                </div>
+
+                <!-- Versión 0.1.8 -->
+                <div class="border-l-4 border-green-900 pl-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="bg-green-200 text-green-900 text-sm font-medium px-2 py-1 rounded">v0.1.8</span>
+                  </div>
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Ordenamiento Alfabético de Pacientes</h4>
+                  <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                    <li>• <strong>Lista Ordenada:</strong> Los pacientes se muestran en orden alfabético por nombre</li>
+                    <li>• <strong>Ordenamiento Inteligente:</strong> No distingue entre mayúsculas y minúsculas</li>
+                    <li>• <strong>Localización:</strong> Respeta las reglas de ordenamiento del idioma local</li>
+                    <li>• <strong>Aplicación Universal:</strong> Funciona tanto para usuarios normales como administradores</li>
+                    <li>• <strong>Mejor Experiencia:</strong> Facilita encontrar pacientes de forma más rápida y organizada</li>
+                  </ul>
+                </div>
+
+                <!-- Versión 0.1.7 -->
+                <div class="border-l-4 border-green-900 pl-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="bg-green-200 text-green-900 text-sm font-medium px-2 py-1 rounded">v0.1.7</span>
                   </div>
                   <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Lógica de Primera Sesión Mejorada</h4>
                   <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
@@ -2374,16 +2408,24 @@
                   </ul>
                 </div>
 
-                <!-- Versión 2.3.4 -->
+                <!-- Versión 0.1.6 -->
                 <div class="border-l-4 border-green-900 pl-4">
                   <div class="flex items-center gap-2 mb-2">
-                    <span class="bg-green-200 text-green-900 text-sm font-medium px-2 py-1 rounded">v2.3.4</span>
+                    <span class="bg-green-200 text-green-900 text-sm font-medium px-2 py-1 rounded">v0.1.6</span>
                   </div>
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Funcionalidad de Backup Implementada</h4>
+                  <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                    <li>• <strong>Sistema de Backup:</strong> Botón de backup de pacientes agregado al panel principal</li>
+                    <li>• <strong>Selección de Pacientes:</strong> Modal con lista de pacientes y opción de seleccionar todos</li>
+                    <li>• <strong>Exportación CSV:</strong> Descarga de datos de pacientes seleccionados en formato CSV</li>
+                    <li>• <strong>Solo para Administradores:</strong> Funcionalidad restringida a usuarios con permisos administrativos</li>
+                  </ul>
+                </div>
 
-                <!-- Versión 2.3.3 -->
+                <!-- Versión 0.1.5 -->
                 <div class="border-l-4 border-green-900 pl-4">
                   <div class="flex items-center gap-2 mb-2">
-                    <span class="bg-green-200 text-green-900 text-sm font-medium px-2 py-1 rounded">v2.3.3</span>
+                    <span class="bg-green-200 text-green-900 text-sm font-medium px-2 py-1 rounded">v0.1.5</span>
                   </div>
                   <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Modal de Backup Mejorado</h4>
                   <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
@@ -2396,10 +2438,10 @@
                   </ul>
                 </div>
 
-                <!-- Versión 2.3.2 -->
+                <!-- Versión 0.1.4 -->
                 <div class="border-l-4 border-green-900 pl-4">
                   <div class="flex items-center gap-2 mb-2">
-                    <span class="bg-green-200 text-green-900 text-sm font-medium px-2 py-1 rounded">v2.3.2</span>
+                    <span class="bg-green-200 text-green-900 text-sm font-medium px-2 py-1 rounded">v0.1.4</span>
                   </div>
                   <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Backup Completo de Pacientes</h4>
                   <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
@@ -2411,10 +2453,10 @@
                     <li>• Corrección de errores menores en el backup y mejoras de estabilidad.</li>
                   </ul>
                 </div>
-                <!-- Versión 2.3.1 -->
+                <!-- Versión 0.1.3 -->
                 <div class="border-l-4 border-green-800 pl-4">
                   <div class="flex items-center gap-2 mb-2">
-                    <span class="bg-green-200 text-green-900 text-sm font-medium px-2 py-1 rounded">v2.3.1</span>
+                    <span class="bg-green-200 text-green-900 text-sm font-medium px-2 py-1 rounded">v0.1.3</span>
                   </div>
                   <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Editor enriquecido en Observaciones</h4>
                   <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
@@ -2424,11 +2466,10 @@
                   </ul>
                 </div>
 
-                <!-- Versión 2.3.0 -->
+                <!-- Versión 0.1.2 -->
                 <div class="border-l-4 border-green-700 pl-4">
                     <div class="flex items-center gap-2 mb-2">
-                        <span class="bg-green-100 text-green-800 text-sm font-medium px-2 py-1 rounded">v2.3.0</span>
-                        <span class="text-sm text-gray-500">Actual</span>
+                        <span class="bg-green-100 text-green-800 text-sm font-medium px-2 py-1 rounded">v0.1.2</span>
                     </div>
                     <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Grupo Familiar y Grilla Simplificada</h4>
                     <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
@@ -2437,11 +2478,10 @@
                     </ul>
                 </div>
 
-                <!-- Versión 2.2.0 -->
+                <!-- Versión 0.1.1 -->
                 <div class="border-l-4 border-green-600 pl-4">
                     <div class="flex items-center gap-2 mb-2">
-                        <span class="bg-green-100 text-green-800 text-sm font-medium px-2 py-1 rounded">v2.2.0</span>
-                        <span class="text-sm text-gray-500">Actual</span>
+                        <span class="bg-green-100 text-green-800 text-sm font-medium px-2 py-1 rounded">v0.1.1</span>
                     </div>
                     <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Mejoras en foto de perfil</h4>
                     <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
@@ -2449,11 +2489,10 @@
                     </ul>
                 </div>
 
-                <!-- Versión 2.1.0 -->
+                <!-- Versión 0.1.0 -->
                 <div class="border-l-4 border-green-500 pl-4">
                     <div class="flex items-center gap-2 mb-2">
-                        <span class="bg-green-100 text-green-800 text-sm font-medium px-2 py-1 rounded">v2.1.0</span>
-                        <span class="text-sm text-gray-500">Actual</span>
+                        <span class="bg-green-100 text-green-800 text-sm font-medium px-2 py-1 rounded">v0.1.0</span>
                     </div>
                     <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Información Familiar Completa</h4>
                     <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
@@ -2464,10 +2503,10 @@
                     </ul>
                 </div>
 
-                <!-- Versión 2.0.0 -->
+                <!-- Versión 0.0.9 -->
                 <div class="border-l-4 border-blue-500 pl-4">
                     <div class="flex items-center gap-2 mb-2">
-                        <span class="bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded">v2.0.0</span>
+                        <span class="bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded">v0.0.9</span>
                     </div>
                     <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Primera Sesión Destacada</h4>
                     <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
@@ -2478,10 +2517,10 @@
                     </ul>
                 </div>
 
-                <!-- Versión 1.9.0 -->
+                <!-- Versión 0.0.8 -->
                 <div class="border-l-4 border-purple-500 pl-4">
                     <div class="flex items-center gap-2 mb-2">
-                        <span class="bg-purple-100 text-purple-800 text-sm font-medium px-2 py-1 rounded">v1.9.0</span>
+                        <span class="bg-purple-100 text-purple-800 text-sm font-medium px-2 py-1 rounded">v0.0.8</span>
                     </div>
                     <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Navegación Principal Reorganizada</h4>
                     <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
@@ -2492,10 +2531,10 @@
                     </ul>
                 </div>
 
-                <!-- Versión 1.8.0 -->
+                <!-- Versión 0.0.7 -->
                 <div class="border-l-4 border-yellow-500 pl-4">
                     <div class="flex items-center gap-2 mb-2">
-                        <span class="bg-yellow-100 text-yellow-800 text-sm font-medium px-2 py-1 rounded">v1.8.0</span>
+                        <span class="bg-yellow-100 text-yellow-800 text-sm font-medium px-2 py-1 rounded">v0.0.7</span>
                     </div>
                     <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Vista Mensual del Calendario</h4>
                     <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
@@ -2506,10 +2545,10 @@
                     </ul>
                 </div>
 
-                <!-- Versión 1.7.0 -->
+                <!-- Versión 0.0.6 -->
                 <div class="border-l-4 border-red-500 pl-4">
                     <div class="flex items-center gap-2 mb-2">
-                        <span class="bg-red-100 text-red-800 text-sm font-medium px-2 py-1 rounded">v1.7.0</span>
+                        <span class="bg-red-100 text-red-800 text-sm font-medium px-2 py-1 rounded">v0.0.6</span>
                     </div>
                     <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Colores Intuitivos del Calendario</h4>
                     <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
@@ -2520,10 +2559,10 @@
                     </ul>
                 </div>
 
-                <!-- Versión 1.6.0 -->
+                <!-- Versión 0.0.5 -->
                 <div class="border-l-4 border-indigo-500 pl-4">
                     <div class="flex items-center gap-2 mb-2">
-                        <span class="bg-indigo-100 text-indigo-800 text-sm font-medium px-2 py-1 rounded">v1.6.0</span>
+                        <span class="bg-indigo-100 text-indigo-800 text-sm font-medium px-2 py-1 rounded">v0.0.5</span>
                     </div>
                     <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Funcionalidad de Cámara</h4>
                     <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
@@ -2534,10 +2573,10 @@
                     </ul>
                 </div>
 
-                <!-- Versión 1.5.0 -->
+                <!-- Versión 0.0.4 -->
                 <div class="border-l-4 border-pink-500 pl-4">
                     <div class="flex items-center gap-2 mb-2">
-                        <span class="bg-pink-100 text-pink-800 text-sm font-medium px-2 py-1 rounded">v1.5.0</span>
+                        <span class="bg-pink-100 text-pink-800 text-sm font-medium px-2 py-1 rounded">v0.0.4</span>
                     </div>
                     <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Responsive Móvil Completo</h4>
                     <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
@@ -2548,10 +2587,10 @@
                     </ul>
                 </div>
 
-                <!-- Versión 1.4.0 -->
+                <!-- Versión 0.0.3 -->
                 <div class="border-l-4 border-teal-500 pl-4">
                     <div class="flex items-center gap-2 mb-2">
-                        <span class="bg-teal-100 text-teal-800 text-sm font-medium px-2 py-1 rounded">v1.4.0</span>
+                        <span class="bg-teal-100 text-teal-800 text-sm font-medium px-2 py-1 rounded">v0.0.3</span>
                     </div>
                     <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Nomenclador CIE-10 Reubicado</h4>
                     <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
@@ -2562,10 +2601,10 @@
                     </ul>
                 </div>
 
-                <!-- Versión 1.3.0 -->
+                <!-- Versión 0.0.2 -->
                 <div class="border-l-4 border-orange-500 pl-4">
                     <div class="flex items-center gap-2 mb-2">
-                        <span class="bg-orange-100 text-orange-800 text-sm font-medium px-2 py-1 rounded">v1.3.0</span>
+                        <span class="bg-orange-100 text-orange-800 text-sm font-medium px-2 py-1 rounded">v0.0.2</span>
                     </div>
                     <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Mejoras de Terminología</h4>
                     <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
@@ -2578,7 +2617,7 @@
                 <!-- Versión Base -->
                 <div class="border-l-4 border-gray-500 pl-4">
                     <div class="flex items-center gap-2 mb-2">
-                        <span class="bg-gray-100 text-gray-800 text-sm font-medium px-2 py-1 rounded">v1.0.0</span>
+                        <span class="bg-gray-100 text-gray-800 text-sm font-medium px-2 py-1 rounded">v0.0.1</span>
                     </div>
                     <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Funcionalidades Base</h4>
                     <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
@@ -2621,6 +2660,31 @@
         width: 100vw;
       }
     }
+    
+    /* Estilos específicos para el modal de backup */
+    .modal-backup {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 99999 !important;
+      align-items: center !important;
+      justify-content: center !important;
+      background-color: rgba(0, 0, 0, 0.4) !important;
+    }
+    
+    .modal-backup.hidden {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+    }
+    
+    .modal-backup:not(.hidden) {
+      display: flex !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
     </style>
 
     <!-- Menú de opciones para foto de perfil -->
@@ -2642,44 +2706,9 @@
       </div>
     </div>
 
-    <!-- Modal de Backup de Pacientes -->
-    <div id="modalBackupPacientes" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
-      <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg w-full max-w-2xl relative border dark:border-darkborder max-h-[90vh] flex flex-col">
-        <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-darkborder">
-          <h3 class="text-lg font-bold text-primary-600">Backup de Pacientes</h3>
-          <button id="btnCerrarModalBackup" class="text-gray-400 hover:text-gray-700 text-2xl">×</button>
-        </div>
-        <div class="p-4 flex flex-col gap-4 flex-1 overflow-y-auto">
-          <input id="inputBuscarPacienteBackup" type="text" placeholder="Buscar paciente..." class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" />
-          <div id="listaPacientesBackup" class="overflow-y-auto max-h-72 border rounded p-2 bg-gray-50 dark:bg-darkbg"></div>
-          <div class="flex items-center gap-2 mt-2">
-            <input type="checkbox" id="checkTodosBackup" />
-            <label for="checkTodosBackup" class="text-sm">Seleccionar todos</label>
-          </div>
-        </div>
-        <div class="flex justify-end gap-2 p-4 border-t border-gray-200 dark:border-darkborder">
-          <button id="btnVerBackup" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">Ver</button>
-          <button id="btnVerBackupSinNotas" class="bg-blue-400 hover:bg-blue-500 text-white font-semibold py-2 px-4 rounded">Ver (sin notas)</button>
-          <button id="btnDescargarBackup" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded">Descargar</button>
-          <button id="btnDescargarBackupSinNotas" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded">Descargar (sin notas)</button>
-          <button id="btnCancelarBackup" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded">Cancelar</button>
-        </div>
-      </div>
-    </div>
 
-    <script>
-    window.addEventListener('DOMContentLoaded', () => {
-        const btnBackup = document.getElementById('btnBackupPacientes');
-        if (btnBackup && window.isAdmin) {
-            btnBackup.classList.remove('hidden');
-        }
-        if (btnBackup) {
-            btnBackup.addEventListener('click', async () => {
-                // ... toda la lógica de descarga directa ...
-            });
-        }
-    });
-    </script>
+
+
 
     <!-- Modal de Visualización de Backup -->
     <div id="modalVerBackup" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
@@ -2705,6 +2734,36 @@
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
         </svg>
         <span class="text-primary-700 font-semibold text-lg">Cargando datos...</span>
+        <span id="tiempoEstimativo" class="text-primary-600 text-sm mt-2">Estimando tiempo...</span>
+      </div>
+    </div>
+
+    <!-- Modal de Backup de Pacientes - MOVIDO AL FINAL DEL BODY -->
+    <div id="modalBackupPacientes" class="modal-backup fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[99999] hidden">
+      <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg w-full max-w-2xl relative border dark:border-darkborder max-h-[90vh] flex flex-col">
+        <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-darkborder">
+          <h3 class="text-lg font-bold text-primary-600">Backup de Pacientes</h3>
+          <button id="btnCerrarModalBackup" class="text-gray-400 hover:text-gray-700 text-2xl">×</button>
+        </div>
+        <div class="p-4 flex flex-col gap-4 flex-1 overflow-y-auto">
+          <input id="inputBuscarPacienteBackup" type="text" placeholder="Buscar paciente..." class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" />
+          <div id="listaPacientesBackup" class="overflow-y-auto max-h-72 border rounded p-2 bg-gray-50 dark:bg-darkbg"></div>
+          <div class="flex items-center gap-2 mt-2">
+            <input type="checkbox" id="checkTodosBackup" />
+            <label for="checkTodosBackup" class="text-sm">Seleccionar todos</label>
+          </div>
+        </div>
+        <div class="flex justify-end gap-4 p-4 border-t border-gray-200 dark:border-darkborder">
+          <div class="flex flex-col gap-1">
+            <button id="btnVerBackup" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">Ver</button>
+            <button id="btnVerBackupSinNotas" class="bg-blue-400 hover:bg-blue-500 text-white text-xs py-1 px-4 rounded">sin notas</button>
+          </div>
+          <div class="flex flex-col gap-1">
+            <button id="btnDescargarBackup" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded">Descargar</button>
+            <button id="btnDescargarBackupSinNotas" class="bg-yellow-500 hover:bg-yellow-600 text-white text-xs py-1 px-4 rounded">sin notas</button>
+          </div>
+          <button id="btnCancelarBackup" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded">Cancelar</button>
+        </div>
       </div>
     </div>
 
