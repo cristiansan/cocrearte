@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estadísticas - Espacio Cocrearte</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        darkbg: '#1a202c',
+                        darkcard: '#2d3748',
+                        darkborder: '#4a5568',
+                        darktext: '#e2e8f0'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    
+    <!-- Leaflet CSS y JS para el mapa -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <style>
+        /* Transiciones suaves para el tema */
+        * {
+            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+        }
+        
+        /* Scrollbar personalizado */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        .dark ::-webkit-scrollbar-track {
+            background: #2d3748;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        
+        .dark ::-webkit-scrollbar-thumb {
+            background: #4a5568;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+        
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #718096;
+        }
+        
+        /* Estilos personalizados para tooltips del mapa */
+        .leaflet-tooltip.custom-tooltip {
+            background: rgba(0, 0, 0, 0.8) !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 6px !important;
+            padding: 6px 10px !important;
+            font-weight: 600 !important;
+            font-size: 13px !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+        }
+        
+        .leaflet-tooltip.custom-tooltip::before {
+            border-top-color: rgba(0, 0, 0, 0.8) !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-darkbg text-gray-900 dark:text-darktext min-h-screen">
+    <!-- Header -->
+    <header class="bg-white dark:bg-darkcard shadow-sm border-b dark:border-darkborder">
+        <div class="w-full px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo y título -->
+                <div class="flex items-center gap-3">
+                    <button id="btnVolver" class="flex items-center gap-2 text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 font-medium transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                        Volver al Dashboard
+                    </button>
+                </div>
+                
+                <!-- Controles del header -->
+                <div class="flex items-center gap-3">
+                    <!-- Botón de cambio de tema -->
+                    <button id="themeToggle" title="Cambiar tema" class="p-2 rounded-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                        <span id="themeIcon" class="text-lg">🌙</span>
+                    </button>
+                    
+                    <!-- Información del usuario -->
+                    <div class="flex items-center gap-2">
+                        <img id="userAvatar" src="" alt="Avatar" class="w-8 h-8 rounded-full object-cover border border-gray-200 dark:border-gray-600">
+                        <span id="userEmail" class="text-sm text-gray-600 dark:text-gray-400"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenido principal -->
+    <main class="w-full px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Título de la página -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                📊 Estadísticas
+            </h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-2">
+                Análisis y métricas de la plataforma Espacio Cocrearte
+            </p>
+            <!-- Nota sobre conectividad -->
+            <div id="notaConectividad" class="mt-4 p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg hidden">
+                <div class="flex items-start gap-2">
+                    <svg class="w-5 h-5 text-orange-600 dark:text-orange-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                    <div class="text-sm">
+                        <p class="font-medium text-orange-800 dark:text-orange-200">Datos cargados desde cache</p>
+                        <p class="text-orange-700 dark:text-orange-300 mt-1">
+                            Se detectaron problemas de conectividad. Los datos mostrados pueden no estar completamente actualizados.
+                            <button id="btnRecargarConexion" class="ml-2 underline hover:no-underline">Intentar recargar</button>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nota sobre datos de prueba -->
+            <div id="notaDatosPrueba" class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg hidden">
+                <div class="flex items-start gap-2">
+                    <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <div class="text-sm">
+                        <p class="font-medium text-yellow-800 dark:text-yellow-200">Datos de prueba excluidos</p>
+                        <p class="text-yellow-700 dark:text-yellow-300 mt-1">
+                            Las estadísticas mostradas excluyen los datos de prueba de los usuarios: cristiansan@gmail.com, malaika y test.
+                            <span id="datosPruebaExcluidos" class="font-medium"></span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loader -->
+        <div id="statsLoader" class="flex flex-col justify-center items-center py-12">
+            <svg class="animate-spin h-12 w-12 text-primary-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+            </svg>
+            <span class="text-primary-600 font-semibold text-lg mb-6">Cargando estadísticas...</span>
+            
+            <!-- Barra de progreso estimado -->
+            <div class="w-80 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-4">
+                <div id="progressBar" class="bg-primary-600 h-2 rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
+            </div>
+            
+            <!-- Estimación de tiempo y estado -->
+            <div class="text-center">
+                <p id="loadingStep" class="text-sm text-gray-600 dark:text-gray-400 mb-1 font-medium">Iniciando carga...</p>
+                <p id="timeEstimate" class="text-xs text-gray-500 dark:text-gray-500">
+                    ⏱️ Tiempo estimado: <span id="estimatedTime" class="font-semibold">5-8 segundos</span>
+                </p>
+                <p id="loadingDetails" class="text-xs text-gray-400 dark:text-gray-600 mt-2 italic">
+                    Conectando con Firebase...
+                </p>
+            </div>
+        </div>
+
+        <!-- Contenedor de estadísticas -->
+        <div id="statsContainer" class="hidden">
+            <!-- Cards de resumen -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <!-- Total de Profesionales -->
+                <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border dark:border-darkborder p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Total Profesionales</p>
+                            <p id="totalProfesionales" class="text-3xl font-bold text-gray-900 dark:text-white">-</p>
+                        </div>
+                        <div class="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-full">
+                            <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total de Pacientes -->
+                <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border dark:border-darkborder p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Total Pacientes</p>
+                            <p id="totalPacientes" class="text-3xl font-bold text-gray-900 dark:text-white">-</p>
+                        </div>
+                        <div class="p-3 bg-green-100 dark:bg-green-900/30 rounded-full">
+                            <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total de Sesiones -->
+                <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border dark:border-darkborder p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Total Sesiones</p>
+                            <p id="totalSesiones" class="text-3xl font-bold text-gray-900 dark:text-white">-</p>
+                        </div>
+                        <div class="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-full">
+                            <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Promedio Sesiones por Paciente -->
+                <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border dark:border-darkborder p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Promedio por Paciente</p>
+                                <div class="relative group">
+                                    <div class="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center cursor-help">
+                                        <span class="text-white text-xs font-bold">i</span>
+                                    </div>
+                                    <!-- Tooltip -->
+                                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
+                                        <div class="max-w-xs">
+                                            <p class="font-semibold mb-1">Número promedio de sesiones por paciente</p>
+                                            <p class="text-gray-300">• 1.0 = Cada paciente tuvo exactamente 1 sesión</p>
+                                            <p class="text-gray-300">• >1.0 = Algunos pacientes han tenido múltiples sesiones</p>
+                                            <p class="text-gray-300">• <1.0 = Algunos pacientes aún no han tenido sesiones</p>
+                                        </div>
+                                        <!-- Flecha del tooltip -->
+                                        <div class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p id="promedioSesiones" class="text-3xl font-bold text-gray-900 dark:text-white">-</p>
+                        </div>
+                        <div class="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-full">
+                            <svg class="w-6 h-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 00-2-2z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Métricas de Firebase lado a lado -->
+            <div class="flex flex-col lg:flex-row gap-6 mb-8">
+                <!-- Uso de Almacenamiento -->
+                <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border dark:border-darkborder flex-1">
+                    <div class="p-4 cursor-pointer" onclick="toggleSection('almacenamiento')">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Uso de Almacenamiento</h3>
+                            <div class="relative group">
+                                <div class="w-4 h-4 bg-indigo-500 rounded-full flex items-center justify-center cursor-help">
+                                    <span class="text-white text-xs font-bold">i</span>
+                                </div>
+                                <!-- Tooltip -->
+                                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
+                                    <div class="max-w-xs">
+                                        <p class="font-semibold mb-1">Estimación completa de Firebase</p>
+                                        <p class="text-gray-300">• Límite mostrado: 1 GB</p>
+                                        <p class="text-gray-300">• Incluye Firestore (documentos de texto)</p>
+                                        <p class="text-gray-300">• Incluye Storage (fotos de perfil e imágenes)</p>
+                                        <p class="text-gray-300">• Pasa el mouse sobre el valor para ver desglose</p>
+                                    </div>
+                                    <!-- Flecha del tooltip -->
+                                    <div class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-full">
+                                    <svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
+                                    </svg>
+                                </div>
+                                <svg id="almacenamiento-arrow" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="almacenamiento-content" class="px-4 pb-4 hidden">
+                        <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600 dark:text-gray-400">Usado estimado:</span>
+                            <span id="espacioUsado" class="font-semibold text-gray-900 dark:text-white">-</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600 dark:text-gray-400">Crecimiento diario:</span>
+                            <span id="crecimientoDiario" class="font-semibold text-gray-900 dark:text-white">-</span>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                            <div id="barraProgreso" class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                            <span>0 MB</span>
+                            <span id="porcentajeUso" class="font-medium">0%</span>
+                            <span>1 GB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Consultas Diarias -->
+                <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border dark:border-darkborder flex-1">
+                    <div class="p-4 cursor-pointer" onclick="toggleSection('consultas')">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Consultas Estimadas</h3>
+                                <div class="relative group">
+                                    <div class="w-4 h-4 bg-emerald-500 rounded-full flex items-center justify-center cursor-help">
+                                        <span class="text-white text-xs font-bold">i</span>
+                                    </div>
+                                    <!-- Tooltip -->
+                                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
+                                        <div class="max-w-xs">
+                                            <p class="font-semibold mb-1">Estimación de uso de Firestore</p>
+                                            <p class="text-gray-300">• Firebase Spark: 50,000 lecturas/día</p>
+                                            <p class="text-gray-300">• Basado en documentos existentes</p>
+                                            <p class="text-gray-300">• No incluye consultas en tiempo real</p>
+                                        </div>
+                                        <!-- Flecha del tooltip -->
+                                        <div class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-full">
+                                    <svg class="w-6 h-6 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                    </svg>
+                                </div>
+                                <svg id="consultas-arrow" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="consultas-content" class="px-4 pb-4 hidden">
+                        <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600 dark:text-gray-400">Documentos totales:</span>
+                            <span id="totalDocumentos" class="font-semibold text-gray-900 dark:text-white">-</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600 dark:text-gray-400">Estimado diario:</span>
+                            <span id="consultasDiarias" class="font-semibold text-gray-900 dark:text-white">-</span>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                            <div id="barraConsultas" class="bg-emerald-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                            <span>0</span>
+                            <span id="porcentajeConsultas" class="font-medium">0%</span>
+                            <span>50,000/día</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Temas más recurrentes en sesiones -->
+            <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border dark:border-darkborder mb-8">
+                <div class="p-4 cursor-pointer" onclick="toggleSection('temas')">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Temas más recurrentes</h3>
+                    <div class="relative group">
+                        <div class="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center cursor-help">
+                            <span class="text-white text-xs font-bold">i</span>
+                        </div>
+                        <!-- Tooltip -->
+                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
+                            <div class="max-w-xs">
+                                <p class="font-semibold mb-1">Análisis de patrones en sesiones</p>
+                                <p class="text-gray-300">• Basado en comentarios y notas de sesiones</p>
+                                <p class="text-gray-300">• Ayuda a identificar temas recurrentes</p>
+                                <p class="text-gray-300">• Útil para detectar patrones de tratamiento</p>
+                            </div>
+                            <!-- Flecha del tooltip -->
+                            <div class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
+                        </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-full">
+                                <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                                </svg>
+                            </div>
+                            <svg id="temas-arrow" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="temas-content" class="px-4 pb-4 hidden">
+                    <div id="temasContainer" class="hidden">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div id="temasLista" class="space-y-3">
+                                <!-- Los temas se llenarán dinámicamente -->
+                            </div>
+                            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                                <h4 class="font-medium text-gray-900 dark:text-white mb-3">Estadísticas de análisis</h4>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600 dark:text-gray-400">Sesiones analizadas:</span>
+                                        <span id="sesionesAnalizadas" class="font-medium text-gray-900 dark:text-white">-</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600 dark:text-gray-400">Palabras únicas:</span>
+                                        <span id="palabrasUnicas" class="font-medium text-gray-900 dark:text-white">-</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600 dark:text-gray-400">Tema más frecuente:</span>
+                                        <span id="temaMasFrecuente" class="font-medium text-gray-900 dark:text-white">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="sinTemas" class="text-center py-8 text-gray-500 dark:text-gray-400">
+                        <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                        </svg>
+                        <p class="text-lg font-medium mb-2">No hay suficientes datos</p>
+                        <p class="text-sm">Se necesitan más sesiones con comentarios o notas para analizar patrones</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mapa de ubicaciones de pacientes -->
+            <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border dark:border-darkborder mb-8">
+                <div class="p-4 cursor-pointer" onclick="toggleSection('mapa')">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Mapa de Pacientes</h3>
+                            <div class="relative group">
+                                <div class="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center cursor-help">
+                                    <span class="text-white text-xs font-bold">i</span>
+                                </div>
+                                <!-- Tooltip -->
+                                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
+                                    <div class="max-w-xs">
+                                        <p class="font-semibold mb-1">Ubicaciones geográficas</p>
+                                        <p class="text-gray-300">• Puntos rojos muestran direcciones de pacientes</p>
+                                        <p class="text-gray-300">• Pasa el mouse para ver el nombre</p>
+                                        <p class="text-gray-300">• Solo pacientes con dirección válida</p>
+                                    </div>
+                                    <!-- Flecha del tooltip -->
+                                    <div class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
+                                <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                            </div>
+                            <svg id="mapa-arrow" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div id="mapa-content" class="px-4 pb-4 hidden">
+                    <!-- Mapa principal - ancho completo en desktop, con panel lateral en móvil -->
+                    <div class="flex flex-col lg:flex-row gap-4">
+                        <!-- Mapa -->
+                        <div class="flex-1">
+                            <div id="map" class="w-full h-96 lg:h-[500px] bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600">
+                                <div class="flex items-center justify-center h-full">
+                                    <div class="text-center">
+                                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Cargando mapa...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Panel de información - lateral en desktop, abajo en móvil -->
+                        <div class="w-full lg:w-80 bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                            <h4 class="font-medium text-gray-900 dark:text-white mb-3">Estadísticas del mapa</h4>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 dark:text-gray-400">Pacientes ubicados:</span>
+                                    <span id="pacientesUbicados" class="font-medium text-gray-900 dark:text-white">-</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 dark:text-gray-400">Sin dirección:</span>
+                                    <span id="pacientesSinDireccion" class="font-medium text-gray-900 dark:text-white">-</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 dark:text-gray-400">Cobertura:</span>
+                                    <span id="porcentajeCobertura" class="font-medium text-gray-900 dark:text-white">-</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                                <h5 class="font-medium text-gray-900 dark:text-white mb-2">Leyenda</h5>
+                                <div class="flex items-center gap-2 text-sm">
+                                    <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                                    <span class="text-gray-600 dark:text-gray-400">Paciente</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Lista de pacientes ubicados -->
+                            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                                <h5 class="font-medium text-gray-900 dark:text-white mb-2">Pacientes en el mapa</h5>
+                                <div id="listaPacientesMapa" class="space-y-1 text-xs max-h-32 overflow-y-auto">
+                                    <!-- Se llenará dinámicamente -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profesionales con más pacientes -->
+            <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border dark:border-darkborder mb-8">
+                <div class="p-4 cursor-pointer" onclick="toggleSection('profesionales')">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">👥 Profesionales con más pacientes</h3>
+                            <div class="relative group">
+                                <div class="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center cursor-help">
+                                    <span class="text-white text-xs font-bold">i</span>
+                                </div>
+                                <!-- Tooltip -->
+                                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
+                                    <div class="max-w-xs">
+                                        <p class="font-semibold mb-1">Ranking de profesionales</p>
+                                        <p class="text-gray-300">• Ordenados por cantidad de pacientes</p>
+                                        <p class="text-gray-300">• Incluye número de sesiones</p>
+                                        <p class="text-gray-300">• Solo datos reales (sin pruebas)</p>
+                                    </div>
+                                    <!-- Flecha del tooltip -->
+                                    <div class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-full">
+                                <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                            </div>
+                            <svg id="profesionales-arrow" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div id="profesionales-content" class="px-4 pb-4 hidden">
+                    <div id="profesionalesStats" class="space-y-3">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actividad reciente -->
+            <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border dark:border-darkborder mb-8">
+                <div class="p-4 cursor-pointer" onclick="toggleSection('actividad')">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">📅 Actividad reciente (últimos 30 días)</h3>
+                            <div class="relative group">
+                                <div class="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center cursor-help">
+                                    <span class="text-white text-xs font-bold">i</span>
+                                </div>
+                                <!-- Tooltip -->
+                                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
+                                    <div class="max-w-xs">
+                                        <p class="font-semibold mb-1">Actividad reciente</p>
+                                        <p class="text-gray-300">• Sesiones de los últimos 30 días</p>
+                                        <p class="text-gray-300">• Ordenadas por fecha</p>
+                                        <p class="text-gray-300">• Solo datos reales (sin pruebas)</p>
+                                    </div>
+                                    <!-- Flecha del tooltip -->
+                                    <div class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="p-3 bg-green-100 dark:bg-green-900/30 rounded-full">
+                                <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                            </div>
+                            <svg id="actividad-arrow" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div id="actividad-content" class="px-4 pb-4 hidden">
+                    <div id="actividadReciente" class="space-y-3">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla detallada -->
+            <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border dark:border-darkborder mb-8">
+                <div class="p-4 cursor-pointer" onclick="toggleSection('detalle')">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">📋 Detalle por Profesional</h3>
+                            <div class="relative group">
+                                <div class="w-4 h-4 bg-gray-500 rounded-full flex items-center justify-center cursor-help">
+                                    <span class="text-white text-xs font-bold">i</span>
+                                </div>
+                                <!-- Tooltip -->
+                                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
+                                    <div class="max-w-xs">
+                                        <p class="font-semibold mb-1">Tabla detallada</p>
+                                        <p class="text-gray-300">• Información completa por profesional</p>
+                                        <p class="text-gray-300">• Pacientes, sesiones y última actividad</p>
+                                        <p class="text-gray-300">• Solo datos reales (sin pruebas)</p>
+                                    </div>
+                                    <!-- Flecha del tooltip -->
+                                    <div class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="p-3 bg-gray-100 dark:bg-gray-800 rounded-full">
+                                <svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2H9a2 2 0 00-2 2v10z"></path>
+                                </svg>
+                            </div>
+                            <svg id="detalle-arrow" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div id="detalle-content" class="hidden">
+                    <div class="px-6 py-4 border-b dark:border-darkborder">
+                        <h4 class="text-md font-medium text-gray-700 dark:text-gray-300">
+                            Información detallada por profesional
+                        </h4>
+                    </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-800">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Profesional</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Pacientes</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sesiones</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Promedio</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Última actividad</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaDetalle" class="bg-white dark:bg-darkcard divide-y divide-gray-200 dark:divide-gray-700">
+                            <!-- Se llenará dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error state -->
+        <div id="statsError" class="hidden text-center py-12">
+            <div class="text-red-500 mb-4">
+                <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Error al cargar estadísticas</h3>
+            <p class="text-gray-600 dark:text-gray-400 mb-4">No se pudieron cargar los datos. Verifica tu conexión e inténtalo de nuevo.</p>
+            <button id="btnRecargar" class="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+                Recargar
+            </button>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script>
+        // Esperar a que Firebase esté completamente inicializado
+        document.addEventListener('DOMContentLoaded', () => {
+            // Verificar que Firebase esté disponible
+            if (typeof firebase === 'undefined') {
+                console.error('Firebase no está disponible');
+                document.getElementById('statsError').classList.remove('hidden');
+                document.getElementById('statsLoader').classList.add('hidden');
+                return;
+            }
+            
+            // Verificar que los servicios estén disponibles
+            if (!firebase.auth || !firebase.firestore) {
+                console.error('Servicios de Firebase no disponibles');
+                document.getElementById('statsError').classList.remove('hidden');
+                document.getElementById('statsLoader').classList.add('hidden');
+                return;
+            }
+            
+            console.log('✅ Firebase inicializado correctamente');
+        });
+    </script>
+    <script src="estadisticas.js"></script>
+</body>
+</html> 

@@ -663,7 +663,7 @@
                 </button>
                 <!-- Número de versión - Solo visible para administradores -->
                 <button id="versionBtnDashboard" class="hidden text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition cursor-pointer px-2 py-1 rounded" onclick="abrirModalVersion()">
-                    v0.1.9
+                    v0.2.1
                 </button>
                 <button id="logoutBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded transition">Cerrar sesión</button>
             </div>
@@ -674,6 +674,7 @@
             <button id="tabPacientes" class="tab-calendar bg-primary-700 text-white font-semibold py-2 px-4 rounded-t">Pacientes</button>
             <button id="tabAgendaIndividual" class="tab-calendar bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-t">Agenda individual</button>
             <button id="tabAgendaMultiple" class="tab-calendar bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-t">Agenda múltiple</button>
+            <button id="btnEstadisticas" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-t hidden">Estadísticas</button>
             <button id="btnBackupPacientes" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-t hidden">Backup</button>
         </div>
         <div id="calendarTabs" class="hidden">
@@ -2355,18 +2356,50 @@
                     <span class="text-2xl">🚀</span>
                     <div>
                         <h3 class="text-xl font-bold text-primary-700 dark:text-primary-400">Historial de Versiones</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Espacio Cocrearte v0.1.9</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Espacio Cocrearte v0.2.1</p>
                     </div>
                 </div>
                 <button onclick="cerrarModalVersion()" class="text-gray-400 hover:text-gray-700 text-2xl p-1">×</button>
             </div>
             
             <div class="p-6 space-y-6">
+                <!-- Versión 0.2.1 -->
+                <div class="border-l-4 border-green-600 pl-4 mb-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="bg-green-100 text-green-800 text-sm font-medium px-2 py-1 rounded">v0.2.1</span>
+                    <span class="text-sm text-gray-500">Actual</span>
+                  </div>
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Mejoras en Estadísticas y Análisis</h4>
+                  <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                    <li>• <strong>Avatar de Usuario:</strong> Imagen de perfil visible en la página de estadísticas</li>
+                    <li>• <strong>Métricas de Firebase Completas:</strong> Incluye almacenamiento de Firestore y Storage (imágenes)</li>
+                    <li>• <strong>Crecimiento Diario:</strong> Estimación del crecimiento de datos por día</li>
+                    <li>• <strong>Análisis de Temas:</strong> Identifica patrones y temas más recurrentes en sesiones</li>
+                    <li>• <strong>Mejora de Conectividad:</strong> Mejor manejo de errores offline y cache inteligente</li>
+                    <li>• <strong>Tooltips Informativos:</strong> Explicaciones detalladas de cada métrica</li>
+                  </ul>
+                </div>
+
+                <!-- Versión 0.2.0 -->
+                <div class="border-l-4 border-blue-600 pl-4 mb-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded">v0.2.0</span>
+                  </div>
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Página de Estadísticas</h4>
+                  <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                    <li>• <strong>Nueva Página Independiente:</strong> Estadísticas en archivo separado para mejor rendimiento</li>
+                    <li>• <strong>Métricas Completas:</strong> Total de profesionales, pacientes, sesiones y promedios</li>
+                    <li>• <strong>Ranking de Profesionales:</strong> Top profesionales con más pacientes y sesiones</li>
+                    <li>• <strong>Actividad Reciente:</strong> Últimas 30 días de actividad en la plataforma</li>
+                    <li>• <strong>Filtrado Inteligente:</strong> Exclusión automática de datos de prueba (test, malaika, cristiansan)</li>
+                    <li>• <strong>Interfaz Responsiva:</strong> Diseño adaptable con soporte para modo oscuro</li>
+                  </ul>
+                </div>
+
                 <!-- Versión 0.1.9 -->
                 <div class="border-l-4 border-blue-600 pl-4 mb-4">
                   <div class="flex items-center gap-2 mb-2">
                     <span class="bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded">v0.1.9</span>
-                    <span class="text-sm text-gray-500">Actual</span>
                   </div>
                   <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Selección por Profesionales en Backup</h4>
                   <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">

@@ -781,6 +781,21 @@ async function showDashboard(user) {
         }
     }
     
+    // Mostrar el botón Estadísticas solo para admin y configurar event listener
+    const btnEstadisticas = document.getElementById('btnEstadisticas');
+    if (btnEstadisticas) {
+        if (isAdmin) {
+            btnEstadisticas.classList.remove('hidden');
+        } else {
+            btnEstadisticas.classList.add('hidden');
+        }
+        
+        // Configurar event listener para redirigir a estadísticas
+        btnEstadisticas.addEventListener('click', () => {
+            window.location.href = 'estadisticas.html';
+        });
+    }
+    
     // Sincronizar el estado del tema en el dashboard
     sincronizarTemaDashboard();
     
