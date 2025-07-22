@@ -491,43 +491,68 @@ const modalInfoHermano = document.getElementById('modalInfoHermano');
 const formInfoHermano = document.getElementById('formInfoHermano');
 const btnCerrarModalInfoHermano = document.querySelector('#modalInfoHermano button[onclick="cerrarModalInfoHermano()"]');
 
-// Configuración del tema
-function setTheme(dark) {
-    if (dark) {
+// Configuración del tema (light, dark, dust)
+function setTheme(theme) {
+    // Remover todas las clases de tema
+    document.documentElement.classList.remove('dark', 'dust');
+    document.body.classList.remove('bg-white', 'dust-bg');
+    
+    if (theme === 'dark') {
         document.documentElement.classList.add('dark');
-        if (themeIcon) themeIcon.textContent = '☀️';
-        if (themeIconDashboard) themeIconDashboard.textContent = '☀️';
+        document.body.classList.remove('bg-white', 'dust-bg'); // Quitar ambas clases
+        if (themeIcon) themeIcon.textContent = '🏜️'; // Siguiente: dust
+        if (themeIconDashboard) themeIconDashboard.textContent = '🏜️';
         localStorage.setItem('theme', 'dark');
+    } else if (theme === 'dust') {
+        document.documentElement.classList.add('dust');
+        document.body.classList.remove('bg-white'); // Quitar bg-white
+        document.body.classList.add('dust-bg');
+        if (themeIcon) themeIcon.textContent = '☀️'; // Siguiente: light
+        if (themeIconDashboard) themeIconDashboard.textContent = '☀️';
+        localStorage.setItem('theme', 'dust');
     } else {
-        document.documentElement.classList.remove('dark');
-        if (themeIcon) themeIcon.textContent = '🌙';
+        // theme === 'light' o por defecto
+        document.body.classList.remove('dust-bg'); // Quitar dust-bg
+        document.body.classList.add('bg-white');
+        if (themeIcon) themeIcon.textContent = '🌙'; // Siguiente: dark
         if (themeIconDashboard) themeIconDashboard.textContent = '🌙';
         localStorage.setItem('theme', 'light');
     }
+    
+    console.log('🎨 Tema cambiado a:', theme);
 }
 
-// Detectar preferencia inicial
+// Detectar preferencia inicial - por defecto dark como solicita el usuario
 (function() {
     const saved = localStorage.getItem('theme');
-    if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        setTheme(true);
+    if (saved && ['light', 'dark', 'dust'].includes(saved)) {
+        setTheme(saved);
     } else {
-        setTheme(false);
+        // Por defecto dark según solicitud del usuario
+        setTheme('dark');
     }
 })();
+
+// Función para obtener el siguiente tema en el ciclo
+function getNextTheme() {
+    const currentTheme = localStorage.getItem('theme') || 'dark';
+    const themes = ['light', 'dark', 'dust'];
+    const currentIndex = themes.indexOf(currentTheme);
+    return themes[(currentIndex + 1) % themes.length];
+}
 
 // Event listeners para el tema
 if (themeToggle) {
     themeToggle.addEventListener('click', () => {
-        const isDark = document.documentElement.classList.contains('dark');
-        setTheme(!isDark);
+        const nextTheme = getNextTheme();
+        setTheme(nextTheme);
     });
 }
 
 if (themeToggleDashboard) {
     themeToggleDashboard.addEventListener('click', () => {
-        const isDark = document.documentElement.classList.contains('dark');
-        setTheme(!isDark);
+        const nextTheme = getNextTheme();
+        setTheme(nextTheme);
     });
 }
 

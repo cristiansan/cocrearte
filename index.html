@@ -31,6 +31,10 @@
               darkcard: '#232b3b',
               darkborder: '#313a4d',
               darktext: '#d1d5db',
+              dustbg: '#2a2024',
+              dustcard: '#32272c',
+              dustborder: '#463a41',
+              dusttext: '#f2e9e4',
             },
             fontFamily: {
               sans: ['Inter', 'ui-sans-serif', 'system-ui'],
@@ -403,10 +407,10 @@
     }
     </style>
 </head>
-<body class="bg-white dark:bg-darkbg font-sans transition-colors duration-300">
+    <body class="bg-white dark:bg-darkbg dust:bg-dustbg font-sans transition-colors duration-300">
     <div id="landingPage">
     <!-- Header/Navigation -->
-    <header class="bg-white dark:bg-darkcard shadow-sm border-b border-gray-100 dark:border-darkborder sticky top-0 z-50">
+    <header class="bg-white dark:bg-darkcard dust:bg-dustcard shadow-sm border-b border-gray-100 dark:border-darkborder dust:border-dustborder sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center py-4">
                 <!-- Logo -->
@@ -430,7 +434,7 @@
 
                 <!-- Mobile Auth Buttons -->
                 <div class="flex items-center space-x-2 md:space-x-4">
-                    <button id="themeToggle" title="Cambiar tema" class="p-2 rounded-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                    <button id="themeToggle" title="Cambiar tema" class="p-2 rounded-full border border-gray-200 dark:border-gray-600 dust:border-dustborder bg-white dark:bg-gray-800 dust:bg-dustbg hover:bg-gray-50 dark:hover:bg-gray-700 dust:hover:bg-dustcard transition">
                         <span id="themeIcon" class="text-lg">🌙</span>
                     </button>
                     
@@ -736,7 +740,7 @@
                     </p>
                     <!-- Número de versión - Visible para todos los usuarios -->
                     <button id="versionBtn" class="text-xs text-gray-500 hover:text-gray-300 transition mt-2 sm:mt-0 cursor-pointer" onclick="abrirModalVersion()">
-                        v0.2.9
+                        v0.3.0
                     </button>
                 </div>
                 <div class="flex space-x-6 mt-4 md:mt-0">
@@ -837,8 +841,8 @@
             </div>
             <div class="flex items-center gap-3">
                 <!-- Número de versión - Visible para todos los usuarios -->
-                <button id="versionBtnDashboard" class="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition cursor-pointer px-2 py-1 rounded" onclick="abrirModalVersion()">
-                    v0.2.9
+                <button id="versionBtnDashboard" class="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 dust:text-gray-400 dust:hover:text-gray-200 transition cursor-pointer px-2 py-1 rounded" onclick="abrirModalVersion()">
+                    v0.3.0
                 </button>
                 <button id="logoutBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded transition">Cerrar sesión</button>
             </div>
@@ -875,8 +879,10 @@
       
       <!-- Botón de tema flotante centrado horizontalmente, a la altura del header -->
       <div id="floatingThemeToggle" class="fixed top-[60px] left-1/2 transform -translate-x-1/2 z-40 hidden">
-        <button id="themeToggleDashboard" title="Cambiar tema" class="p-3 rounded-full border-2 border-primary-500 dark:border-primary-400 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110">
-          <span id="themeIconDashboard" class="text-2xl">🌙</span>
+        <button id="themeToggleDashboard" title="Cambiar tema" class="flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-primary-500 dark:border-primary-400 dust:border-dustborder bg-white dark:bg-gray-800 dust:bg-dustbg hover:bg-gray-50 dark:hover:bg-gray-700 dust:hover:bg-dustcard transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110">
+          <span class="text-sm font-medium text-gray-700 dark:text-gray-300 dust:text-dusttext">Estilo</span>
+          <span class="text-lg">→</span>
+          <span id="themeIconDashboard" class="text-xl">🌙</span>
         </button>
       </div>
       
@@ -943,7 +949,7 @@
 
     <!-- Modal para agregar paciente -->
     <div id="addPatientModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-start sm:items-center justify-center z-50 hidden p-2 sm:p-4 overflow-y-auto">
-        <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg w-full max-w-2xl relative border dark:border-darkborder max-h-[95vh] my-4 sm:my-8 flex flex-col" style="max-width:calc(100vw - 20px); max-height:calc(100vh - 20px); margin:10px;">
+        <div class="bg-white dark:bg-darkcard dust:bg-dustcard rounded-xl shadow-lg w-full max-w-2xl relative border dark:border-darkborder dust:border-dustborder max-h-[95vh] my-4 sm:my-8 flex flex-col" style="max-width:calc(100vw - 20px); max-height:calc(100vh - 20px); margin:10px;">
             <div class="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-darkborder shrink-0">
                 <h3 class="text-lg sm:text-xl font-bold text-primary-600">Agregar Paciente</h3>
                 <button onclick="hideAddPatientModal()" class="text-gray-400 hover:text-gray-700 text-2xl min-h-[48px] min-w-[48px] flex items-center justify-center">×</button>
@@ -956,7 +962,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label for="patientName" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Nombre Completo *</label>
-                            <input id="patientName" name="patientName" type="text" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Nombre completo">
+                            <input id="patientName" name="patientName" type="text" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder dust:bg-dustbg dust:text-dusttext dust:border-dustborder" placeholder="Nombre completo">
                         </div>
                         <div>
                             <label for="patientDni" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">DNI</label>
@@ -2319,6 +2325,606 @@
         .profesional-checkbox input[type="checkbox"] {
             margin: 0;
         }
+        
+        /* === TEMA DUST === */
+        .dust .historial-fullscreen-modal {
+            background: #32272c;
+            color: #f2e9e4;
+        }
+        
+        .dust .historial-fullscreen-header {
+            border-bottom-color: #463a41;
+        }
+        
+        .dust .historial-fullscreen-content .sesion-item {
+            background: #2a2024;
+            border-color: #463a41;
+        }
+        
+        .dust .fc {
+            background: #2a2024;
+            color: #f2e9e4;
+        }
+        
+        .dust .fc-col-header-cell {
+            background: #32272c;
+            border-color: #463a41;
+        }
+        
+        .dust .fc-col-header-cell-cushion {
+            color: #f2e9e4;
+        }
+        
+        .dust .fc-timegrid-slot-label-cushion {
+            color: #f2e9e4;
+        }
+        
+        .dust .fc-timegrid-axis-cushion {
+            color: #f2e9e4;
+        }
+        
+        .dust .fc-timegrid-slot {
+            border-color: #463a41;
+        }
+        
+        .dust .fc-timegrid-divider {
+            border-color: #463a41;
+        }
+        
+        .dust .fc-event {
+            background: #8b7355 !important;
+            border-color: #a67c52 !important;
+            color: #fff !important;
+        }
+        
+        .dust #fichaPacienteModal ::-webkit-scrollbar-track {
+            background: #2a2024;
+        }
+        
+        .dust #fichaPacienteModal ::-webkit-scrollbar-thumb {
+            background: #463a41;
+        }
+        
+        .dust #fichaPacienteModal ::-webkit-scrollbar-thumb:hover {
+            background: #5c4c44;
+        }
+        
+        .dust .fc-event {
+            background: #8b7355 !important;
+            border-color: #a67c52 !important;
+        }
+        
+        .dust .fc-event:hover {
+            background: #a67c52 !important;
+            border-color: #bf8f65 !important;
+        }
+        
+        .dust .fc-daygrid-day:not(.fc-day-other):not(:has(.fc-event)) {
+            background: #2a2024;
+            border-color: #463a41;
+        }
+        
+        .dust .fc-daygrid-day.fc-day-other {
+            background: #211b19;
+            opacity: 0.7;
+        }
+        
+        .dust .fc-timegrid-slot {
+            border-color: #463a41;
+        }
+        
+        .dust .fc-timegrid-col {
+            border-color: #463a41;
+        }
+        
+        .dust .fc-day-today {
+            background: #3d2f25 !important;
+        }
+        
+        .dust .fc-day-today:not(:has(.fc-event)) {
+            background: #3d2f25;
+        }
+        
+        .dust .fc-scrollgrid {
+            border-color: #463a41;
+        }
+        
+        .dust .fc-scrollgrid td,
+        .dust .fc-scrollgrid th {
+            border-color: #463a41;
+        }
+        
+        .dust .fc-timegrid-axis {
+            border-color: #463a41;
+        }
+        
+        .dust .fc-button {
+            background: #463a41;
+            border-color: #534741;
+            color: #d4c4b0;
+        }
+        
+        .dust .fc-button:hover {
+            background: #534741;
+        }
+        
+        .dust .fc-toolbar-title {
+            color: #f2e9e4;
+        }
+        
+        .dust .fc-daygrid-day-number {
+            color: #f2e9e4;
+        }
+        
+        .dust .fc-timegrid-col {
+            border-color: #463a41;
+        }
+        
+        .dust .fc-highlight {
+            background: rgba(139, 115, 85, 0.2);
+        }
+        
+        .dust #calendarCurrentLabel {
+            color: #f2e9e4;
+        }
+        
+        .dust #btnPrev,
+        .dust #btnNext {
+            background: #463a41;
+            border-color: #534741;
+            color: #d4c4b0;
+        }
+        
+        .dust #btnPrev:hover,
+        .dust #btnNext:hover {
+            background: #534741;
+        }
+        
+        .dust #btnVistaDia,
+        .dust #btnVistaSemana,
+        .dust #btnVistaMes {
+            background: #463a41;
+            border-color: #534741;
+            color: #d4c4b0;
+        }
+        
+        .dust #btnVistaDia:not(.bg-primary-700),
+        .dust #btnVistaSemana:not(.bg-primary-700),
+        .dust #btnVistaMes:not(.bg-primary-700) {
+            background: #463a41;
+        }
+        
+        .dust #btnVistaDia:not(.bg-primary-700):hover,
+        .dust #btnVistaSemana:not(.bg-primary-700):hover,
+        .dust #btnVistaMes:not(.bg-primary-700):hover {
+            background: #534741;
+        }
+        
+        .dust .fc-resource-timeline-divider,
+        .dust .fc-resource-area-divider {
+            border-color: #463a41;
+        }
+        
+        .dust .fc-resource {
+            border-color: #463a41;
+            background: #2a2024;
+        }
+        
+        .dust .fc-resource-area {
+            background: #32272c;
+        }
+        
+        .dust .fc-resource-area th {
+            background: #32272c;
+            border-color: #463a41;
+            color: #f2e9e4;
+        }
+        
+        .dust .profesional-checkbox {
+            background: #32272c;
+            border: 1px solid #463a41;
+            color: #f2e9e4;
+        }
+        
+        .dust .profesional-checkbox:hover {
+            background: #463a41;
+        }
+        
+        /* Clase global para fondo DUST */
+        .dust-bg {
+            background: #2a2024 !important;
+            color: #f5ebe0 !important;
+        }
+        
+        /* Forzar fondo DUST cuando está activo */
+        .dust body.bg-white {
+            background: #2a2024 !important;
+        }
+        
+        /* Asegurar que DUST sobrescriba bg-white */
+        body.dust-bg {
+            background: #2a2024 !important;
+        }
+        
+        /* Modales en tema DUST */
+        .dust .modal-content.bg-white {
+            background: #32272c !important;
+            color: #f5ebe0 !important;
+        }
+        
+        /* Forzar todos los modales en DUST */
+        .dust .modal-content {
+            background: #32272c !important;
+            color: #f5ebe0 !important;
+        }
+        
+        /* Elementos dentro de modales en DUST */
+        .dust .modal-content * {
+            color: inherit;
+        }
+        
+        /* Inputs y textareas en modales DUST */
+        .dust .modal-content input,
+        .dust .modal-content textarea,
+        .dust .modal-content select {
+            background: #463a41 !important;
+            border-color: #8b7355 !important;
+            color: #f5ebe0 !important;
+        }
+        
+        /* Forzar todos los modales en DUST - regla más específica */
+        .dust div[class*="modal-content"] {
+            background: #32272c !important;
+            color: #f2e9e4 !important;
+        }
+        
+        /* Sobrescribir bg-white en cualquier modal cuando DUST está activo */
+        .dust div[class*="modal-content"][class*="bg-white"] {
+            background: #32272c !important;
+        }
+        
+        /* Asegurar que todos los elementos dentro de modales en DUST tengan el color correcto */
+        .dust div[class*="modal-content"] h1,
+        .dust div[class*="modal-content"] h2,
+        .dust div[class*="modal-content"] h3,
+        .dust div[class*="modal-content"] p,
+        .dust div[class*="modal-content"] label,
+        .dust div[class*="modal-content"] span {
+            color: #f5ebe0 !important;
+        }
+        
+        /* Reglas adicionales para elementos específicos en DUST */
+        .dust .bg-gray-50 {
+            background: #463a41 !important;
+        }
+        
+        .dust .text-gray-500 {
+            color: #e8d5c4 !important;
+        }
+        
+        .dust .text-gray-700 {
+            color: #f5ebe0 !important;
+        }
+        
+        .dust .border-gray-300 {
+            border-color: #8b7355 !important;
+        }
+        
+        /* Forzar todos los elementos con bg-white en DUST */
+        .dust .bg-white {
+            background: #32272c !important;
+        }
+        
+        /* Reglas específicas para textos en DUST - colores más claros */
+        .dust .text-gray-900 {
+            color: #f5ebe0 !important;
+        }
+        
+        .dust .text-gray-800 {
+            color: #f5ebe0 !important;
+        }
+        
+        .dust .text-gray-600 {
+            color: #e8d5c4 !important;
+        }
+        
+        .dust .text-gray-400 {
+            color: #d4c4b3 !important;
+        }
+        
+        .dust .text-gray-300 {
+            color: #c4b5a3 !important;
+        }
+        
+        /* Textos en elementos específicos */
+        .dust .text-primary-600 {
+            color: #d4a574 !important;
+        }
+        
+        .dust .text-primary-400 {
+            color: #e6c08c !important;
+        }
+        
+        /* Placeholders y textos de input */
+        .dust input::placeholder,
+        .dust textarea::placeholder {
+            color: #c4b5a3 !important;
+        }
+        
+        /* Textos en botones y elementos interactivos */
+        .dust button {
+            color: #f5ebe0 !important;
+        }
+        
+        /* Textos en listas y elementos de navegación */
+        .dust nav a,
+        .dust .nav-link {
+            color: #e8d5c4 !important;
+        }
+        
+        .dust nav a:hover,
+        .dust .nav-link:hover {
+            color: #f5ebe0 !important;
+        }
+        
+        /* Elementos específicos del panel de administración */
+        .dust .dashboard-container * {
+            color: #f5ebe0 !important;
+        }
+        
+        .dust .dashboard-container h1,
+        .dust .dashboard-container h2,
+        .dust .dashboard-container h3,
+        .dust .dashboard-container h4,
+        .dust .dashboard-container h5,
+        .dust .dashboard-container h6 {
+            color: #f5ebe0 !important;
+        }
+        
+        .dust .dashboard-container p,
+        .dust .dashboard-container span,
+        .dust .dashboard-container div {
+            color: #e8d5c4 !important;
+        }
+        
+        /* Elementos de lista y cards */
+        .dust .card,
+        .dust .list-item,
+        .dust .user-item {
+            color: #f5ebe0 !important;
+        }
+        
+        /* Textos en elementos de formulario */
+        .dust input,
+        .dust select,
+        .dust textarea {
+            color: #f5ebe0 !important;
+        }
+        
+        /* Regla general para cualquier texto en DUST */
+        .dust * {
+            color: inherit;
+        }
+        
+        /* Elementos con fondo claro que necesitan texto oscuro en DUST */
+        .dust .bg-gray-100,
+        .dust .bg-gray-200,
+        .dust .bg-gray-300,
+        .dust .bg-white,
+        .dust .bg-blue-50,
+        .dust .bg-green-50,
+        .dust .bg-purple-50 {
+            color: #8b4513 !important; /* Marrón oscuro para contraste */
+        }
+        
+        /* Botones específicos en DUST */
+        .dust button.bg-gray-100,
+        .dust button.bg-gray-200,
+        .dust button.bg-gray-300,
+        .dust button.bg-white {
+            color: #8b4513 !important;
+            background: #f5ebe0 !important;
+        }
+        
+        /* Tabs y navegación en DUST */
+        .dust .tab,
+        .dust .nav-tab,
+        .dust [class*="tab"] {
+            color: #8b4513 !important;
+        }
+        
+        /* Input fields en DUST */
+        .dust input[type="text"],
+        .dust input[type="email"],
+        .dust input[type="password"],
+        .dust input[type="search"],
+        .dust textarea {
+            color: #8b4513 !important;
+            background: #f5ebe0 !important;
+        }
+        
+        /* Elementos de lista con fondo claro */
+        .dust .list-item.bg-gray-100,
+        .dust .list-item.bg-gray-200,
+        .dust .list-item.bg-white,
+        .dust .user-item.bg-gray-100,
+        .dust .user-item.bg-gray-200,
+        .dust .user-item.bg-white {
+            color: #8b4513 !important;
+        }
+        
+        /* Cualquier elemento con fondo claro en DUST */
+        .dust [class*="bg-gray-100"],
+        .dust [class*="bg-gray-200"],
+        .dust [class*="bg-gray-300"],
+        .dust [class*="bg-white"] {
+            color: #8b4513 !important;
+        }
+        
+        /* Reglas específicas para elementos problemáticos */
+        .dust .bg-gray-50 {
+            background: #f5ebe0 !important;
+            color: #8b4513 !important;
+        }
+        
+        .dust .bg-gray-100 {
+            background: #f5ebe0 !important;
+            color: #8b4513 !important;
+        }
+        
+        .dust .bg-gray-200 {
+            background: #e8d5c4 !important;
+            color: #8b4513 !important;
+        }
+        
+        /* Elementos específicos del dashboard */
+        .dust .dashboard-container .bg-gray-100,
+        .dust .dashboard-container .bg-gray-200,
+        .dust .dashboard-container .bg-white {
+            color: #8b4513 !important;
+        }
+        
+        /* Forzar texto oscuro en cualquier elemento con fondo claro */
+        .dust div[style*="background-color: rgb(243, 244, 246)"],
+        .dust div[style*="background-color: rgb(229, 231, 235)"],
+        .dust div[style*="background-color: rgb(209, 213, 219)"],
+        .dust div[style*="background-color: white"] {
+            color: #8b4513 !important;
+        }
+        
+        /* Reglas específicas para elementos problemáticos - más agresivas */
+        .dust .bg-purple-100,
+        .dust .bg-purple-200,
+        .dust .bg-purple-300,
+        .dust .bg-indigo-100,
+        .dust .bg-indigo-200,
+        .dust .bg-indigo-300,
+        .dust .bg-blue-100,
+        .dust .bg-blue-200,
+        .dust .bg-blue-300 {
+            background: #463a41 !important;
+            color: #f5ebe0 !important;
+        }
+        
+        /* Badges y etiquetas admin */
+        .dust .badge,
+        .dust .tag,
+        .dust .pill,
+        .dust [class*="badge"],
+        .dust [class*="tag"],
+        .dust [class*="pill"] {
+            background: #463a41 !important;
+            color: #f5ebe0 !important;
+        }
+        
+        /* Elementos de lista específicos */
+        .dust .list-item,
+        .dust .user-item,
+        .dust .professional-item,
+        .dust .patient-item {
+            background: #463a41 !important;
+            color: #f5ebe0 !important;
+        }
+        
+        /* Inputs específicos */
+        .dust input,
+        .dust input[type="text"],
+        .dust input[type="email"],
+        .dust input[type="search"],
+        .dust input[type="password"] {
+            background: #463a41 !important;
+            color: #f5ebe0 !important;
+            border-color: #8b7355 !important;
+        }
+        
+        /* Forzar todos los elementos con cualquier clase de fondo claro */
+        .dust [class*="bg-"] {
+            background: #463a41 !important;
+            color: #f5ebe0 !important;
+        }
+        
+        /* Excepción para elementos que deben mantener su color */
+        .dust .bg-primary-600,
+        .dust .bg-green-500,
+        .dust .bg-red-500,
+        .dust .bg-yellow-500 {
+            color: white !important;
+        }
+        
+        /* Reglas específicas para elementos del dashboard */
+        .dust .dashboard-container div[class*="bg-"] {
+            background: #463a41 !important;
+            color: #f5ebe0 !important;
+        }
+        
+        /* Elementos específicos que podrían estar usando clases personalizadas */
+        .dust .highlighted,
+        .dust .selected,
+        .dust .active,
+        .dust .current-user {
+            background: #463a41 !important;
+            color: #f5ebe0 !important;
+        }
+        
+        /* Forzar todos los elementos dentro del panel de administración */
+        .dust #adminPanel *,
+        .dust .admin-panel * {
+            background: #463a41 !important;
+            color: #f5ebe0 !important;
+        }
+        
+        /* Regla nuclear para cualquier elemento con fondo claro en DUST */
+        .dust * {
+            background: #463a41 !important;
+            color: #f5ebe0 !important;
+        }
+        
+        /* Excepciones para elementos que deben mantener su apariencia */
+        .dust .bg-primary-600,
+        .dust .bg-green-500,
+        .dust .bg-red-500,
+        .dust .bg-yellow-500,
+        .dust .bg-purple-600,
+        .dust .bg-blue-600,
+        .dust .bg-gray-800,
+        .dust .bg-gray-900,
+        .dust .bg-black {
+            color: white !important;
+        }
+        
+        /* Botón del tema en DUST */
+        .dust #themeToggle,
+        .dust #themeToggleDashboard {
+            background: #463a41 !important;
+            border-color: #8b7355 !important;
+            color: #f5ebe0 !important;
+        }
+        
+        .dust #themeToggle:hover,
+        .dust #themeToggleDashboard:hover {
+            background: #5a4d54 !important;
+        }
+        
+        /* Posición del botón del tema en dashboard */
+        #floatingThemeToggle {
+            position: fixed !important;
+            top: 200px !important;
+            right: 40px !important;
+            bottom: auto !important;
+            left: auto !important;
+            transform: none !important;
+            z-index: 9999 !important;
+        }
+        
+        /* Tamaño del botón del tema */
+        #themeToggleDashboard {
+            padding: 0.5rem 1rem !important;
+            font-size: 0.875rem !important;
+        }
+        
+        #themeIconDashboard {
+            font-size: 1.25rem !important;
+        }
     </style>
     <!-- FullCalendar JS (versión básica sin scheduler para evitar licencia) -->
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.js"></script>
@@ -2802,7 +3408,7 @@
                     <span class="text-2xl">🚀</span>
                     <div>
                         <h3 class="text-xl font-bold text-primary-700 dark:text-primary-400">Historial de Versiones</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Espacio Cocrearte v0.2.9</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 dust:text-gray-400">Espacio Cocrearte v0.3.0</p>
                     </div>
                 </div>
                 <button onclick="cerrarModalVersion()" class="text-gray-400 hover:text-gray-700 text-2xl p-1">×</button>
@@ -2812,11 +3418,29 @@
                 <!-- Versión 0.2.6 -->
                 <div class="border-l-4 border-green-600 pl-4 mb-4">
                   <div class="flex items-center gap-2 mb-2">
-                    <span class="bg-green-100 text-green-800 text-sm font-medium px-2 py-1 rounded">v0.2.9</span>
+                    <span class="bg-green-100 text-green-800 text-sm font-medium px-2 py-1 rounded">v0.3.0</span>
                     <span class="text-sm text-gray-500">Actual</span>
                   </div>
-                  <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Control de Acceso Administrativo</h4>
-                  <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white dust:text-dusttext mb-3">🎨 Sistema de 3 Temas</h4>
+                  <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300 dust:text-dusttext">
+                    <li>• <strong>🌙 LIGHT:</strong> Tema clásico claro para uso diurno y mayor legibilidad</li>
+                    <li>• <strong>🌚 DARK:</strong> Tema oscuro por defecto, ideal para sesiones prolongadas</li>
+                    <li>• <strong>🏜️ DUST:</strong> Nuevo tema intermedio con tonos marrones cálidos y acogedores</li>
+                    <li>• <strong>🔄 Ciclo Automático:</strong> Alternancia entre los 3 temas con un solo clic</li>
+                    <li>• <strong>💾 Persistencia:</strong> El tema seleccionado se guarda automáticamente</li>
+                    <li>• <strong>🎯 Botón Intuitivo:</strong> Iconos que indican el próximo tema disponible</li>
+                    <li>• <strong>🎨 Paleta Completa:</strong> Variables CSS personalizadas para cada tema</li>
+                  </ul>
+                </div>
+                
+                <!-- Versión 0.2.9 -->
+                <div class="border-l-4 border-gray-400 pl-4 mb-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="bg-gray-100 text-gray-800 text-sm font-medium px-2 py-1 rounded">v0.2.9</span>
+                    <span class="text-sm text-gray-500">Anterior</span>
+                  </div>
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white dust:text-dusttext mb-3">Control de Acceso Administrativo</h4>
+                  <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300 dust:text-dusttext">
                     <li>• <strong>🔐 Derivación Solo Admin:</strong> Funcionalidad de derivar pacientes restringida exclusivamente a administradores</li>
                     <li>• <strong>🚫 Validación de Permisos:</strong> Verificación automática de permisos antes de permitir acceso</li>
                     <li>• <strong>👁️ Visibilidad Condicional:</strong> Botones "Derivar" solo aparecen para usuarios autorizados</li>
@@ -3467,5 +4091,619 @@
       </div>
     </div>
 
-</body>
-</html> 
+    <style>
+    .dashboard-container {
+      padding: 10px;
+      min-height: 100vh;
+      width: calc(100vw - 24px);
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    body {
+      overflow-x: hidden;
+    }
+    @media (max-width: 640px) {
+      .dashboard-container {
+        padding: 4px;
+        gap: 8px;
+        width: 100vw;
+      }
+    }
+    
+    /* Estilos específicos para el modal de backup */
+    .modal-backup {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 99999 !important;
+      align-items: center !important;
+      justify-content: center !important;
+      background-color: rgba(0, 0, 0, 0.4) !important;
+    }
+    
+    .modal-backup.hidden {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+    }
+    
+    .modal-backup:not(.hidden) {
+      display: flex !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+    </style>
+
+    <!-- Menú de opciones para foto de perfil -->
+    <div id="profilePhotoMenu" class="absolute z-50 bg-white dark:bg-darkcard rounded-lg shadow-lg border dark:border-darkborder mt-2 left-0 ml-[10px] hidden w-48">
+      <button id="optionUploadPhoto" class="w-full text-left px-4 py-2 hover:bg-primary-50 dark:hover:bg-gray-700 rounded-t transition text-gray-800 dark:text-white">Subir foto</button>
+      <button id="optionTakePhoto" class="w-full text-left px-4 py-2 hover:bg-primary-50 dark:hover:bg-gray-700 rounded-b transition text-gray-800 dark:text-white">Tomar foto</button>
+    </div>
+
+    <!-- Modal de cámara para tomar foto de perfil -->
+    <div id="cameraModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
+      <div class="bg-white dark:bg-darkcard rounded-2xl shadow-lg p-6 w-full max-w-xs sm:max-w-sm flex flex-col items-center relative">
+        <button id="closeCameraModal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">×</button>
+        <h2 class="text-lg font-bold mb-4 text-gray-900 dark:text-white">Tomar foto de perfil</h2>
+        <video id="cameraVideo" autoplay playsinline class="rounded-lg w-48 h-48 bg-black mb-4 object-cover"></video>
+        <canvas id="cameraCanvas" class="hidden"></canvas>
+        <button id="takePhotoBtn" class="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-6 rounded-lg transition mb-2">Tomar foto</button>
+        <button id="confirmPhotoBtn" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg transition mb-2 hidden">Usar esta foto</button>
+        <button id="retakePhotoBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-6 rounded-lg transition hidden">Repetir</button>
+      </div>
+    </div>
+
+
+
+
+
+    <!-- Modal de Visualización de Backup -->
+    <div id="modalVerBackup" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+      <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg w-full max-w-3xl relative border dark:border-darkborder max-h-[90vh] flex flex-col">
+        <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-darkborder">
+          <h3 class="text-lg font-bold text-primary-600">Visualización de Backup</h3>
+          <button id="btnCerrarModalVerBackup" class="text-gray-400 hover:text-gray-700 text-2xl">×</button>
+        </div>
+        <div class="p-4 flex-1 overflow-y-auto">
+          <div id="contenidoVerBackup" class="overflow-x-auto"></div>
+        </div>
+        <div class="flex justify-end gap-2 p-4 border-t border-gray-200 dark:border-darkborder">
+          <button id="btnCerrarVerBackup" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded">Cerrar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loader para modal de visualización de backup -->
+    <div id="loaderVerBackup" class="fixed inset-0 flex items-center justify-center z-[99999] bg-black bg-opacity-30 hidden">
+      <div class="flex flex-col items-center">
+        <svg class="animate-spin h-12 w-12 text-primary-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+        </svg>
+        <span class="text-primary-700 font-semibold text-lg">Cargando datos...</span>
+        <span id="tiempoEstimativo" class="text-primary-600 text-sm mt-2">Estimando tiempo...</span>
+      </div>
+    </div>
+
+    <!-- Modal de Backup de Pacientes - MOVIDO AL FINAL DEL BODY -->
+    <div id="modalBackupPacientes" class="modal-backup fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[99999] hidden">
+      <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg w-full max-w-2xl relative border dark:border-darkborder max-h-[90vh] flex flex-col">
+        <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-darkborder">
+          <h3 class="text-lg font-bold text-primary-600">Backup de Pacientes</h3>
+          <button id="btnCerrarModalBackup" class="text-gray-400 hover:text-gray-700 text-2xl">×</button>
+        </div>
+        <div class="p-4 flex flex-col gap-4 flex-1 overflow-y-auto">
+          <input id="inputBuscarPacienteBackup" type="text" placeholder="Buscar paciente..." class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" />
+          <div id="listaPacientesBackup" class="overflow-y-auto max-h-72 border rounded p-2 bg-gray-50 dark:bg-darkbg"></div>
+          <div class="flex items-center gap-2 mt-2">
+            <input type="checkbox" id="checkTodosBackup" />
+            <label for="checkTodosBackup" class="text-sm">Seleccionar todos</label>
+          </div>
+        </div>
+        <div class="flex justify-end gap-4 p-4 border-t border-gray-200 dark:border-darkborder">
+          <div class="flex flex-col gap-1">
+            <button id="btnVerBackup" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">Ver</button>
+            <button id="btnVerBackupSinNotas" class="bg-blue-400 hover:bg-blue-500 text-white text-xs py-1 px-4 rounded">sin notas</button>
+          </div>
+          <div class="flex flex-col gap-1">
+            <button id="btnDescargarBackup" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded">Descargar</button>
+            <button id="btnDescargarBackupSinNotas" class="bg-yellow-500 hover:bg-yellow-600 text-white text-xs py-1 px-4 rounded">sin notas</button>
+          </div>
+          <button id="btnCancelarBackup" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded">Cancelar</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Modal para configurar mensaje de recordatorio -->
+    <div id="modalConfiguracionMensaje" class="modal hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div class="modal-content bg-white dark:bg-darkcard rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold text-[#2d3748] dark:text-gray-100">
+              📱 Configurar Mensaje de Recordatorio
+            </h2>
+            <button id="cerrarConfiguracionMensaje" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl">
+              ×
+            </button>
+          </div>
+          
+          <div class="space-y-4">
+            <!-- Plantillas predefinidas -->
+            <div>
+              <label class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-2">
+                Plantillas Predefinidas
+              </label>
+              <select id="plantillasSelect" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-darkbg dark:text-darktext">
+                <option value="default">Mensaje por defecto</option>
+                <option value="formal">Mensaje formal</option>
+                <option value="amigable">Mensaje amigable</option>
+                <option value="breve">Mensaje breve</option>
+              </select>
+            </div>
+            
+            <!-- Editor de mensaje -->
+            <div>
+              <label class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-2">
+                Personalizar Mensaje
+              </label>
+              <div class="mb-2 text-xs text-gray-500 dark:text-gray-400">
+                Variables disponibles: {nombre}, {fecha}, {hora}, {lugar}
+              </div>
+              <textarea id="mensajePersonalizado" rows="8" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-darkbg dark:text-darktext resize-none" 
+                        placeholder="Escribe tu mensaje personalizado aquí..."></textarea>
+            </div>
+            
+            <!-- Vista previa -->
+            <div>
+              <label class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-2">
+                Vista Previa
+              </label>
+              <div id="vistaPreviaMensaje" class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border text-sm whitespace-pre-wrap">
+                <!-- Vista previa del mensaje -->
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex justify-end gap-3 mt-6">
+            <button id="cancelarConfiguracionMensaje" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+              Cancelar
+            </button>
+            <button id="guardarConfiguracionMensaje" class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition">
+              Guardar Configuración
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <style>
+    .dashboard-container {
+      padding: 10px;
+      min-height: 100vh;
+      width: calc(100vw - 24px);
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    body {
+      overflow-x: hidden;
+    }
+    @media (max-width: 640px) {
+      .dashboard-container {
+        padding: 4px;
+        gap: 8px;
+        width: 100vw;
+      }
+    }
+    
+    /* Estilos específicos para el modal de backup */
+    .modal-backup {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 99999 !important;
+      align-items: center !important;
+      justify-content: center !important;
+      background-color: rgba(0, 0, 0, 0.4) !important;
+    }
+    
+    .modal-backup.hidden {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+    }
+    
+    .modal-backup:not(.hidden) {
+      display: flex !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+    </style>
+
+    <!-- Menú de opciones para foto de perfil -->
+    <div id="profilePhotoMenu" class="absolute z-50 bg-white dark:bg-darkcard rounded-lg shadow-lg border dark:border-darkborder mt-2 left-0 ml-[10px] hidden w-48">
+      <button id="optionUploadPhoto" class="w-full text-left px-4 py-2 hover:bg-primary-50 dark:hover:bg-gray-700 rounded-t transition text-gray-800 dark:text-white">Subir foto</button>
+      <button id="optionTakePhoto" class="w-full text-left px-4 py-2 hover:bg-primary-50 dark:hover:bg-gray-700 rounded-b transition text-gray-800 dark:text-white">Tomar foto</button>
+    </div>
+
+    <!-- Modal de cámara para tomar foto de perfil -->
+    <div id="cameraModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
+      <div class="bg-white dark:bg-darkcard rounded-2xl shadow-lg p-6 w-full max-w-xs sm:max-w-sm flex flex-col items-center relative">
+        <button id="closeCameraModal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">×</button>
+        <h2 class="text-lg font-bold mb-4 text-gray-900 dark:text-white">Tomar foto de perfil</h2>
+        <video id="cameraVideo" autoplay playsinline class="rounded-lg w-48 h-48 bg-black mb-4 object-cover"></video>
+        <canvas id="cameraCanvas" class="hidden"></canvas>
+        <button id="takePhotoBtn" class="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-6 rounded-lg transition mb-2">Tomar foto</button>
+        <button id="confirmPhotoBtn" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg transition mb-2 hidden">Usar esta foto</button>
+        <button id="retakePhotoBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-6 rounded-lg transition hidden">Repetir</button>
+      </div>
+    </div>
+
+
+
+
+
+    <!-- Modal de Visualización de Backup -->
+    <div id="modalVerBackup" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+      <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg w-full max-w-3xl relative border dark:border-darkborder max-h-[90vh] flex flex-col">
+        <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-darkborder">
+          <h3 class="text-lg font-bold text-primary-600">Visualización de Backup</h3>
+          <button id="btnCerrarModalVerBackup" class="text-gray-400 hover:text-gray-700 text-2xl">×</button>
+        </div>
+        <div class="p-4 flex-1 overflow-y-auto">
+          <div id="contenidoVerBackup" class="overflow-x-auto"></div>
+        </div>
+        <div class="flex justify-end gap-2 p-4 border-t border-gray-200 dark:border-darkborder">
+          <button id="btnCerrarVerBackup" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded">Cerrar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loader para modal de visualización de backup -->
+    <div id="loaderVerBackup" class="fixed inset-0 flex items-center justify-center z-[99999] bg-black bg-opacity-30 hidden">
+      <div class="flex flex-col items-center">
+        <svg class="animate-spin h-12 w-12 text-primary-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+        </svg>
+        <span class="text-primary-700 font-semibold text-lg">Cargando datos...</span>
+        <span id="tiempoEstimativo" class="text-primary-600 text-sm mt-2">Estimando tiempo...</span>
+      </div>
+    </div>
+
+    <!-- Modal de Backup de Pacientes - MOVIDO AL FINAL DEL BODY -->
+    <div id="modalBackupPacientes" class="modal-backup fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[99999] hidden">
+      <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg w-full max-w-2xl relative border dark:border-darkborder max-h-[90vh] flex flex-col">
+        <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-darkborder">
+          <h3 class="text-lg font-bold text-primary-600">Backup de Pacientes</h3>
+          <button id="btnCerrarModalBackup" class="text-gray-400 hover:text-gray-700 text-2xl">×</button>
+        </div>
+        <div class="p-4 flex flex-col gap-4 flex-1 overflow-y-auto">
+          <input id="inputBuscarPacienteBackup" type="text" placeholder="Buscar paciente..." class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" />
+          <div id="listaPacientesBackup" class="overflow-y-auto max-h-72 border rounded p-2 bg-gray-50 dark:bg-darkbg"></div>
+          <div class="flex items-center gap-2 mt-2">
+            <input type="checkbox" id="checkTodosBackup" />
+            <label for="checkTodosBackup" class="text-sm">Seleccionar todos</label>
+          </div>
+        </div>
+        <div class="flex justify-end gap-4 p-4 border-t border-gray-200 dark:border-darkborder">
+          <div class="flex flex-col gap-1">
+            <button id="btnVerBackup" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">Ver</button>
+            <button id="btnVerBackupSinNotas" class="bg-blue-400 hover:bg-blue-500 text-white text-xs py-1 px-4 rounded">sin notas</button>
+          </div>
+          <div class="flex flex-col gap-1">
+            <button id="btnDescargarBackup" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded">Descargar</button>
+            <button id="btnDescargarBackupSinNotas" class="bg-yellow-500 hover:bg-yellow-600 text-white text-xs py-1 px-4 rounded">sin notas</button>
+          </div>
+          <button id="btnCancelarBackup" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded">Cancelar</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Modal para configurar mensaje de recordatorio -->
+    <div id="modalConfiguracionMensaje" class="modal hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div class="modal-content bg-white dark:bg-darkcard rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold text-[#2d3748] dark:text-gray-100">
+              📱 Configurar Mensaje de Recordatorio
+            </h2>
+            <button id="cerrarConfiguracionMensaje" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl">
+              ×
+            </button>
+          </div>
+          
+          <div class="space-y-4">
+            <!-- Plantillas predefinidas -->
+            <div>
+              <label class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-2">
+                Plantillas Predefinidas
+              </label>
+              <select id="plantillasSelect" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-darkbg dark:text-darktext">
+                <option value="default">Mensaje por defecto</option>
+                <option value="formal">Mensaje formal</option>
+                <option value="amigable">Mensaje amigable</option>
+                <option value="breve">Mensaje breve</option>
+              </select>
+            </div>
+            
+            <!-- Editor de mensaje -->
+            <div>
+              <label class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-2">
+                Personalizar Mensaje
+              </label>
+              <div class="mb-2 text-xs text-gray-500 dark:text-gray-400">
+                Variables disponibles: {nombre}, {fecha}, {hora}, {lugar}
+              </div>
+              <textarea id="mensajePersonalizado" rows="8" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-darkbg dark:text-darktext resize-none" 
+                        placeholder="Escribe tu mensaje personalizado aquí..."></textarea>
+            </div>
+            
+            <!-- Vista previa -->
+            <div>
+              <label class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-2">
+                Vista Previa
+              </label>
+              <div id="vistaPreviaMensaje" class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border text-sm whitespace-pre-wrap">
+                <!-- Vista previa del mensaje -->
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex justify-end gap-3 mt-6">
+            <button id="cancelarConfiguracionMensaje" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+              Cancelar
+            </button>
+            <button id="guardarConfiguracionMensaje" class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition">
+              Guardar Configuración
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <style>
+    .dashboard-container {
+      padding: 10px;
+      min-height: 100vh;
+      width: calc(100vw - 24px);
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    body {
+      overflow-x: hidden;
+    }
+    @media (max-width: 640px) {
+      .dashboard-container {
+        padding: 4px;
+        gap: 8px;
+        width: 100vw;
+      }
+    }
+    
+    /* Estilos específicos para el modal de backup */
+    .modal-backup {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 99999 !important;
+      align-items: center !important;
+      justify-content: center !important;
+      background-color: rgba(0, 0, 0, 0.4) !important;
+    }
+    
+    .modal-backup.hidden {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+    }
+    
+    .modal-backup:not(.hidden) {
+      display: flex !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+    </style>
+
+    <!-- Menú de opciones para foto de perfil -->
+    <div id="profilePhotoMenu" class="absolute z-50 bg-white dark:bg-darkcard rounded-lg shadow-lg border dark:border-darkborder mt-2 left-0 ml-[10px] hidden w-48">
+      <button id="optionUploadPhoto" class="w-full text-left px-4 py-2 hover:bg-primary-50 dark:hover:bg-gray-700 rounded-t transition text-gray-800 dark:text-white">Subir foto</button>
+      <button id="optionTakePhoto" class="w-full text-left px-4 py-2 hover:bg-primary-50 dark:hover:bg-gray-700 rounded-b transition text-gray-800 dark:text-white">Tomar foto</button>
+    </div>
+
+    <!-- Modal de cámara para tomar foto de perfil -->
+    <div id="cameraModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
+      <div class="bg-white dark:bg-darkcard rounded-2xl shadow-lg p-6 w-full max-w-xs sm:max-w-sm flex flex-col items-center relative">
+        <button id="closeCameraModal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">×</button>
+        <h2 class="text-lg font-bold mb-4 text-gray-900 dark:text-white">Tomar foto de perfil</h2>
+        <video id="cameraVideo" autoplay playsinline class="rounded-lg w-48 h-48 bg-black mb-4 object-cover"></video>
+        <canvas id="cameraCanvas" class="hidden"></canvas>
+        <button id="takePhotoBtn" class="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-6 rounded-lg transition mb-2">Tomar foto</button>
+        <button id="confirmPhotoBtn" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg transition mb-2 hidden">Usar esta foto</button>
+        <button id="retakePhotoBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-6 rounded-lg transition hidden">Repetir</button>
+      </div>
+    </div>
+
+
+
+
+
+    <!-- Modal de Visualización de Backup -->
+    <div id="modalVerBackup" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+      <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg w-full max-w-3xl relative border dark:border-darkborder max-h-[90vh] flex flex-col">
+        <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-darkborder">
+          <h3 class="text-lg font-bold text-primary-600">Visualización de Backup</h3>
+          <button id="btnCerrarModalVerBackup" class="text-gray-400 hover:text-gray-700 text-2xl">×</button>
+        </div>
+        <div class="p-4 flex-1 overflow-y-auto">
+          <div id="contenidoVerBackup" class="overflow-x-auto"></div>
+        </div>
+        <div class="flex justify-end gap-2 p-4 border-t border-gray-200 dark:border-darkborder">
+          <button id="btnCerrarVerBackup" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded">Cerrar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loader para modal de visualización de backup -->
+    <div id="loaderVerBackup" class="fixed inset-0 flex items-center justify-center z-[99999] bg-black bg-opacity-30 hidden">
+      <div class="flex flex-col items-center">
+        <svg class="animate-spin h-12 w-12 text-primary-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+        </svg>
+        <span class="text-primary-700 font-semibold text-lg">Cargando datos...</span>
+        <span id="tiempoEstimativo" class="text-primary-600 text-sm mt-2">Estimando tiempo...</span>
+      </div>
+    </div>
+
+    <!-- Modal de Backup de Pacientes - MOVIDO AL FINAL DEL BODY -->
+    <div id="modalBackupPacientes" class="modal-backup fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[99999] hidden">
+      <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg w-full max-w-2xl relative border dark:border-darkborder max-h-[90vh] flex flex-col">
+        <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-darkborder">
+          <h3 class="text-lg font-bold text-primary-600">Backup de Pacientes</h3>
+          <button id="btnCerrarModalBackup" class="text-gray-400 hover:text-gray-700 text-2xl">×</button>
+        </div>
+        <div class="p-4 flex flex-col gap-4 flex-1 overflow-y-auto">
+          <input id="inputBuscarPacienteBackup" type="text" placeholder="Buscar paciente..." class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" />
+          <div id="listaPacientesBackup" class="overflow-y-auto max-h-72 border rounded p-2 bg-gray-50 dark:bg-darkbg"></div>
+          <div class="flex items-center gap-2 mt-2">
+            <input type="checkbox" id="checkTodosBackup" />
+            <label for="checkTodosBackup" class="text-sm">Seleccionar todos</label>
+          </div>
+        </div>
+        <div class="flex justify-end gap-4 p-4 border-t border-gray-200 dark:border-darkborder">
+          <div class="flex flex-col gap-1">
+            <button id="btnVerBackup" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">Ver</button>
+            <button id="btnVerBackupSinNotas" class="bg-blue-400 hover:bg-blue-500 text-white text-xs py-1 px-4 rounded">sin notas</button>
+          </div>
+          <div class="flex flex-col gap-1">
+            <button id="btnDescargarBackup" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded">Descargar</button>
+            <button id="btnDescargarBackupSinNotas" class="bg-yellow-500 hover:bg-yellow-600 text-white text-xs py-1 px-4 rounded">sin notas</button>
+          </div>
+          <button id="btnCancelarBackup" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded">Cancelar</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Modal para configurar mensaje de recordatorio -->
+    <div id="modalConfiguracionMensaje" class="modal hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div class="modal-content bg-white dark:bg-darkcard rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold text-[#2d3748] dark:text-gray-100">
+              📱 Configurar Mensaje de Recordatorio
+            </h2>
+            <button id="cerrarConfiguracionMensaje" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl">
+              ×
+            </button>
+          </div>
+          
+          <div class="space-y-4">
+            <!-- Plantillas predefinidas -->
+            <div>
+              <label class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-2">
+                Plantillas Predefinidas
+              </label>
+              <select id="plantillasSelect" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-darkbg dark:text-darktext">
+                <option value="default">Mensaje por defecto</option>
+                <option value="formal">Mensaje formal</option>
+                <option value="amigable">Mensaje amigable</option>
+                <option value="breve">Mensaje breve</option>
+              </select>
+            </div>
+            
+            <!-- Editor de mensaje -->
+            <div>
+              <label class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-2">
+                Personalizar Mensaje
+              </label>
+              <div class="mb-2 text-xs text-gray-500 dark:text-gray-400">
+                Variables disponibles: {nombre}, {fecha}, {hora}, {lugar}
+              </div>
+              <textarea id="mensajePersonalizado" rows="8" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-darkbg dark:text-darktext resize-none" 
+                        placeholder="Escribe tu mensaje personalizado aquí..."></textarea>
+            </div>
+            
+            <!-- Vista previa -->
+            <div>
+              <label class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-2">
+                Vista Previa
+              </label>
+              <div id="vistaPreviaMensaje" class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border text-sm whitespace-pre-wrap">
+                <!-- Vista previa del mensaje -->
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex justify-end gap-3 mt-6">
+            <button id="cancelarConfiguracionMensaje" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+              Cancelar
+            </button>
+            <button id="guardarConfiguracionMensaje" class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition">
+              Guardar Configuración
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <style>
+    .dashboard-container {
+      padding: 10px;
+      min-height: 100vh;
+      width: calc(100vw - 24px);
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    body {
+      overflow-x: hidden;
+    }
+    @media (max-width: 640px) {
+      .dashboard-container {
+        padding: 4px;
+        gap: 8px;
+        width: 100vw;
+      }
+    }
+    
+    /* Estilos específicos para el modal de backup */
+    .modal-backup {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 99999 !important;
+      align-items: center !important;
+      justify-content: center !important;
+      background-color: rgba(0, 0, 0, 0.4) !important;
+    }
+    
+    .modal-backup.hidden {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+    }
+    
+    .modal-backup:not(.hidden) {
+      display: flex !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+    </style>
+
+    <!-- Menú de opciones para foto de perfil -->
+    <div id="profilePhotoMenu" class="absolute z-50 bg-white dark:bg
