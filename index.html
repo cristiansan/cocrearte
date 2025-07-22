@@ -734,9 +734,9 @@
                     <p class="text-gray-400 text-sm">
                         © 2025 Espacio Cocrearte. Todos los derechos reservados.
                     </p>
-                    <!-- Número de versión - Solo visible para administradores -->
-                    <button id="versionBtn" class="hidden text-xs text-gray-500 hover:text-gray-300 transition mt-2 sm:mt-0 cursor-pointer" onclick="abrirModalVersion()">
-                        v0.2.5
+                    <!-- Número de versión - Visible para todos los usuarios -->
+                    <button id="versionBtn" class="text-xs text-gray-500 hover:text-gray-300 transition mt-2 sm:mt-0 cursor-pointer" onclick="abrirModalVersion()">
+                        v0.2.6
                     </button>
                 </div>
                 <div class="flex space-x-6 mt-4 md:mt-0">
@@ -836,13 +836,9 @@
                 </div>
             </div>
             <div class="flex items-center gap-3">
-                <!-- Botón de cambio de tema - Visible para todos los usuarios -->
-                <button id="themeToggleDashboard" title="Cambiar tema" class="p-2 rounded-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                    <span id="themeIconDashboard" class="text-lg">🌙</span>
-                </button>
-                <!-- Número de versión - Solo visible para administradores -->
-                <button id="versionBtnDashboard" class="hidden text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition cursor-pointer px-2 py-1 rounded" onclick="abrirModalVersion()">
-                    v0.2.5
+                <!-- Número de versión - Visible para todos los usuarios -->
+                <button id="versionBtnDashboard" class="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition cursor-pointer px-2 py-1 rounded" onclick="abrirModalVersion()">
+                    v0.2.6
                 </button>
                 <button id="logoutBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded transition">Cerrar sesión</button>
             </div>
@@ -876,6 +872,14 @@
             <div id="calendar" class="bg-white dark:bg-darkcard rounded-b-lg shadow p-4 border dark:border-darkborder"></div>
         </div>
       </div>
+      
+      <!-- Botón de tema flotante centrado horizontalmente, a la altura del header -->
+      <div id="floatingThemeToggle" class="fixed top-[60px] left-1/2 transform -translate-x-1/2 z-40 hidden">
+        <button id="themeToggleDashboard" title="Cambiar tema" class="p-3 rounded-full border-2 border-primary-500 dark:border-primary-400 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110">
+          <span id="themeIconDashboard" class="text-2xl">🌙</span>
+        </button>
+      </div>
+      
       <!-- Panel de recordatorios WhatsApp -->
       <section id="recordatoriosSection" class="w-full mt-0 hidden">
         <div class="bg-white dark:bg-darkcard rounded-lg shadow p-6 border dark:border-darkborder w-full">
@@ -2323,6 +2327,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-analytics-compat.js"></script>
     <script src="firebase-config.js"></script>
     <script src="nomenclador.js"></script>
     <!-- Muevo el script principal al final del body para asegurar que el DOM esté cargado -->
@@ -2640,7 +2645,7 @@
                         <input id="hermanoEdad" name="hermanoEdad" type="number" min="0" max="120" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 dark:bg-darkbg dark:text-darktext" placeholder="Edad">
                     </div>
                     <div class="md:col-span-2">
-                        <label for="hermanoOcupacion" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ocupación/Grado</slabel>
+                        <label for="hermanoOcupacion" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ocupación/Grado</label>
                         <input id="hermanoOcupacion" name="hermanoOcupacion" type="text" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 dark:bg-darkbg dark:text-darktext" placeholder="Ocupación o grado escolar">
                     </div>
                     <div class="md:col-span-2">
@@ -2753,18 +2758,36 @@
                     <span class="text-2xl">🚀</span>
                     <div>
                         <h3 class="text-xl font-bold text-primary-700 dark:text-primary-400">Historial de Versiones</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Espacio Cocrearte v0.2.5</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Espacio Cocrearte v0.2.6</p>
                     </div>
                 </div>
                 <button onclick="cerrarModalVersion()" class="text-gray-400 hover:text-gray-700 text-2xl p-1">×</button>
             </div>
             
             <div class="p-6 space-y-6">
-                <!-- Versión 0.2.5 -->
+                <!-- Versión 0.2.6 -->
                 <div class="border-l-4 border-green-600 pl-4 mb-4">
                   <div class="flex items-center gap-2 mb-2">
-                    <span class="bg-green-100 text-green-800 text-sm font-medium px-2 py-1 rounded">v0.2.5</span>
+                    <span class="bg-green-100 text-green-800 text-sm font-medium px-2 py-1 rounded">v0.2.6</span>
                     <span class="text-sm text-gray-500">Actual</span>
+                  </div>
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Información Familiar Simplificada</h4>
+                  <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                    <li>• <strong>Botones Simplificados:</strong> Eliminación de botones "Info. Padre" e "Info. Madre" de la ficha clínica</li>
+                    <li>• <strong>Gestión Centralizada:</strong> Información de padres ahora se maneja solo desde "Editar Paciente"</li>
+                    <li>• <strong>Solo Info. Hermanos:</strong> Botón único centrado y optimizado en la ficha clínica</li>
+                    <li>• <strong>Modal de Hermanos Corregido:</strong> Ahora muestra correctamente todos los hermanos guardados al abrir</li>
+                    <li>• <strong>Sincronización Mejorada:</strong> Corrección de IDs para evitar problemas de carga de datos</li>
+                    <li>• <strong>Mejor UX:</strong> Ya no es necesario usar "Agregar hermano" para ver los datos existentes</li>
+                    <li>• <strong>Interfaz Limpia:</strong> Ficha clínica más organizada con menos elementos visuales</li>
+                  </ul>
+                </div>
+                
+                <!-- Versión 0.2.5 -->
+                <div class="border-l-4 border-blue-600 pl-4 mb-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded">v0.2.5</span>
+                    <span class="text-sm text-gray-500">Anterior</span>
                   </div>
                   <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Historial de Sesiones Mejorado</h4>
                   <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">

@@ -5,7 +5,8 @@ const firebaseConfig = {
     projectId: "monitor-entrenamiento-1fc15",
     storageBucket: "monitor-entrenamiento-1fc15.firebasestorage.app",
     messagingSenderId: "662506260306",
-    appId: "1:662506260306:web:9497e4cbbd1826d8ca5c8b"
+    appId: "1:662506260306:web:9497e4cbbd1826d8ca5c8b",
+    measurementId: "G-K6DP04D3M7"
 };
 
 // Inicializar Firebase
@@ -13,8 +14,10 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 const storage = firebase.storage();
+const analytics = firebase.analytics();
 
 // Exportar para uso global
 window.firebaseAuth = auth;
 window.firebaseDB = db;
-window.firebaseStorage = storage; 
+window.firebaseStorage = storage;
+window.firebaseAnalytics = analytics; 

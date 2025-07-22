@@ -802,6 +802,12 @@ async function showDashboard(user) {
     // Sincronizar el estado del tema en el dashboard
     sincronizarTemaDashboard();
     
+    // Mostrar el botón de tema flotante
+    const floatingThemeToggle = document.getElementById('floatingThemeToggle');
+    if (floatingThemeToggle) {
+        floatingThemeToggle.classList.remove('hidden');
+    }
+    
     // Inicializar funcionalidad de foto de perfil
     setTimeout(() => {
         inicializarFotoPerfil();
@@ -845,6 +851,12 @@ window.firebaseAuth.onAuthStateChanged(user => {
         document.getElementById('calendarToggleBlock').classList.add('hidden');
         document.getElementById('dashboardPacientesSection').classList.add('hidden');
         
+        // Ocultar el botón de tema flotante
+        const floatingThemeToggle = document.getElementById('floatingThemeToggle');
+        if (floatingThemeToggle) {
+            floatingThemeToggle.classList.add('hidden');
+        }
+        
         // Ocultar todos los modales
         const modals = [
             'addPatientModal', 'editPatientModal', 'fichaPacienteModal',
@@ -881,6 +893,12 @@ logoutBtn.addEventListener('click', async () => {
     welcomeBlock.classList.add('hidden');
     document.getElementById('calendarToggleBlock').classList.add('hidden');
     document.getElementById('dashboardPacientesSection').classList.add('hidden');
+    
+    // Ocultar el botón de tema flotante
+    const floatingThemeToggle = document.getElementById('floatingThemeToggle');
+    if (floatingThemeToggle) {
+        floatingThemeToggle.classList.add('hidden');
+    }
     
     // Ocultar todos los modales
     const modals = [
@@ -1178,14 +1196,8 @@ patientsList.addEventListener('click', async (e) => {
                 ` : ''}
                 
                 <!-- Información Familiar -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3 border-t pt-3">
-                    <button onclick="abrirModalInfoPadre('${fichaPacienteId}')" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors">
-                        👨 Info. Padre ${p.infoPadre && p.infoPadre.nombre ? '✓' : ''}
-                    </button>
-                    <button onclick="abrirModalInfoMadre('${fichaPacienteId}')" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors">
-                        👩 Info. Madre ${p.infoMadre && p.infoMadre.nombre ? '✓' : ''}
-                    </button>
-                    <button onclick="abrirModalInfoHermanos('${fichaPacienteId}')" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors">
+                <div class="mb-3 border-t pt-3">
+                    <button onclick="abrirModalInfoHermanos('${fichaPacienteId}')" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors w-full max-w-xs">
                         👫 Info. Hermanos ${p.infoHermanos && p.infoHermanos.length > 0 ? '✓' : ''}
                     </button>
                 </div>
@@ -1867,14 +1879,8 @@ async function showAdminPanel() {
                       ` : ''}
                       
                       <!-- Información Familiar -->
-                      <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3 border-t pt-3">
-                          <button onclick="abrirModalInfoPadre('${fichaPacienteId}')" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors">
-                              👨 Info. Padre ${p.infoPadre && p.infoPadre.nombre ? '✓' : ''}
-                          </button>
-                          <button onclick="abrirModalInfoMadre('${fichaPacienteId}')" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors">
-                              👩 Info. Madre ${p.infoMadre && p.infoMadre.nombre ? '✓' : ''}
-                          </button>
-                          <button onclick="abrirModalInfoHermanos('${fichaPacienteId}')" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors">
+                      <div class="mb-3 border-t pt-3">
+                          <button onclick="abrirModalInfoHermanos('${fichaPacienteId}')" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors w-full max-w-xs">
                               👫 Info. Hermanos ${p.infoHermanos && p.infoHermanos.length > 0 ? '✓' : ''}
                           </button>
                       </div>
@@ -4476,14 +4482,8 @@ if (editPatientFormElement) {
                                 ` : ''}
                                 
                                 <!-- Información Familiar -->
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3 border-t pt-3">
-                                    <button onclick="abrirModalInfoPadre('${pacienteId}')" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors">
-                                        👨 Info. Padre ${p.infoPadre && p.infoPadre.nombre ? '✓' : ''}
-                                    </button>
-                                    <button onclick="abrirModalInfoMadre('${pacienteId}')" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors">
-                                        👩 Info. Madre ${p.infoMadre && p.infoMadre.nombre ? '✓' : ''}
-                                    </button>
-                                    <button onclick="abrirModalInfoHermanos('${pacienteId}')" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors">
+                                <div class="mb-3 border-t pt-3">
+                                    <button onclick="abrirModalInfoHermanos('${pacienteId}')" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors w-full max-w-xs">
                                         👫 Info. Hermanos ${p.infoHermanos && p.infoHermanos.length > 0 ? '✓' : ''}
                                     </button>
                                 </div>
@@ -4791,14 +4791,19 @@ function cargarDatosHermanos(hermanos) {
     limpiarListaHermanos();
     
     hermanos.forEach((hermano, index) => {
+        // Agregar nuevo hermano
         agregarHermano();
-        const hermanoDiv = document.querySelector(`[data-hermano-id="${index}"]`);
+        
+        // Obtener el ID real que se asignó al último hermano agregado
+        const realHermanoId = hermanosCounter - 1; // Ya se incrementó en agregarHermano()
+        const hermanoDiv = document.querySelector(`[data-hermano-id="${realHermanoId}"]`);
+        
         if (hermanoDiv) {
-            hermanoDiv.querySelector(`input[name="hermanoNombre_${index}"]`).value = hermano.nombre || '';
-            hermanoDiv.querySelector(`input[name="hermanoEdad_${index}"]`).value = hermano.edad || '';
-            hermanoDiv.querySelector(`input[name="hermanoOcupacion_${index}"]`).value = hermano.ocupacion || '';
-            hermanoDiv.querySelector(`select[name="hermanoRelacion_${index}"]`).value = hermano.relacion || '';
-            hermanoDiv.querySelector(`textarea[name="hermanoObservaciones_${index}"]`).value = hermano.observaciones || '';
+            hermanoDiv.querySelector(`input[name="hermanoNombre_${realHermanoId}"]`).value = hermano.nombre || '';
+            hermanoDiv.querySelector(`input[name="hermanoEdad_${realHermanoId}"]`).value = hermano.edad || '';
+            hermanoDiv.querySelector(`input[name="hermanoOcupacion_${realHermanoId}"]`).value = hermano.ocupacion || '';
+            hermanoDiv.querySelector(`select[name="hermanoRelacion_${realHermanoId}"]`).value = hermano.relacion || '';
+            hermanoDiv.querySelector(`textarea[name="hermanoObservaciones_${realHermanoId}"]`).value = hermano.observaciones || '';
         }
     });
 }
@@ -4806,7 +4811,7 @@ function cargarDatosHermanos(hermanos) {
 function limpiarListaHermanos() {
     const listaHermanos = document.getElementById('listaHermanos');
     listaHermanos.innerHTML = '';
-    hermanosCounter = 0;
+    hermanosCounter = 0; // Resetear contador para empezar de cero
 }
 
 window.guardarInfoHermanos = async function() {
@@ -4971,9 +4976,9 @@ async function verificarSiEsAdmin(uid) {
     }
 }
 
-// Función para mostrar/ocultar el botón de versión
+// Función para mostrar/ocultar el botón de versión (ahora siempre visible)
 function actualizarVisibilidadVersion(esAdmin) {
-    console.log('🎛️ Actualizando visibilidad de versión. Es admin:', esAdmin);
+    console.log('🎛️ Botón de versión ahora visible para todos los usuarios');
     
     const versionBtn = document.getElementById('versionBtn'); // Footer landing page
     const versionBtnDashboard = document.getElementById('versionBtnDashboard'); // Dashboard
@@ -4983,40 +4988,15 @@ function actualizarVisibilidadVersion(esAdmin) {
         versionBtnDashboard: !!versionBtnDashboard
     });
     
+    // Los botones de versión ahora siempre están visibles
     if (versionBtn) {
-        if (esAdmin) {
-            versionBtn.classList.remove('hidden');
-            console.log('✅ Botón footer visible');
-        } else {
-            versionBtn.classList.add('hidden');
-            console.log('❌ Botón footer oculto');
-        }
+        versionBtn.classList.remove('hidden');
+        console.log('✅ Botón footer siempre visible');
     }
     
     if (versionBtnDashboard) {
-        if (esAdmin) {
-            versionBtnDashboard.classList.remove('hidden');
-            console.log('✅ Botón dashboard visible');
-        } else {
-            versionBtnDashboard.classList.add('hidden');
-            console.log('❌ Botón dashboard oculto');
-        }
-    } else {
-        console.log('⚠️ Elemento versionBtnDashboard no encontrado');
-        
-        // Reintentar después de un momento si es admin
-        if (esAdmin) {
-            console.log('🔄 Reintentando en 500ms...');
-            setTimeout(() => {
-                const versionBtnDashboardRetry = document.getElementById('versionBtnDashboard');
-                if (versionBtnDashboardRetry) {
-                    versionBtnDashboardRetry.classList.remove('hidden');
-                    console.log('✅ Botón dashboard visible (segundo intento)');
-                } else {
-                    console.log('❌ Elemento versionBtnDashboard aún no encontrado');
-                }
-            }, 500);
-        }
+        versionBtnDashboard.classList.remove('hidden');
+        console.log('✅ Botón dashboard siempre visible');
     }
 }
 
