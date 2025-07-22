@@ -1217,9 +1217,20 @@ patientsList.addEventListener('click', async (e) => {
                 </div>
                 ` : ''}
             </div>
-            <button onclick="showEditPatientModal('${fichaPacienteId}', ${JSON.stringify(p).replace(/"/g, '&quot;')})" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
-                ✏️ Editar
-            </button>
+            <div class="flex flex-col gap-2">
+                <button onclick="showEditPatientModal('${fichaPacienteId}', ${JSON.stringify(p).replace(/"/g, '&quot;')})" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
+                    ✏️ Editar
+                </button>
+                ${isAdmin ? `
+                <button onclick="abrirModalDerivarSeguro(this)" 
+                        data-paciente-id="${fichaPacienteId}" 
+                        data-paciente-nombre="${(p.nombre || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}" 
+                        data-paciente-email="${(p.email || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}" 
+                        class="bg-orange-600 hover:bg-orange-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
+                    🔄 Derivar
+                </button>
+                ` : ''}
+            </div>
         </div>
     `;
     await loadSesiones();
@@ -1531,12 +1542,24 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.key === 'Escape' && historialOverlay && historialOverlay.style.display === 'flex') {
             cerrarHistorialExpandido();
         }
+        
+        // Cerrar modal de derivación con ESC
+        const modalDerivar = document.getElementById('modalDerivarPaciente');
+        if (e.key === 'Escape' && modalDerivar && !modalDerivar.classList.contains('hidden')) {
+            cerrarModalDerivar();
+        }
     });
     
     // Event listener para clic fuera del modal
     document.addEventListener('click', function(e) {
         if (historialOverlay && e.target === historialOverlay && historialOverlay.style.display === 'flex') {
             cerrarHistorialExpandido();
+        }
+        
+        // Cerrar modal de derivación si se hace clic fuera
+        const modalDerivar = document.getElementById('modalDerivarPaciente');
+        if (modalDerivar && e.target === modalDerivar && !modalDerivar.classList.contains('hidden')) {
+            cerrarModalDerivar();
         }
     });
 });
@@ -1900,9 +1923,18 @@ async function showAdminPanel() {
                       </div>
                       ` : ''}
                   </div>
-                  <button onclick="showEditPatientModal('${fichaPacienteId}', ${JSON.stringify(p).replace(/"/g, '&quot;')})" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
-                      ✏️ Editar
-                  </button>
+                  <div class="flex flex-col gap-2">
+                      <button onclick="showEditPatientModal('${fichaPacienteId}', ${JSON.stringify(p).replace(/"/g, '&quot;')})" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
+                          ✏️ Editar
+                      </button>
+                      <button onclick="abrirModalDerivarSeguro(this)" 
+                              data-paciente-id="${fichaPacienteId}" 
+                              data-paciente-nombre="${(p.nombre || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}" 
+                              data-paciente-email="${(p.email || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}" 
+                              class="bg-orange-600 hover:bg-orange-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
+                          🔄 Derivar
+                      </button>
+                  </div>
               </div>
           `;
           fichaPacienteModal.classList.remove('hidden');
@@ -4503,9 +4535,20 @@ if (editPatientFormElement) {
                                 </div>
                                 ` : ''}
                             </div>
-                            <button onclick="showEditPatientModal('${pacienteId}', ${JSON.stringify(p).replace(/"/g, '&quot;')})" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
-                                ✏️ Editar
-                            </button>
+                            <div class="flex flex-col gap-2">
+                                <button onclick="showEditPatientModal('${pacienteEditandoId}', ${JSON.stringify(p).replace(/"/g, '&quot;')})" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
+                                    ✏️ Editar
+                                </button>
+                                ${isAdmin ? `
+                                <button onclick="abrirModalDerivarSeguro(this)" 
+                                        data-paciente-id="${pacienteEditandoId}" 
+                                        data-paciente-nombre="${(p.nombre || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}" 
+                                        data-paciente-email="${(p.email || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}" 
+                                        class="bg-orange-600 hover:bg-orange-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
+                                    🔄 Derivar
+                                </button>
+                                ` : ''}
+                            </div>
                         </div>
                     `;
                 }
@@ -7808,3 +7851,470 @@ generarMensajeRecordatorio = function(nombrePaciente, fechaSesion) {
 
 console.log('🎤 Sistema de voz a texto inicializado');
 console.log('📱 Sistema de recordatorios WhatsApp inicializado');
+
+// === FUNCIONES PARA DERIVAR PACIENTES ===
+
+// Variables globales para la derivación
+let pacienteADerivar = {
+    id: null,
+    nombre: '',
+    email: ''
+};
+
+// Flag para evitar limpiar durante proceso activo
+let derivacionEnProceso = false;
+
+// Función de debug para interceptar llamadas
+window.debugAbrirModalDerivar = function(...args) {
+    console.log('🐛 DEBUG: arguments.length:', arguments.length);
+    console.log('🐛 DEBUG: arguments:', arguments);
+    console.log('🐛 DEBUG: args spread:', args);
+    
+    for (let i = 0; i < arguments.length; i++) {
+        console.log(`🐛 DEBUG: arg[${i}]:`, {
+            valor: arguments[i],
+            tipo: typeof arguments[i],
+            stringified: JSON.stringify(arguments[i])
+        });
+    }
+    
+    return abrirModalDerivar.apply(this, arguments);
+};
+
+// Función segura que extrae parámetros de atributos data-*
+window.abrirModalDerivarSeguro = function(buttonElement) {
+    console.log('🛡️ Iniciando derivación segura...');
+    console.log('🔍 Elemento del botón:', buttonElement);
+    console.log('🔍 this context:', this);
+    console.log('🔍 arguments:', arguments);
+    
+    // Verificar permisos de administrador
+    if (!isAdmin) {
+        console.error('🚫 ACCESO DENEGADO: Solo administradores pueden derivar pacientes');
+        showMessage('❌ Acceso denegado: Esta funcionalidad está reservada para administradores', 'error');
+        return;
+    }
+    
+    console.log('✅ Permisos de admin verificados - continuando con derivación');
+    
+    if (!buttonElement) {
+        console.error('❌ No se recibió elemento del botón');
+        showMessage('Error interno: botón no válido');
+        return;
+    }
+    
+    const pacienteId = buttonElement.getAttribute('data-paciente-id');
+    const nombrePaciente = buttonElement.getAttribute('data-paciente-nombre');
+    const emailPaciente = buttonElement.getAttribute('data-paciente-email');
+    
+    console.log('📊 Datos extraídos de atributos:', {
+        pacienteId: pacienteId,
+        nombrePaciente: nombrePaciente,
+        emailPaciente: emailPaciente
+    });
+    
+    // Validar que tenemos datos
+    if (!pacienteId) {
+        console.error('❌ No se pudo obtener el ID del paciente del atributo data-paciente-id');
+        showMessage('Error: No se pudo identificar el paciente (ID faltante)');
+        return;
+    }
+    
+    // Decodificar HTML entities si las hay
+    const nombreDecodificado = nombrePaciente ? 
+        nombrePaciente.replace(/&quot;/g, '"').replace(/&#39;/g, "'") : 'Sin nombre';
+    const emailDecodificado = emailPaciente ? 
+        emailPaciente.replace(/&quot;/g, '"').replace(/&#39;/g, "'") : 'Sin email';
+    
+    // Llamar a la función original con los datos extraídos
+    abrirModalDerivar(pacienteId, nombreDecodificado, emailDecodificado);
+};
+
+// Función para abrir el modal de derivación
+window.abrirModalDerivar = async function(pacienteId, nombrePaciente, emailPaciente) {
+    console.log('🔄 Abriendo modal de derivación para:', nombrePaciente);
+    console.log('📋 Parámetros recibidos:', { 
+        pacienteId: pacienteId, 
+        nombrePaciente: nombrePaciente, 
+        emailPaciente: emailPaciente,
+        tiposPacienteId: typeof pacienteId,
+        longitudPacienteId: pacienteId ? pacienteId.length : 'N/A'
+    });
+    
+    // Validar parámetros con más detalle
+    if (!pacienteId || pacienteId === 'null' || pacienteId === 'undefined' || pacienteId === '' || (typeof pacienteId === 'string' && pacienteId.trim() === '')) {
+        console.error('❌ Error: ID del paciente no válido:', pacienteId);
+        console.error('❌ Tipo de dato:', typeof pacienteId);
+        console.error('❌ Valor exacto:', JSON.stringify(pacienteId));
+        showMessage('Error: No se pudo identificar el paciente para derivar. ID: ' + JSON.stringify(pacienteId));
+        return;
+    }
+    
+    pacienteADerivar = {
+        id: pacienteId,
+        nombre: nombrePaciente || 'Paciente sin nombre',
+        email: emailPaciente || 'Sin email'
+    };
+    
+    console.log('✅ Paciente configurado para derivar:', pacienteADerivar);
+    console.log('🔍 Verificación inmediata - pacienteADerivar.id:', pacienteADerivar.id);
+    console.log('🔍 Verificación inmediata - typeof pacienteADerivar.id:', typeof pacienteADerivar.id);
+    console.log('🔍 Verificación inmediata - JSON.stringify(pacienteADerivar.id):', JSON.stringify(pacienteADerivar.id));
+    
+    // Marcar que no se debe limpiar durante el proceso
+    derivacionEnProceso = false; // Resetear al abrir modal
+    
+    // Verificar que la variable global se asignó correctamente
+    setTimeout(() => {
+        console.log('⏱️ Verificación después de timeout - pacienteADerivar:', pacienteADerivar);
+    }, 100);
+    
+    const modal = document.getElementById('modalDerivarPaciente');
+    const infoPaciente = document.getElementById('infoPacienteDerivar');
+    const selectProfesional = document.getElementById('selectProfesionalDerivacion');
+    
+    if (!modal) {
+        showMessage('Error: No se pudo abrir el modal de derivación');
+        return;
+    }
+    
+    // Mostrar información del paciente
+    infoPaciente.innerHTML = `
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center">
+                <span class="text-orange-600 dark:text-orange-400 text-xl">👤</span>
+            </div>
+            <div>
+                <h4 class="font-semibold text-gray-900 dark:text-white">${nombrePaciente}</h4>
+                <p class="text-sm text-gray-600 dark:text-gray-400">${emailPaciente}</p>
+            </div>
+        </div>
+    `;
+    
+    // Cargar lista de profesionales
+    try {
+        console.log('👥 Cargando lista de profesionales...');
+        console.log('🔍 Estado del admin panel:', {
+            isAdmin: isAdmin,
+            selectedUser: adminPanelState?.selectedUser,
+            currentUserUid: window.firebaseAuth.currentUser?.uid
+        });
+        
+        if (!window.firebaseDB) {
+            throw new Error('Firebase no está disponible');
+        }
+        
+        const profesionalesSnapshot = await window.firebaseDB.collection('usuarios').get();
+        selectProfesional.innerHTML = '<option value="">Seleccionar profesional...</option>';
+        
+        const currentUser = window.firebaseAuth.currentUser;
+        if (!currentUser) {
+            throw new Error('Usuario no autenticado');
+        }
+        
+        let profesionalesEncontrados = 0;
+        
+        profesionalesSnapshot.forEach(doc => {
+            const profesional = doc.data();
+            const profesionalId = doc.id;
+            
+            console.log('👤 Profesional encontrado:', { id: profesionalId, nombre: profesional.displayName || profesional.email });
+            
+            // Determinar si incluir al usuario actual en la lista
+            let incluirProfesional = false;
+            
+            if (profesionalId !== currentUser.uid) {
+                // Siempre incluir otros profesionales
+                incluirProfesional = true;
+                console.log('✅ Incluir - profesional diferente al usuario actual');
+            } else if (isAdmin && adminPanelState.selectedUser && adminPanelState.selectedUser !== currentUser.uid) {
+                // Si soy admin y estoy viendo pacientes de otro profesional, incluir mi usuario
+                incluirProfesional = true;
+                console.log('✅ Incluir - admin derivando desde otro profesional hacia sí mismo');
+            } else {
+                console.log('❌ Excluir - usuario actual en su propia lista');
+            }
+            
+            if (incluirProfesional) {
+                const option = document.createElement('option');
+                option.value = profesionalId;
+                
+                let nombreProfesional = profesional.displayName || profesional.email || `Profesional ${profesionalId}`;
+                
+                // Si es el usuario actual, agregar etiqueta especial
+                if (profesionalId === currentUser.uid) {
+                    nombreProfesional += ' (Yo mismo)';
+                }
+                
+                option.textContent = nombreProfesional;
+                selectProfesional.appendChild(option);
+                profesionalesEncontrados++;
+                
+                console.log('✅ Profesional agregado a la lista:', nombreProfesional);
+            }
+        });
+        
+        console.log(`📊 Total profesionales disponibles: ${profesionalesEncontrados}`);
+        
+        if (profesionalesEncontrados === 0) {
+            selectProfesional.innerHTML = '<option value="">No hay otros profesionales disponibles</option>';
+        }
+        
+    } catch (error) {
+        console.error('❌ Error cargando profesionales:', error);
+        selectProfesional.innerHTML = '<option value="">Error al cargar profesionales</option>';
+        showMessage('Error al cargar la lista de profesionales: ' + (error.message || error));
+    }
+    
+    modal.classList.remove('hidden');
+};
+
+// Función para cerrar el modal de derivación
+window.cerrarModalDerivar = function() {
+    console.log('🚨 ¡LLAMADA A cerrarModalDerivar()!');
+    console.log('🚨 Stack trace:', new Error().stack);
+    console.log('🚨 pacienteADerivar ANTES de limpiar:', pacienteADerivar);
+    console.log('🚨 derivacionEnProceso:', derivacionEnProceso);
+    
+    const modal = document.getElementById('modalDerivarPaciente');
+    if (modal) {
+        modal.classList.add('hidden');
+        console.log('🚨 Modal ocultado');
+    }
+    
+    // Solo limpiar variables si NO hay derivación en proceso
+    if (!derivacionEnProceso) {
+        console.log('🚨 Limpiando variables - derivación NO en proceso');
+        pacienteADerivar = {
+            id: null,
+            nombre: '',
+            email: ''
+        };
+        console.log('🚨 pacienteADerivar DESPUÉS de limpiar:', pacienteADerivar);
+    } else {
+        console.log('🛡️ NO limpiando variables - derivación EN PROCESO');
+    }
+};
+
+// Función para confirmar la derivación
+window.confirmarDerivacion = async function(event) {
+    // Prevenir propagación del evento para evitar cerrar modal accidentalmente
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        console.log('⚠️ Evento prevenido para evitar propagación');
+    }
+    
+    console.log('🎯 ¡USUARIO HIZO CLIC EN DERIVAR PACIENTE!');
+    console.log('🎯 INICIANDO confirmarDerivacion()');
+    console.log('🔍 Estado de pacienteADerivar al inicio:', pacienteADerivar);
+    console.log('🔍 pacienteADerivar.id:', pacienteADerivar.id);
+    console.log('🔍 typeof pacienteADerivar.id:', typeof pacienteADerivar.id);
+    console.log('🔍 JSON.stringify(pacienteADerivar.id):', JSON.stringify(pacienteADerivar.id));
+    
+    const selectProfesional = document.getElementById('selectProfesionalDerivacion');
+    const profesionalDestino = selectProfesional.value;
+    
+    console.log('👤 Profesional seleccionado:', profesionalDestino);
+    
+    if (!profesionalDestino) {
+        showMessage('Por favor selecciona un profesional de destino');
+        return;
+    }
+    
+    console.log('🔍 Validando pacienteADerivar.id...');
+    console.log('🔍 !pacienteADerivar.id:', !pacienteADerivar.id);
+    console.log('🔍 pacienteADerivar.id === null:', pacienteADerivar.id === null);
+    console.log('🔍 pacienteADerivar.id === undefined:', pacienteADerivar.id === undefined);
+    console.log('🔍 pacienteADerivar.id === "":', pacienteADerivar.id === "");
+    
+    if (!pacienteADerivar.id) {
+        console.error('❌ FALLO EN VALIDACIÓN: pacienteADerivar.id no válido');
+        showMessage('Error: No hay paciente seleccionado para derivar');
+        return;
+    }
+    
+    console.log('✅ VALIDACIÓN PASADA - pacienteADerivar.id:', pacienteADerivar.id);
+    
+    // Marcar derivación en proceso ANTES del customConfirm
+    derivacionEnProceso = true;
+    console.log('🛡️ PROTECCIÓN ACTIVADA antes de customConfirm - derivacionEnProceso:', derivacionEnProceso);
+    
+    // Confirmar la acción con el usuario
+    console.log('🤔 ANTES de customConfirm - pacienteADerivar.id:', pacienteADerivar.id);
+    
+    // Mostrar loading inmediatamente con toast personalizado
+    const loadingToast = document.createElement('div');
+    loadingToast.className = 'fixed top-4 right-4 bg-blue-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-opacity duration-300';
+    loadingToast.textContent = '⏳ Preparando derivación... Por favor espera';
+    loadingToast.id = 'derivacion-loading-toast';
+    document.body.appendChild(loadingToast);
+    
+    // Pequeño delay para asegurar que el toast se muestre
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    // Ocultar el toast automáticamente
+    loadingToast.style.opacity = '0';
+    setTimeout(() => {
+        if (document.body.contains(loadingToast)) {
+            document.body.removeChild(loadingToast);
+        }
+    }, 300);
+    
+    // Cerrar el modal de derivación inmediatamente
+    const modal = document.getElementById('modalDerivarPaciente');
+    if (modal) {
+        modal.classList.add('hidden');
+        console.log('🚪 Modal de derivación cerrado inmediatamente tras confirmación');
+    }
+    
+    const confirmar = await customConfirm(
+        `¿Estás seguro de derivar a "${pacienteADerivar.nombre}" al profesional seleccionado?
+
+⚠️ El paciente desaparecerá de tu lista y se transferirá al otro profesional.`
+    );
+    console.log('✅ DESPUÉS de customConfirm - pacienteADerivar.id:', pacienteADerivar.id);
+    
+    if (!confirmar) {
+        console.log('❌ Usuario canceló la derivación');
+        // Resetear flag si usuario cancela
+        derivacionEnProceso = false;
+        console.log('🔄 Flag reseteado tras cancelación del usuario');
+        return;
+    }
+    
+    console.log('✅ USUARIO CONFIRMÓ - pacienteADerivar.id:', pacienteADerivar.id);
+    
+    try {
+        console.log('🔄 Iniciando derivación del paciente...');
+        console.log('🔍 JUSTO ANTES del logging - pacienteADerivar:', pacienteADerivar);
+        console.log('🔍 JUSTO ANTES del logging - pacienteADerivar.id:', pacienteADerivar.id);
+        
+        // ¡VERIFICACIÓN CRÍTICA ANTES DE CONTINUAR!
+        if (!pacienteADerivar.id) {
+            console.error('🚨 CRÍTICO: pacienteADerivar.id se perdió después de la confirmación!');
+            console.error('🚨 Estado actual de pacienteADerivar:', pacienteADerivar);
+            throw new Error('ID del paciente se perdió durante el proceso - posible corrupción de estado');
+        }
+        
+        console.log('📋 Datos de derivación:', {
+            pacienteId: pacienteADerivar.id,
+            profesionalDestino: profesionalDestino,
+            currentUser: window.firebaseAuth.currentUser?.uid
+        });
+        
+        // Validar Firebase
+        if (!window.firebaseDB) {
+            throw new Error('Firebase Firestore no está disponible');
+        }
+        
+        if (!window.firebaseAuth.currentUser) {
+            throw new Error('Usuario no autenticado');
+        }
+        
+        // Obtener información del profesional de destino
+        console.log('📤 Obteniendo datos del profesional destino...');
+        const profesionalDoc = await window.firebaseDB.collection('usuarios').doc(profesionalDestino).get();
+        
+        if (!profesionalDoc.exists) {
+            throw new Error('El profesional de destino no existe');
+        }
+        
+        const profesionalData = profesionalDoc.data();
+        const nombreProfesional = profesionalData?.displayName || profesionalData?.email || 'Profesional';
+        console.log('👨‍⚕️ Profesional destino:', nombreProfesional);
+        
+        // Verificar que el paciente existe antes de actualizar
+        console.log('🔍 Verificando existencia del paciente...');
+        console.log('🆔 ID del paciente a verificar:', pacienteADerivar.id);
+        
+        if (!pacienteADerivar.id) {
+            throw new Error('ID del paciente no válido para la verificación');
+        }
+        
+        const pacienteDoc = await window.firebaseDB.collection('pacientes').doc(pacienteADerivar.id).get();
+        
+        if (!pacienteDoc.exists) {
+            throw new Error('El paciente no existe o ya fue derivado');
+        }
+        
+        console.log('💾 Actualizando owner del paciente...');
+        // Actualizar el owner del paciente
+        await window.firebaseDB.collection('pacientes').doc(pacienteADerivar.id).update({
+            owner: profesionalDestino,
+            derivadoEl: new Date(),
+            derivadoPor: window.firebaseAuth.currentUser.uid,
+            derivadoA: profesionalDestino
+        });
+        
+        console.log('✅ Actualización en Firebase completada');
+        
+        console.log('✅ Paciente derivado exitosamente');
+        
+        // Cerrar modal
+        console.log('🚪 Cerrando modal de derivación...');
+        cerrarModalDerivar();
+        
+        // Cerrar ficha clínica si está abierta
+        if (fichaPacienteModal && !fichaPacienteModal.classList.contains('hidden')) {
+            console.log('📋 Cerrando ficha clínica...');
+            hideFichaPacienteModal();
+        }
+        
+        // Recargar la lista de pacientes
+        console.log('🔄 Recargando lista de pacientes...');
+        const currentUser = window.firebaseAuth.currentUser;
+        await loadPatients(currentUser.uid);
+        console.log('✅ Lista de pacientes recargada');
+        
+        // Si hay panel admin abierto, recargarlo también
+        if (isAdmin && adminPanel) {
+            console.log('🔄 Recargando panel de administrador...');
+            await showAdminPanel();
+            console.log('✅ Panel de administrador recargado');
+        }
+        
+        showMessage(
+            `✅ Paciente "${pacienteADerivar.nombre}" derivado exitosamente a ${nombreProfesional}`, 
+            'success'
+        );
+        
+        console.log('🎉 Derivación completada exitosamente');
+        
+        // Resetear flag y limpiar variables al finalizar exitosamente
+        derivacionEnProceso = false;
+        pacienteADerivar = { id: null, nombre: '', email: '' };
+        console.log('✅ Variables limpiadas tras derivación exitosa');
+        
+    } catch (error) {
+        console.error('❌ Error al derivar paciente:', error);
+        console.error('❌ Error completo:', error);
+        console.error('❌ Stack trace:', error.stack);
+        
+        // Resetear flag en caso de error también
+        derivacionEnProceso = false;
+        console.log('❌ Flag reseteado tras error en derivación');
+        
+        const errorMessage = error.message || error.toString() || 'Error desconocido al derivar paciente';
+        showMessage('Error al derivar paciente: ' + errorMessage);
+    }
+};
+
+console.log('🔄 Sistema de derivación de pacientes inicializado');
+
+// Función de debugging para ejecutar desde consola
+window.debugDerivacion = function() {
+    console.log('🐛 === DEBUG ESTADO DE DERIVACIÓN ===');
+    console.log('🔍 pacienteADerivar:', pacienteADerivar);
+    console.log('🔍 window.pacienteADerivar:', window.pacienteADerivar);
+    console.log('🔍 fichaPacienteId:', fichaPacienteId);
+    console.log('🔍 typeof fichaPacienteId:', typeof fichaPacienteId);
+    
+    const modal = document.getElementById('modalDerivarPaciente');
+    console.log('🔍 Modal derivación visible:', modal ? !modal.classList.contains('hidden') : 'Modal no encontrado');
+    
+    const select = document.getElementById('selectProfesionalDerivacion');
+    console.log('🔍 Profesional seleccionado:', select ? select.value : 'Select no encontrado');
+    
+    console.log('🐛 === FIN DEBUG ===');
+};

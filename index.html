@@ -736,7 +736,7 @@
                     </p>
                     <!-- Número de versión - Visible para todos los usuarios -->
                     <button id="versionBtn" class="text-xs text-gray-500 hover:text-gray-300 transition mt-2 sm:mt-0 cursor-pointer" onclick="abrirModalVersion()">
-                        v0.2.6
+                        v0.2.9
                     </button>
                 </div>
                 <div class="flex space-x-6 mt-4 md:mt-0">
@@ -838,7 +838,7 @@
             <div class="flex items-center gap-3">
                 <!-- Número de versión - Visible para todos los usuarios -->
                 <button id="versionBtnDashboard" class="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition cursor-pointer px-2 py-1 rounded" onclick="abrirModalVersion()">
-                    v0.2.6
+                    v0.2.9
                 </button>
                 <button id="logoutBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded transition">Cerrar sesión</button>
             </div>
@@ -2750,6 +2750,50 @@
         </div>
     </div>
 
+    <!-- Modal para Derivar Paciente -->
+    <div id="modalDerivarPaciente" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden p-4">
+        <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg w-full max-w-lg relative border dark:border-darkborder">
+            <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-darkborder">
+                <h3 class="text-xl font-bold text-orange-600 dark:text-orange-400">🔄 Derivar Paciente</h3>
+                <button onclick="cerrarModalDerivar()" class="text-gray-400 hover:text-gray-700 text-2xl p-1">×</button>
+            </div>
+            
+            <div class="p-6">
+                <div class="mb-4">
+                    <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4 mb-4">
+                        <div class="flex items-center mb-2">
+                            <span class="text-yellow-600 dark:text-yellow-400 text-lg mr-2">⚠️</span>
+                            <h4 class="font-semibold text-yellow-800 dark:text-yellow-300">Confirmación de Derivación</h4>
+                        </div>
+                        <p class="text-sm text-yellow-700 dark:text-yellow-300">
+                            Estás por transferir este paciente a otro profesional. 
+                            <strong>El paciente desaparecerá de tu lista</strong> y aparecerá en la lista del profesional seleccionado.
+                        </p>
+                    </div>
+                    
+                    <div id="infoPacienteDerivar" class="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <!-- Aquí se mostrará la info del paciente -->
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <label for="selectProfesionalDerivacion" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Seleccionar Profesional de Destino:
+                    </label>
+                    <select id="selectProfesionalDerivacion" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:bg-darkbg dark:text-darktext">
+                        <option value="">Seleccionar profesional...</option>
+                        <!-- Las opciones se cargarán dinámicamente -->
+                    </select>
+                </div>
+                
+                <div class="flex justify-end gap-3">
+                    <button type="button" onclick="cerrarModalDerivar()" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded-lg">Cancelar</button>
+                    <button type="button" onclick="confirmarDerivacion(event)" class="bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-4 rounded-lg">🔄 Derivar Paciente</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Historial de Versiones - Solo para Administradores -->
     <div id="modalVersion" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden p-4">
         <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg w-full max-w-4xl relative border dark:border-darkborder max-h-[90vh] overflow-y-auto">
@@ -2758,7 +2802,7 @@
                     <span class="text-2xl">🚀</span>
                     <div>
                         <h3 class="text-xl font-bold text-primary-700 dark:text-primary-400">Historial de Versiones</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Espacio Cocrearte v0.2.6</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Espacio Cocrearte v0.2.9</p>
                     </div>
                 </div>
                 <button onclick="cerrarModalVersion()" class="text-gray-400 hover:text-gray-700 text-2xl p-1">×</button>
@@ -2768,8 +2812,62 @@
                 <!-- Versión 0.2.6 -->
                 <div class="border-l-4 border-green-600 pl-4 mb-4">
                   <div class="flex items-center gap-2 mb-2">
-                    <span class="bg-green-100 text-green-800 text-sm font-medium px-2 py-1 rounded">v0.2.6</span>
+                    <span class="bg-green-100 text-green-800 text-sm font-medium px-2 py-1 rounded">v0.2.9</span>
                     <span class="text-sm text-gray-500">Actual</span>
+                  </div>
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Control de Acceso Administrativo</h4>
+                  <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                    <li>• <strong>🔐 Derivación Solo Admin:</strong> Funcionalidad de derivar pacientes restringida exclusivamente a administradores</li>
+                    <li>• <strong>🚫 Validación de Permisos:</strong> Verificación automática de permisos antes de permitir acceso</li>
+                    <li>• <strong>👁️ Visibilidad Condicional:</strong> Botones "Derivar" solo aparecen para usuarios autorizados</li>
+                    <li>• <strong>🛡️ Doble Protección:</strong> Validación tanto en UI como en lógica de negocio</li>
+                    <li>• <strong>📋 Mensajes Informativos:</strong> Notificación clara cuando se deniega acceso</li>
+                    <li>• <strong>🚪 Modal Cerrado:</strong> Mejor UX con cierre automático del modal tras confirmar</li>
+                    <li>• <strong>🔍 Auditoría Completa:</strong> Log detallado de intentos de acceso y permisos</li>
+                  </ul>
+                </div>
+                
+                <!-- Versión 0.2.8 -->
+                <div class="border-l-4 border-gray-400 pl-4 mb-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="bg-gray-100 text-gray-800 text-sm font-medium px-2 py-1 rounded">v0.2.8</span>
+                    <span class="text-sm text-gray-500">Anterior</span>
+                  </div>
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">UX Derivación Mejorada</h4>
+                  <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                    <li>• <strong>Toast Automático:</strong> Mensaje de carga desaparece automáticamente sin intervención manual</li>
+                    <li>• <strong>Derivación a Usuario Actual:</strong> En panel admin, ahora puedes derivar pacientes hacia ti mismo</li>
+                    <li>• <strong>Etiqueta "Yo mismo":</strong> Identificación clara cuando apareces como opción de destino</li>
+                    <li>• <strong>Lógica Contextual:</strong> Sistema inteligente que determina qué profesionales mostrar según el contexto</li>
+                    <li>• <strong>Feedback Inmediato:</strong> Respuesta visual instantánea al hacer clic en derivar</li>
+                    <li>• <strong>Protección de Variables:</strong> Prevención de limpieza prematura durante procesos</li>
+                    <li>• <strong>Logging Administrativo:</strong> Trazabilidad completa para debugging de derivaciones</li>
+                  </ul>
+                </div>
+                
+                <!-- Versión 0.2.7 -->
+                <div class="border-l-4 border-gray-400 pl-4 mb-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="bg-gray-100 text-gray-800 text-sm font-medium px-2 py-1 rounded">v0.2.7</span>
+                    <span class="text-sm text-gray-500">Anterior</span>
+                  </div>
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Sistema de Derivación Operativo</h4>
+                  <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                    <li>• <strong>Derivación Funcional:</strong> Corregidos errores críticos que impedían transferir pacientes</li>
+                    <li>• <strong>IDs Corregidos:</strong> Solucionado problema con identificadores nulos en diferentes contextos</li>
+                    <li>• <strong>Validaciones Robustas:</strong> Verificaciones múltiples antes de cualquier transferencia</li>
+                    <li>• <strong>Logging Detallado:</strong> Sistema completo de trazabilidad para identificar errores</li>
+                    <li>• <strong>Interfaz Mejorada:</strong> Mensajes claros con advertencias sobre las consecuencias</li>
+                    <li>• <strong>Transferencia Segura:</strong> Confirmación doble y validación de existencia de profesionales</li>
+                    <li>• <strong>Actualización Automática:</strong> Listas de pacientes se actualizan inmediatamente tras derivar</li>
+                  </ul>
+                </div>
+                
+                <!-- Versión 0.2.6 -->
+                <div class="border-l-4 border-gray-400 pl-4 mb-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="bg-gray-100 text-gray-800 text-sm font-medium px-2 py-1 rounded">v0.2.6</span>
+                    <span class="text-sm text-gray-500">Anterior</span>
                   </div>
                   <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Información Familiar Simplificada</h4>
                   <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
@@ -2784,12 +2882,30 @@
                 </div>
                 
                 <!-- Versión 0.2.5 -->
-                <div class="border-l-4 border-blue-600 pl-4 mb-4">
+                <div class="border-l-4 border-gray-400 pl-4 mb-4">
                   <div class="flex items-center gap-2 mb-2">
-                    <span class="bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded">v0.2.5</span>
+                    <span class="bg-gray-100 text-gray-800 text-sm font-medium px-2 py-1 rounded">v0.2.5</span>
                     <span class="text-sm text-gray-500">Anterior</span>
                   </div>
-                  <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Historial de Sesiones Mejorado</h4>
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Historial de Sesiones Expandido</h4>
+                  <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                    <li>• <strong>Mayor Espacio de Visualización:</strong> Aumento de altura del contenedor del historial de sesiones</li>
+                    <li>• <strong>Vista Expandida:</strong> Botón "Ver completo" para abrir modal de pantalla completa</li>
+                    <li>• <strong>Modal de Historial Completo:</strong> Vista expandida similar al sistema de observaciones</li>
+                    <li>• <strong>Navegación Mejorada:</strong> Cierre con ESC y clic fuera del modal</li>
+                    <li>• <strong>Detalle de Sesiones:</strong> Visualización completa de observaciones, notas y archivos</li>
+                    <li>• <strong>Interfaz Responsive:</strong> Adaptación óptima a diferentes tamaños de pantalla</li>
+                    <li>• <strong>UX Consistente:</strong> Comportamiento similar a otros modales expandidos del sistema</li>
+                  </ul>
+                </div>
+                
+                <!-- Versión 0.2.4 -->
+                <div class="border-l-4 border-blue-600 pl-4 mb-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded">v0.2.4</span>
+                    <span class="text-sm text-gray-500">Anterior</span>
+                  </div>
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Historial de Sesiones Expandido</h4>
                   <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
                     <li>• <strong>Mayor Espacio de Visualización:</strong> Aumento de altura del contenedor del historial de sesiones</li>
                     <li>• <strong>Vista Expandida:</strong> Botón "Ver completo" para abrir modal de pantalla completa</li>
