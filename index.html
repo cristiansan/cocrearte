@@ -118,6 +118,82 @@
         width: 100%;
         flex: 1 1 auto;
       }
+      
+      /* Estilos para el modal de historial expandido */
+      .historial-fullscreen-bg {
+        position: fixed !important;
+        top: 0; left: 0; right: 0; bottom: 0;
+        z-index: 99999;
+        background: rgba(0, 0, 0, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px !important;
+      }
+      
+      .historial-fullscreen-modal {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 32px rgba(0,0,0,0.4);
+        max-width: 1200px;
+        width: 96vw;
+        min-width: 320px;
+        max-height: 90vh;
+        height: 80vh;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+      
+      .dark .historial-fullscreen-modal {
+        background: #1f2937;
+        color: #f9fafb;
+      }
+      
+      .historial-fullscreen-header {
+        padding: 24px 32px;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+      }
+      
+      .dark .historial-fullscreen-header {
+        border-bottom-color: #374151;
+      }
+      
+      .historial-fullscreen-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 24px 32px;
+      }
+      
+      .historial-fullscreen-content .sesion-item {
+        margin-bottom: 24px;
+        padding: 20px;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+      }
+      
+      .dark .historial-fullscreen-content .sesion-item {
+        border-color: #374151;
+      }
+      
+      .historial-fullscreen-close {
+        background: #6b7280;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 16px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background-color 0.2s;
+      }
+      
+      .historial-fullscreen-close:hover {
+        background: #4b5563;
+      }
       .quill-fullscreen-editor .ql-editor {
         color: #222;
         background: #fff;
@@ -660,7 +736,7 @@
                     </p>
                     <!-- Número de versión - Solo visible para administradores -->
                     <button id="versionBtn" class="hidden text-xs text-gray-500 hover:text-gray-300 transition mt-2 sm:mt-0 cursor-pointer" onclick="abrirModalVersion()">
-                        v2.3.5
+                        v0.2.5
                     </button>
                 </div>
                 <div class="flex space-x-6 mt-4 md:mt-0">
@@ -766,7 +842,7 @@
                 </button>
                 <!-- Número de versión - Solo visible para administradores -->
                 <button id="versionBtnDashboard" class="hidden text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition cursor-pointer px-2 py-1 rounded" onclick="abrirModalVersion()">
-                    v0.2.4
+                    v0.2.5
                 </button>
                 <button id="logoutBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded transition">Cerrar sesión</button>
             </div>
@@ -800,6 +876,31 @@
             <div id="calendar" class="bg-white dark:bg-darkcard rounded-b-lg shadow p-4 border dark:border-darkborder"></div>
         </div>
       </div>
+      <!-- Panel de recordatorios WhatsApp -->
+      <section id="recordatoriosSection" class="w-full mt-0 hidden">
+        <div class="bg-white dark:bg-darkcard rounded-lg shadow p-6 border dark:border-darkborder w-full">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-semibold text-[#2d3748] dark:text-gray-100 flex items-center gap-2">
+              📱 Recordatorios WhatsApp
+              <span id="recordatoriosCount" class="bg-red-500 text-white text-sm px-2 py-1 rounded-full hidden">0</span>
+            </h3>
+            <div class="flex gap-2">
+              <button id="configurarMensajeBtn" class="bg-purple-500 hover:bg-purple-600 text-white font-medium py-2 px-4 rounded transition">
+                ⚙️ Configurar Mensaje
+              </button>
+              <button id="actualizarRecordatoriosBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded transition">
+                🔄 Actualizar
+              </button>
+            </div>
+          </div>
+          <div id="recordatoriosList" class="space-y-3">
+            <div class="text-gray-500 dark:text-gray-400 text-center py-4">
+              Cargando recordatorios...
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Panel de pacientes -->
       <section id="dashboardPacientesSection" class="w-full mt-0 hidden">
         <div class="bg-white dark:bg-darkcard rounded-lg shadow p-6 border dark:border-darkborder w-full">
@@ -1416,8 +1517,13 @@
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <!-- Lista de sesiones existentes -->
                     <div class="lg:order-2">
-                        <h4 class="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Historial de Sesiones</h4>
-                        <div id="sesionesList" class="space-y-3 max-h-64 lg:max-h-80 overflow-y-auto border border-gray-200 dark:border-darkborder rounded-lg p-3"></div>
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="text-lg font-semibold text-gray-900 dark:text-white">Historial de Sesiones</h4>
+                            <button type="button" id="historialMaximizeBtn" class="bg-primary-600 hover:bg-primary-700 text-white px-3 py-1 rounded text-sm flex items-center gap-1" title="Ver historial completo">
+                                ⤢ Ver completo
+                            </button>
+                        </div>
+                        <div id="sesionesList" class="space-y-3 max-h-96 lg:max-h-[500px] overflow-y-auto border border-gray-200 dark:border-darkborder rounded-lg p-3"></div>
                         <div id="noSesionesMsg" class="text-gray-500 text-center py-8 border border-gray-200 dark:border-darkborder rounded-lg hidden">
                             <div class="text-4xl mb-2">📝</div>
                             <p>No hay sesiones registradas.</p>
@@ -1606,6 +1712,20 @@
               📋 Clasificación CIE-10
               <span id="nomencladorSeleccionadoCalendar" class="text-xs bg-blue-500 px-2 py-1 rounded hidden"></span>
             </button>
+          </div>
+          
+          <!-- Opción recordatorio WhatsApp -->
+          <div class="border-t border-gray-200 dark:border-darkborder pt-4">
+            <div class="flex items-center gap-3">
+              <input type="checkbox" id="crearRecordatorioWhatsApp" checked class="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 dark:focus:ring-green-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+              <label for="crearRecordatorioWhatsApp" class="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+                📱 Crear recordatorio WhatsApp
+                <span class="text-xs text-gray-500 dark:text-gray-400">(24h antes)</span>
+              </label>
+            </div>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-7">
+              Se enviará un recordatorio al teléfono del paciente 24 horas antes del turno
+            </p>
           </div>
         </form>
         </div>
@@ -2633,18 +2753,36 @@
                     <span class="text-2xl">🚀</span>
                     <div>
                         <h3 class="text-xl font-bold text-primary-700 dark:text-primary-400">Historial de Versiones</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Espacio Cocrearte v0.2.4</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Espacio Cocrearte v0.2.5</p>
                     </div>
                 </div>
                 <button onclick="cerrarModalVersion()" class="text-gray-400 hover:text-gray-700 text-2xl p-1">×</button>
             </div>
             
             <div class="p-6 space-y-6">
-                <!-- Versión 0.2.1 -->
+                <!-- Versión 0.2.5 -->
                 <div class="border-l-4 border-green-600 pl-4 mb-4">
                   <div class="flex items-center gap-2 mb-2">
-                    <span class="bg-green-100 text-green-800 text-sm font-medium px-2 py-1 rounded">v0.2.4</span>
+                    <span class="bg-green-100 text-green-800 text-sm font-medium px-2 py-1 rounded">v0.2.5</span>
                     <span class="text-sm text-gray-500">Actual</span>
+                  </div>
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Historial de Sesiones Mejorado</h4>
+                  <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                    <li>• <strong>Mayor Espacio de Visualización:</strong> Aumento de altura del contenedor del historial de sesiones</li>
+                    <li>• <strong>Vista Expandida:</strong> Botón "Ver completo" para abrir modal de pantalla completa</li>
+                    <li>• <strong>Modal de Historial Completo:</strong> Vista expandida similar al sistema de observaciones</li>
+                    <li>• <strong>Lectura Cómoda:</strong> Cada sesión con secciones bien diferenciadas y espaciado optimizado</li>
+                    <li>• <strong>Controles Múltiples:</strong> Cierre con botón X, tecla Escape o clic fuera del modal</li>
+                    <li>• <strong>Diseño Consistente:</strong> Mantiene indicadores de primera sesión y clasificación CIE-10</li>
+                    <li>• <strong>Responsive:</strong> Se adapta perfectamente a diferentes tamaños de pantalla</li>
+                  </ul>
+                </div>
+                
+                <!-- Versión 0.2.4 -->
+                <div class="border-l-4 border-blue-600 pl-4 mb-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded">v0.2.4</span>
+                    <span class="text-sm text-gray-500">Anterior</span>
                   </div>
                   <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Dictado por Voz Mejorado</h4>
                   <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
@@ -3124,6 +3262,68 @@
             <button id="btnDescargarBackupSinNotas" class="bg-yellow-500 hover:bg-yellow-600 text-white text-xs py-1 px-4 rounded">sin notas</button>
           </div>
           <button id="btnCancelarBackup" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded">Cancelar</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Modal para configurar mensaje de recordatorio -->
+    <div id="modalConfiguracionMensaje" class="modal hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div class="modal-content bg-white dark:bg-darkcard rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold text-[#2d3748] dark:text-gray-100">
+              📱 Configurar Mensaje de Recordatorio
+            </h2>
+            <button id="cerrarConfiguracionMensaje" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl">
+              ×
+            </button>
+          </div>
+          
+          <div class="space-y-4">
+            <!-- Plantillas predefinidas -->
+            <div>
+              <label class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-2">
+                Plantillas Predefinidas
+              </label>
+              <select id="plantillasSelect" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-darkbg dark:text-darktext">
+                <option value="default">Mensaje por defecto</option>
+                <option value="formal">Mensaje formal</option>
+                <option value="amigable">Mensaje amigable</option>
+                <option value="breve">Mensaje breve</option>
+              </select>
+            </div>
+            
+            <!-- Editor de mensaje -->
+            <div>
+              <label class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-2">
+                Personalizar Mensaje
+              </label>
+              <div class="mb-2 text-xs text-gray-500 dark:text-gray-400">
+                Variables disponibles: {nombre}, {fecha}, {hora}, {lugar}
+              </div>
+              <textarea id="mensajePersonalizado" rows="8" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-darkbg dark:text-darktext resize-none" 
+                        placeholder="Escribe tu mensaje personalizado aquí..."></textarea>
+            </div>
+            
+            <!-- Vista previa -->
+            <div>
+              <label class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-2">
+                Vista Previa
+              </label>
+              <div id="vistaPreviaMensaje" class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border text-sm whitespace-pre-wrap">
+                <!-- Vista previa del mensaje -->
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex justify-end gap-3 mt-6">
+            <button id="cancelarConfiguracionMensaje" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+              Cancelar
+            </button>
+            <button id="guardarConfiguracionMensaje" class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition">
+              Guardar Configuración
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -743,6 +743,9 @@ async function showDashboard(user) {
         dashboardPacientesSection.classList.remove('hidden');
     }
     
+    // Cargar recordatorios WhatsApp
+    await mostrarRecordatoriosEnDashboard();
+    
     // Para administradores, asegurar que el panel de administración esté visible por defecto
     if (isAdmin && adminPanel) {
         adminPanel.classList.remove('hidden');
@@ -1320,6 +1323,211 @@ async function loadSesiones() {
         }
     });
 }
+
+// === MODAL DE HISTORIAL EXPANDIDO ===
+
+// Variables globales para el modal de historial
+let historialOverlay = null;
+
+// Función para crear HTML de una sesión para el modal expandido
+function crearHtmlSesionModal(sesionInfo, esPrimera) {
+    const s = sesionInfo.data;
+    
+    let htmlContent = '<div class="sesion-item bg-white dark:bg-gray-800">';
+    
+    if (esPrimera) {
+        htmlContent += `
+            <div class="flex items-center gap-3 mb-4">
+                <span class="text-2xl">🌟</span>
+                <span class="text-base font-bold text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-800 px-3 py-2 rounded-full">
+                    Primera Sesión
+                </span>
+            </div>
+        `;
+    }
+    
+    htmlContent += `
+        <div class="mb-4">
+            <div class="text-lg font-bold text-[#2d3748] dark:text-gray-100 mb-2">
+                <span class="font-semibold">Fecha:</span> ${s.fecha || ''}
+            </div>
+            ${s.presentismo ? `<div class="text-sm mb-2 text-gray-600 dark:text-gray-400"><span class="font-semibold">Presentismo:</span> ${obtenerTextoPresentismo(s.presentismo)}</div>` : ''}
+        </div>
+        
+        <div class="mb-4">
+            <h5 class="font-semibold text-gray-700 dark:text-gray-300 mb-2">Observaciones:</h5>
+            <div class="text-gray-900 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 p-4 rounded-lg leading-relaxed">
+                ${s.comentario || 'Sin observaciones registradas'}
+            </div>
+        </div>
+    `;
+    
+    if (s.notas) {
+        htmlContent += `
+            <div class="mb-4">
+                <h5 class="font-semibold text-gray-700 dark:text-gray-300 mb-2">Notas adicionales:</h5>
+                <div class="text-gray-600 dark:text-gray-400 bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
+                    ${s.notas}
+                </div>
+            </div>
+        `;
+    }
+    
+    // Agregar información del nomenclador CIE-10 si existe
+    if (s.nomencladorCIE10) {
+        const cie10 = s.nomencladorCIE10;
+        htmlContent += `
+            <div class="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-400">
+                <div class="text-sm font-semibold text-blue-700 dark:text-blue-300 mb-2">📋 Clasificación CIE-10</div>
+                <div class="text-sm text-blue-600 dark:text-blue-400">
+                    <div class="mb-1"><strong>Código:</strong> ${cie10.codigo}</div>
+                    <div class="mb-2"><strong>Categoría:</strong> ${cie10.categoriaNombre}</div>
+                    <div class="text-blue-500 dark:text-blue-300">${cie10.descripcion}</div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Agregar archivos adjuntos
+    if (s.archivosUrls && s.archivosUrls.length) {
+        htmlContent += `
+            <div class="mb-4">
+                <h5 class="font-semibold text-gray-700 dark:text-gray-300 mb-2">Archivos adjuntos:</h5>
+                <div class="flex flex-col gap-2">
+                    ${s.archivosUrls.map((url, index) => `
+                        <a href="${url}" target="_blank" class="text-primary-700 underline dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300">
+                            📎 Ver archivo adjunto ${index + 1}
+                        </a>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    htmlContent += '</div>';
+    return htmlContent;
+}
+
+// Función para mostrar el modal de historial expandido
+async function mostrarHistorialExpandido() {
+    if (!fichaPacienteRef) return;
+    
+    console.log('📋 Abriendo historial expandido...');
+    
+    // Crear overlay si no existe
+    if (!historialOverlay) {
+        historialOverlay = document.createElement('div');
+        historialOverlay.className = 'historial-fullscreen-bg';
+        document.body.appendChild(historialOverlay);
+    }
+    
+    // Cargar datos del paciente
+    const pacienteDoc = await fichaPacienteRef.get();
+    const pacienteData = pacienteDoc.data();
+    const nombrePaciente = pacienteData?.nombre || pacienteData?.email || 'Paciente';
+    
+    // Cargar sesiones
+    const snapshot = await fichaPacienteRef.collection('sesiones').orderBy('fecha', 'desc').get();
+    
+    if (snapshot.empty) {
+        historialOverlay.innerHTML = `
+            <div class="historial-fullscreen-modal">
+                <div class="historial-fullscreen-header">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-white">📋 Historial Completo - ${nombrePaciente}</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Vista expandida del historial de sesiones</p>
+                    </div>
+                    <button class="historial-fullscreen-close" onclick="cerrarHistorialExpandido()">✕ Cerrar</button>
+                </div>
+                <div class="historial-fullscreen-content">
+                    <div class="text-center py-16 text-gray-500 dark:text-gray-400">
+                        <div class="text-6xl mb-4">📝</div>
+                        <p>No hay sesiones registradas para este paciente.</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        historialOverlay.style.display = 'flex';
+        return;
+    }
+    
+    // Procesar sesiones como en loadSesiones()
+    const sesionesArray = [];
+    snapshot.forEach(doc => {
+        const s = doc.data();
+        sesionesArray.push({
+            id: doc.id,
+            data: s,
+            fecha: new Date(s.fecha).getTime()
+        });
+    });
+    
+    const sesionesConComentarios = sesionesArray.filter(sesion => {
+        return tieneComentariosValidos(sesion.data.comentario);
+    });
+    
+    sesionesConComentarios.sort((a, b) => a.fecha - b.fecha);
+    const sesionesParaMostrar = [...sesionesArray].sort((a, b) => b.fecha - a.fecha);
+    const primeraSesionConComentariosId = sesionesConComentarios.length > 0 ? sesionesConComentarios[0].id : null;
+    
+    // Generar HTML del contenido
+    let contenidoSesiones = '';
+    sesionesParaMostrar.forEach(sesionInfo => {
+        const esPrimera = sesionInfo.id === primeraSesionConComentariosId;
+        contenidoSesiones += crearHtmlSesionModal(sesionInfo, esPrimera);
+    });
+    
+    historialOverlay.innerHTML = `
+        <div class="historial-fullscreen-modal">
+            <div class="historial-fullscreen-header">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">📋 Historial Completo - ${nombrePaciente}</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Vista expandida del historial de sesiones (${sesionesParaMostrar.length} sesiones)</p>
+                </div>
+                <button class="historial-fullscreen-close" onclick="cerrarHistorialExpandido()">✕ Cerrar</button>
+            </div>
+            <div class="historial-fullscreen-content">
+                ${contenidoSesiones}
+            </div>
+        </div>
+    `;
+    
+    historialOverlay.style.display = 'flex';
+    console.log('✅ Historial expandido mostrado');
+}
+
+// Función para cerrar el modal de historial expandido
+window.cerrarHistorialExpandido = function() {
+    if (historialOverlay) {
+        historialOverlay.style.display = 'none';
+        console.log('📋 Historial expandido cerrado');
+    }
+}
+
+// Event listener para el botón de maximizar historial
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+        const historialMaxBtn = document.getElementById('historialMaximizeBtn');
+        if (historialMaxBtn) {
+            historialMaxBtn.addEventListener('click', mostrarHistorialExpandido);
+            console.log('✅ Event listener del historial expandido configurado');
+        }
+    }, 1000);
+    
+    // Event listener para cerrar modal con ESC y clic fuera
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && historialOverlay && historialOverlay.style.display === 'flex') {
+            cerrarHistorialExpandido();
+        }
+    });
+    
+    // Event listener para clic fuera del modal
+    document.addEventListener('click', function(e) {
+        if (historialOverlay && e.target === historialOverlay && historialOverlay.style.display === 'flex') {
+            cerrarHistorialExpandido();
+        }
+    });
+});
 
 // Modal de confirmación personalizado
 function customConfirm(message) {
@@ -2819,6 +3027,7 @@ if (formNuevaSesion) {
         const fecha = inputFechaSesion.value;
         const presentismo = inputPresentismoSesion.value;
         const notas = inputNotasSesion.value;
+        const crearRecordatorio = document.getElementById('crearRecordatorioWhatsApp').checked;
         let profesionalId = null;
         if (isAdmin && profesionalSelectContainer && profesionalSelectContainer.style.display !== 'none' && selectProfesional) {
             profesionalId = selectProfesional.value;
@@ -2871,6 +3080,17 @@ if (formNuevaSesion) {
                     console.log('✅ Datos CIE-10 incluidos en nueva sesión');
                 }
                 const docRef = await window.firebaseDB.collection('pacientes').doc(pacienteId).collection('sesiones').add(datosSession);
+                
+                // Crear recordatorio para WhatsApp solo si está marcado
+                if (crearRecordatorio) {
+                    await crearRecordatorioWhatsApp(pacienteId, fecha, docRef.id);
+                    
+                    // Actualizar dashboard de recordatorios inmediatamente
+                    setTimeout(async () => {
+                        await mostrarRecordatoriosEnDashboard();
+                    }, 1000);
+                }
+                
                 // Verificar si es la primera sesión de este paciente
                 const esPrimera = await esPrimeraSesion(pacienteId, fecha);
                 // Agregar evento a la instancia activa
@@ -7147,6 +7367,464 @@ document.addEventListener('DOMContentLoaded', function() {
             stopRecording();
         }
     });
+    
+    // Event listener para botón de actualizar recordatorios
+    const actualizarRecordatoriosBtn = document.getElementById('actualizarRecordatoriosBtn');
+    if (actualizarRecordatoriosBtn) {
+        actualizarRecordatoriosBtn.addEventListener('click', async function() {
+            this.disabled = true;
+            this.innerHTML = '🔄 Cargando...';
+            
+            try {
+                await mostrarRecordatoriosEnDashboard();
+                this.innerHTML = '✅ Actualizado';
+                setTimeout(() => {
+                    this.innerHTML = '🔄 Actualizar';
+                    this.disabled = false;
+                }, 2000);
+            } catch (error) {
+                console.error('Error actualizando recordatorios:', error);
+                this.innerHTML = '❌ Error';
+                setTimeout(() => {
+                    this.innerHTML = '🔄 Actualizar';
+                    this.disabled = false;
+                }, 2000);
+            }
+        });
+    }
+    
+    // Event listeners para configuración de mensajes
+    const configurarMensajeBtn = document.getElementById('configurarMensajeBtn');
+    const modalConfiguracionMensaje = document.getElementById('modalConfiguracionMensaje');
+    const cerrarConfiguracionMensaje = document.getElementById('cerrarConfiguracionMensaje');
+    const cancelarConfiguracionMensaje = document.getElementById('cancelarConfiguracionMensaje');
+    const guardarConfiguracionMensajeBtn = document.getElementById('guardarConfiguracionMensaje');
+    const plantillasSelect = document.getElementById('plantillasSelect');
+    const mensajePersonalizado = document.getElementById('mensajePersonalizado');
+    const vistaPreviaMensaje = document.getElementById('vistaPreviaMensaje');
+    
+    if (configurarMensajeBtn && modalConfiguracionMensaje) {
+        configurarMensajeBtn.addEventListener('click', function() {
+            // Cargar configuración actual
+            const config = cargarConfiguracionMensaje();
+            plantillasSelect.value = config.plantilla;
+            mensajePersonalizado.value = config.mensajePersonalizado;
+            actualizarVistaPreviaConfig();
+            modalConfiguracionMensaje.classList.remove('hidden');
+        });
+        
+        cerrarConfiguracionMensaje.addEventListener('click', function() {
+            modalConfiguracionMensaje.classList.add('hidden');
+        });
+        
+        cancelarConfiguracionMensaje.addEventListener('click', function() {
+            modalConfiguracionMensaje.classList.add('hidden');
+        });
+        
+        plantillasSelect.addEventListener('change', function() {
+            const plantillaSeleccionada = this.value;
+            if (plantillasMensajes[plantillaSeleccionada]) {
+                mensajePersonalizado.value = plantillasMensajes[plantillaSeleccionada];
+                actualizarVistaPreviaConfig();
+            }
+        });
+        
+        mensajePersonalizado.addEventListener('input', actualizarVistaPreviaConfig);
+        
+        guardarConfiguracionMensajeBtn.addEventListener('click', function() {
+            const config = {
+                plantilla: plantillasSelect.value,
+                mensajePersonalizado: mensajePersonalizado.value,
+                lugar: 'Consultorio Cocrearte' // Por ahora fijo, se puede hacer configurable después
+            };
+            
+            guardarConfiguracionMensaje(config);
+            modalConfiguracionMensaje.classList.add('hidden');
+            
+            // Mostrar confirmación
+            this.innerHTML = '✅ Guardado';
+            setTimeout(() => {
+                this.innerHTML = 'Guardar Configuración';
+            }, 2000);
+        });
+    }
+    
+    // Función para actualizar vista previa
+    function actualizarVistaPreviaConfig() {
+        if (vistaPreviaMensaje && mensajePersonalizado) {
+            const mensajeEjemplo = mensajePersonalizado.value
+                .replace(/{nombre}/g, 'María García')
+                .replace(/{fecha}/g, 'viernes, 17 de enero de 2025')
+                .replace(/{hora}/g, '14:30')
+                .replace(/{lugar}/g, 'Consultorio Cocrearte');
+            
+            vistaPreviaMensaje.textContent = mensajeEjemplo;
+        }
+    }
+    
+    // Event listener para mostrar/ocultar opción de WhatsApp según paciente seleccionado
+    const selectPaciente = document.getElementById('selectPaciente');
+    const checkboxRecordatorio = document.getElementById('crearRecordatorioWhatsApp');
+    const containerRecordatorio = checkboxRecordatorio ? checkboxRecordatorio.closest('div').parentElement : null;
+    
+    if (selectPaciente && containerRecordatorio) {
+        selectPaciente.addEventListener('change', async function() {
+            const pacienteId = this.value;
+            
+            if (pacienteId) {
+                try {
+                    // Obtener datos del paciente
+                    const pacienteDoc = await window.firebaseDB.collection('pacientes').doc(pacienteId).get();
+                    if (pacienteDoc.exists) {
+                        const pacienteData = pacienteDoc.data();
+                        const tieneTelefono = pacienteData.telefono && pacienteData.telefono.trim() !== '';
+                        
+                        if (tieneTelefono) {
+                            containerRecordatorio.style.display = 'block';
+                            checkboxRecordatorio.checked = true;
+                        } else {
+                            containerRecordatorio.style.display = 'none';
+                            checkboxRecordatorio.checked = false;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error verificando teléfono del paciente:', error);
+                    containerRecordatorio.style.display = 'none';
+                }
+            } else {
+                containerRecordatorio.style.display = 'none';
+            }
+        });
+    }
 });
 
+// === SISTEMA DE RECORDATORIOS WHATSAPP ===
+
+// Función para crear recordatorio de WhatsApp
+async function crearRecordatorioWhatsApp(pacienteId, fechaSesion, sesionId) {
+    try {
+        console.log('📅 Creando recordatorio WhatsApp para sesión:', sesionId);
+        
+        // Obtener datos del paciente
+        const pacienteDoc = await window.firebaseDB.collection('pacientes').doc(pacienteId).get();
+        if (!pacienteDoc.exists) {
+            console.error('❌ Paciente no encontrado para recordatorio');
+            return;
+        }
+        
+        const pacienteData = pacienteDoc.data();
+        const telefono = pacienteData.telefono;
+        
+        if (!telefono || telefono.trim() === '') {
+            console.warn('⚠️ Paciente sin teléfono, no se puede crear recordatorio WhatsApp');
+            return;
+        }
+        
+        // Calcular fecha de recordatorio (24 horas antes)
+        const fechaSesionObj = new Date(fechaSesion);
+        const fechaRecordatorio = new Date(fechaSesionObj.getTime() - (24 * 60 * 60 * 1000));
+        
+        // Crear datos del recordatorio
+        const recordatorioData = {
+            pacienteId: pacienteId,
+            sesionId: sesionId,
+            fechaSesion: fechaSesion,
+            fechaRecordatorio: fechaRecordatorio,
+            telefono: telefono,
+            nombrePaciente: pacienteData.nombre || pacienteData.email,
+            estado: 'pendiente', // pendiente, enviado, cancelado
+            creado: new Date(),
+            tipo: 'whatsapp'
+        };
+        
+        // Guardar en colección de recordatorios
+        await window.firebaseDB.collection('recordatorios').add(recordatorioData);
+        console.log('✅ Recordatorio WhatsApp creado para:', pacienteData.nombre, 'el', fechaRecordatorio.toLocaleString());
+        
+    } catch (error) {
+        console.error('❌ Error creando recordatorio WhatsApp:', error);
+    }
+}
+
+// Función para generar enlace de WhatsApp
+function generarEnlaceWhatsApp(telefono, mensaje) {
+    // Limpiar el número de teléfono (solo dígitos)
+    const telefonoLimpio = telefono.replace(/\D/g, '');
+    
+    // Agregar código de país si no lo tiene (Argentina por defecto)
+    let telefonoCompleto = telefonoLimpio;
+    if (!telefonoCompleto.startsWith('54') && telefonoCompleto.length === 10) {
+        telefonoCompleto = '54' + telefonoCompleto;
+    }
+    
+    // Codificar el mensaje para URL
+    const mensajeCodificado = encodeURIComponent(mensaje);
+    
+    // Crear enlace de WhatsApp
+    return `https://wa.me/${telefonoCompleto}?text=${mensajeCodificado}`;
+}
+
+// Función para generar mensaje de recordatorio
+function generarMensajeRecordatorio(nombrePaciente, fechaSesion) {
+    const fecha = new Date(fechaSesion);
+    const fechaFormateada = fecha.toLocaleDateString('es-AR', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+    const horaFormateada = fecha.toLocaleTimeString('es-AR', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    
+    return `¡Hola ${nombrePaciente}! 👋
+
+Te recordamos tu turno mañana:
+📅 Fecha: ${fechaFormateada}
+⏰ Hora: ${horaFormateada}
+📍 Lugar: Consultorio Cocrearte
+
+Si necesitas reprogramar, responde a este mensaje.
+
+¡Te esperamos! 😊`;
+}
+
+// Función para cargar recordatorios pendientes
+async function cargarRecordatoriosPendientes() {
+    try {
+        const ahora = new Date();
+        const en48Horas = new Date(ahora.getTime() + (365 * 24 * 60 * 60 * 1000)); // 1 año para testing
+        
+        // Buscar todos los recordatorios pendientes (sin filtro de fecha para evitar índice)
+        const recordatoriosSnap = await window.firebaseDB
+            .collection('recordatorios')
+            .where('estado', '==', 'pendiente')
+            .get();
+        
+        const recordatorios = [];
+        recordatoriosSnap.forEach(doc => {
+            const data = doc.data();
+            const fechaRecordatorio = new Date(data.fechaRecordatorio);
+            
+            // Filtrar en JavaScript: mostrar solo los próximos en 48 horas
+            if (fechaRecordatorio <= en48Horas) {
+                recordatorios.push({
+                    id: doc.id,
+                    ...data
+                });
+            }
+        });
+        
+        console.log(`📱 Recordatorios pendientes encontrados: ${recordatorios.length}`);
+        return recordatorios;
+        
+    } catch (error) {
+        console.error('❌ Error cargando recordatorios:', error);
+        return [];
+    }
+}
+
+// Función para mostrar recordatorios en el dashboard
+async function mostrarRecordatoriosEnDashboard() {
+    try {
+        const recordatorios = await cargarRecordatoriosPendientes();
+        const recordatoriosList = document.getElementById('recordatoriosList');
+        const recordatoriosCount = document.getElementById('recordatoriosCount');
+        const recordatoriosSection = document.getElementById('recordatoriosSection');
+        
+        if (!recordatoriosList) return;
+        
+        // Mostrar/ocultar sección según si hay recordatorios
+        if (recordatorios.length === 0) {
+            recordatoriosSection.classList.add('hidden');
+            return;
+        } else {
+            recordatoriosSection.classList.remove('hidden');
+        }
+        
+        // Actualizar contador
+        if (recordatoriosCount) {
+            recordatoriosCount.textContent = recordatorios.length;
+            recordatoriosCount.classList.remove('hidden');
+        }
+        
+        // Generar HTML para cada recordatorio
+        const recordatoriosHTML = recordatorios.map(recordatorio => {
+            const fechaSesion = new Date(recordatorio.fechaSesion);
+            const fechaRecordatorio = new Date(recordatorio.fechaRecordatorio);
+            const ahora = new Date();
+            
+            // Determinar si es urgente (menos de 2 horas para enviar)
+            const tiempoRestante = fechaRecordatorio - ahora;
+            const esUrgente = tiempoRestante <= (2 * 60 * 60 * 1000) && tiempoRestante > 0;
+            const yaVencido = tiempoRestante <= 0;
+            
+            const mensaje = generarMensajeRecordatorio(recordatorio.nombrePaciente, recordatorio.fechaSesion);
+            const enlaceWhatsApp = generarEnlaceWhatsApp(recordatorio.telefono, mensaje);
+            
+            const colorBorde = yaVencido ? 'border-red-500' : esUrgente ? 'border-orange-500' : 'border-green-500';
+            const colorFondo = yaVencido ? 'bg-red-50 dark:bg-red-900/20' : esUrgente ? 'bg-orange-50 dark:bg-orange-900/20' : 'bg-green-50 dark:bg-green-900/20';
+            const iconoEstado = yaVencido ? '🚨' : esUrgente ? '⚠️' : '📅';
+            
+            return `
+                <div class="border-l-4 ${colorBorde} ${colorFondo} p-4 rounded-r-lg">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="text-lg">${iconoEstado}</span>
+                                <h4 class="font-semibold text-gray-900 dark:text-white">
+                                    ${recordatorio.nombrePaciente}
+                                </h4>
+                                <span class="text-sm text-gray-500 dark:text-gray-400">
+                                    ${recordatorio.telefono}
+                                </span>
+                            </div>
+                            <div class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                                <div><strong>Sesión:</strong> ${fechaSesion.toLocaleString('es-AR')}</div>
+                                <div><strong>Recordar:</strong> ${fechaRecordatorio.toLocaleString('es-AR')}</div>
+                                ${yaVencido ? '<div class="text-red-600 dark:text-red-400 font-medium">⏰ Vencido</div>' : ''}
+                                ${esUrgente && !yaVencido ? '<div class="text-orange-600 dark:text-orange-400 font-medium">⏰ Urgente</div>' : ''}
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-2 ml-4">
+                            <a href="${enlaceWhatsApp}" target="_blank" 
+                               class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium transition flex items-center gap-2">
+                                📱 Enviar WhatsApp
+                            </a>
+                            <button onclick="marcarRecordatorioEnviado('${recordatorio.id}')" 
+                                    class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-full text-sm font-medium transition">
+                                ✅ Marcar enviado
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        recordatoriosList.innerHTML = recordatoriosHTML;
+        
+    } catch (error) {
+        console.error('❌ Error mostrando recordatorios:', error);
+        const recordatoriosList = document.getElementById('recordatoriosList');
+        if (recordatoriosList) {
+            recordatoriosList.innerHTML = `
+                <div class="text-red-500 dark:text-red-400 text-center py-4">
+                    Error cargando recordatorios
+                </div>
+            `;
+        }
+    }
+}
+
+// Función para marcar recordatorio como enviado
+window.marcarRecordatorioEnviado = async function(recordatorioId) {
+    try {
+        await window.firebaseDB.collection('recordatorios').doc(recordatorioId).update({
+            estado: 'enviado',
+            fechaEnvio: new Date()
+        });
+        
+        console.log('✅ Recordatorio marcado como enviado:', recordatorioId);
+        
+        // Actualizar la lista
+        await mostrarRecordatoriosEnDashboard();
+        
+    } catch (error) {
+        console.error('❌ Error marcando recordatorio como enviado:', error);
+        alert('Error al marcar el recordatorio como enviado');
+    }
+}
+
+// === PLANTILLAS DE MENSAJES ===
+
+// Plantillas predefinidas
+const plantillasMensajes = {
+    default: `¡Hola {nombre}! 👋
+
+Te recordamos tu turno mañana:
+📅 Fecha: {fecha}
+⏰ Hora: {hora}
+📍 Lugar: {lugar}
+
+Si necesitas reprogramar, responde a este mensaje.
+
+¡Te esperamos! 😊`,
+
+    formal: `Estimado/a {nombre},
+
+Le recordamos que tiene una cita programada para mañana:
+
+📅 Fecha: {fecha}
+⏰ Horario: {hora}
+📍 Ubicación: {lugar}
+
+En caso de necesitar reprogramar, por favor responda a este mensaje.
+
+Saludos cordiales,
+Consultorio Cocrearte`,
+
+    amigable: `¡Hola {nombre}! 🌟
+
+¡No te olvides! Mañana nos vemos:
+📅 {fecha}
+⏰ {hora}
+📍 {lugar}
+
+Si surge algo y no puedes venir, ¡avísame!
+
+¡Hasta mañana! 😊💜`,
+
+    breve: `Hola {nombre}! 
+Recordatorio: mañana {fecha} a las {hora} en {lugar}.
+Cualquier cambio, responde este mensaje. ¡Nos vemos!`
+};
+
+// Función para cargar configuración de mensaje
+function cargarConfiguracionMensaje() {
+    const configuracion = localStorage.getItem('configuracionMensajeRecordatorio');
+    if (configuracion) {
+        return JSON.parse(configuracion);
+    }
+    return {
+        plantilla: 'default',
+        mensajePersonalizado: plantillasMensajes.default,
+        lugar: 'Consultorio Cocrearte'
+    };
+}
+
+// Función para guardar configuración de mensaje
+function guardarConfiguracionMensaje(configuracion) {
+    localStorage.setItem('configuracionMensajeRecordatorio', JSON.stringify(configuracion));
+}
+
+// Función para generar mensaje con plantilla personalizada
+function generarMensajePersonalizado(nombrePaciente, fechaSesion) {
+    const config = cargarConfiguracionMensaje();
+    const fecha = new Date(fechaSesion);
+    const fechaFormateada = fecha.toLocaleDateString('es-AR', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+    const horaFormateada = fecha.toLocaleTimeString('es-AR', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    
+    return config.mensajePersonalizado
+        .replace(/{nombre}/g, nombrePaciente)
+        .replace(/{fecha}/g, fechaFormateada)
+        .replace(/{hora}/g, horaFormateada)
+        .replace(/{lugar}/g, config.lugar);
+}
+
+// Actualizar función original para usar plantilla personalizada
+const generarMensajeRecordatorioOriginal = generarMensajeRecordatorio;
+generarMensajeRecordatorio = function(nombrePaciente, fechaSesion) {
+    return generarMensajePersonalizado(nombrePaciente, fechaSesion);
+};
+
 console.log('🎤 Sistema de voz a texto inicializado');
+console.log('📱 Sistema de recordatorios WhatsApp inicializado');
