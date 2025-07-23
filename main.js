@@ -659,6 +659,30 @@ function showMessage(msg, type = 'error') {
     }
 }
 
+// Función para obtener el nombre del profesional que derivó un paciente
+async function obtenerNombreProfesionalDerivador(uid) {
+    try {
+        // Intentar primero en la colección 'usuarios'
+        let doc = await window.firebaseDB.collection('usuarios').doc(uid).get();
+        if (doc.exists) {
+            const data = doc.data();
+            return data.name || data.displayName || data.email || 'Profesional';
+        }
+        
+        // Si no existe en 'usuarios', intentar en 'users'
+        doc = await window.firebaseDB.collection('users').doc(uid).get();
+        if (doc.exists) {
+            const data = doc.data();
+            return data.name || data.displayName || data.email || 'Profesional';
+        }
+        
+        return 'Profesional';
+    } catch (error) {
+        console.error('Error al obtener nombre del profesional:', error);
+        return 'Profesional';
+    }
+}
+
 let calendarInstance = null;
 let calendarMultipleInstance = null; // Nueva instancia para agenda múltiple
 
@@ -990,17 +1014,47 @@ async function loadPatients(uid) {
     });
     
     // Renderizar los pacientes ordenados
-    pacientes.forEach(({ id, data: p }) => {
+    for (const { id, data: p } of pacientes) {
         const div = document.createElement('div');
-        div.className = 'border rounded p-4 flex flex-col md:flex-row md:items-center md:justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-darkborder transition';
+        
+        // Verificar si el paciente fue derivado
+        const esDerivado = p.derivadoEl && p.derivadoPor;
+        let nombreDerivador = '';
+        
+        if (esDerivado) {
+            try {
+                nombreDerivador = await obtenerNombreProfesionalDerivador(p.derivadoPor);
+            } catch (error) {
+                nombreDerivador = 'Profesional';
+            }
+        }
+        
+        // Aplicar clases CSS según si es derivado o no
+        const baseClasses = 'border rounded p-4 flex flex-col md:flex-row md:items-center md:justify-between cursor-pointer transition';
+        const normalClasses = 'hover:bg-gray-50 dark:hover:bg-darkborder';
+        const derivadoClasses = 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-600 hover:bg-green-100 dark:hover:bg-green-900/30';
+        
+        div.className = esDerivado ? `${baseClasses} ${derivadoClasses}` : `${baseClasses} ${normalClasses}`;
         div.setAttribute('data-paciente-id', id);
-        div.innerHTML = `
+        
+        let contenidoHTML = `
             <div>
                 <div class="font-bold text-[#2d3748] dark:text-gray-100">${p.nombre || ''}</div>
-            </div>
         `;
+        
+        // Agregar información de derivación si corresponde
+        if (esDerivado) {
+            contenidoHTML += `
+                <div class="text-sm text-green-600 dark:text-green-400 mt-1">
+                    📤 Paciente derivado de ${nombreDerivador}
+                </div>
+            `;
+        }
+        
+        contenidoHTML += `</div>`;
+        div.innerHTML = contenidoHTML;
         patientsList.appendChild(div);
-    });
+    }
 }
 
 // Agregar paciente
@@ -1859,9 +1913,33 @@ async function showAdminPanel() {
         
         pacientesHtml = '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
         for (const { id, data: p } of pacientes) {
-          pacientesHtml += `<div class=\"border rounded p-3 bg-gray-50 dark:bg-darkbg cursor-pointer hover:bg-primary-50 dark:hover:bg-darkborder transition\" data-paciente-id=\"${id}\">\n` +
+          // Verificar si el paciente fue derivado
+          const esDerivado = p.derivadoEl && p.derivadoPor;
+          let nombreDerivador = '';
+          
+          if (esDerivado) {
+            try {
+              nombreDerivador = await obtenerNombreProfesionalDerivador(p.derivadoPor);
+            } catch (error) {
+              nombreDerivador = 'Profesional';
+            }
+          }
+          
+          // Aplicar clases CSS según si es derivado o no
+          const baseClasses = 'border rounded p-3 cursor-pointer transition';
+          const normalClasses = 'bg-gray-50 dark:bg-darkbg hover:bg-primary-50 dark:hover:bg-darkborder';
+          const derivadoClasses = 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-600 hover:bg-green-100 dark:hover:bg-green-900/30';
+          
+          const cardClasses = esDerivado ? `${baseClasses} ${derivadoClasses}` : `${baseClasses} ${normalClasses}`;
+          
+          pacientesHtml += `<div class=\"${cardClasses}\" data-paciente-id=\"${id}\">\n` +
             `<div class=\"font-bold text-[#2d3748] dark:text-gray-100\">${p.nombre || '(sin nombre)'}</div>\n`;
-          // Eliminado: email, teléfono, motivo, sesiones
+          
+          // Agregar información de derivación si corresponde
+          if (esDerivado) {
+            pacientesHtml += `<div class=\"text-sm text-green-600 dark:text-green-400 mt-1\">📤 Derivado de ${nombreDerivador}</div>\n`;
+          }
+          
           pacientesHtml += '</div>';
         }
         pacientesHtml += '</div>';
