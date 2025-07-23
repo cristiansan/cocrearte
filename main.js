@@ -827,12 +827,6 @@ async function showDashboard(user) {
     // Sincronizar el estado del tema en el dashboard
     sincronizarTemaDashboard();
     
-    // Mostrar el botón de tema flotante
-    const floatingThemeToggle = document.getElementById('floatingThemeToggle');
-    if (floatingThemeToggle) {
-        floatingThemeToggle.classList.remove('hidden');
-    }
-    
     // Inicializar funcionalidad de foto de perfil
     setTimeout(() => {
         inicializarFotoPerfil();
@@ -876,11 +870,7 @@ window.firebaseAuth.onAuthStateChanged(user => {
         document.getElementById('calendarToggleBlock').classList.add('hidden');
         document.getElementById('dashboardPacientesSection').classList.add('hidden');
         
-        // Ocultar el botón de tema flotante
-        const floatingThemeToggle = document.getElementById('floatingThemeToggle');
-        if (floatingThemeToggle) {
-            floatingThemeToggle.classList.add('hidden');
-        }
+
         
         // Ocultar todos los modales
         const modals = [
@@ -919,11 +909,7 @@ logoutBtn.addEventListener('click', async () => {
     document.getElementById('calendarToggleBlock').classList.add('hidden');
     document.getElementById('dashboardPacientesSection').classList.add('hidden');
     
-    // Ocultar el botón de tema flotante
-    const floatingThemeToggle = document.getElementById('floatingThemeToggle');
-    if (floatingThemeToggle) {
-        floatingThemeToggle.classList.add('hidden');
-    }
+
     
     // Ocultar todos los modales
     const modals = [
