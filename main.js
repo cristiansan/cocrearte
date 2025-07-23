@@ -605,12 +605,6 @@ showRegisterFormBtn.addEventListener('click', showRegisterForm);
 showLoginFormBtn.addEventListener('click', showLoginForm);
 
 // Botones de demo y contacto (placeholder)
-demoBtn.addEventListener('click', () => {
-    alert('Demo en desarrollo. ¡Regístrate para probar la plataforma!');
-});
-demoBtn2.addEventListener('click', () => {
-    alert('Demo en desarrollo. ¡Regístrate para probar la plataforma!');
-});
 contactBtn.addEventListener('click', () => {
     alert('Contacto: cristiansan@gmail.com');
 });
@@ -1229,18 +1223,27 @@ patientsList.addEventListener('click', async (e) => {
                 ` : ''}
             </div>
             <div class="flex flex-col gap-2">
-                <button onclick="showEditPatientModal('${fichaPacienteId}', ${JSON.stringify(p).replace(/"/g, '&quot;')})" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
-                    ✏️ Editar
-                </button>
-                ${isAdmin ? `
-                <button onclick="abrirModalDerivarSeguro(this)" 
-                        data-paciente-id="${fichaPacienteId}" 
-                        data-paciente-nombre="${(p.nombre || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}" 
-                        data-paciente-email="${(p.email || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}" 
-                        class="bg-orange-600 hover:bg-orange-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
-                    🔄 Derivar
-                </button>
-                ` : ''}
+                <div class="flex flex-col gap-2 items-end -mt-4">
+                    <div class="flex gap-2 w-full">
+                        <button onclick="showEditPatientModal('${fichaPacienteId}', ${JSON.stringify(p).replace(/"/g, '&quot;')})" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
+                            ✏️ Editar
+                        </button>
+                        ${isAdmin ? `
+                        <button onclick="abrirModalDerivarSeguro(this)"
+                                data-paciente-id="${fichaPacienteId}"
+                                data-paciente-nombre="${(p.nombre || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
+                                data-paciente-email="${(p.email || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
+                                class="bg-orange-600 hover:bg-orange-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
+                            🔄 Derivar
+                        </button>
+                        ` : ''}
+                    </div>
+                    ${isAdmin ? `
+                    <button onclick="eliminarPaciente('${fichaPacienteId}')" class="bg-red-600 hover:bg-red-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1 w-full">
+                        🗑️ Eliminar paciente
+                    </button>
+                    ` : ''}
+                </div>
             </div>
         </div>
     `;
@@ -1934,17 +1937,24 @@ async function showAdminPanel() {
                       </div>
                       ` : ''}
                   </div>
-                  <div class="flex flex-col gap-2">
-                      <button onclick="showEditPatientModal('${fichaPacienteId}', ${JSON.stringify(p).replace(/"/g, '&quot;')})" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
-                          ✏️ Editar
+                  <div class="flex flex-col gap-2 -mt-4">
+                      <div class="flex gap-2">
+                          <button onclick="showEditPatientModal('${fichaPacienteId}', ${JSON.stringify(p).replace(/"/g, '&quot;')})" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
+                              ✏️ Editar
+                          </button>
+                          <button onclick="abrirModalDerivarSeguro(this)" 
+                                  data-paciente-id="${fichaPacienteId}" 
+                                  data-paciente-nombre="${(p.nombre || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}" 
+                                  data-paciente-email="${(p.email || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}" 
+                                  class="bg-orange-600 hover:bg-orange-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
+                              🔄 Derivar
+                          </button>
+                      </div>
+                      ${isAdmin ? `
+                      <button onclick="eliminarPaciente('${fichaPacienteId}')" class="bg-red-600 hover:bg-red-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1 w-full">
+                          🗑️ Eliminar paciente
                       </button>
-                      <button onclick="abrirModalDerivarSeguro(this)" 
-                              data-paciente-id="${fichaPacienteId}" 
-                              data-paciente-nombre="${(p.nombre || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}" 
-                              data-paciente-email="${(p.email || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}" 
-                              class="bg-orange-600 hover:bg-orange-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
-                          🔄 Derivar
-                      </button>
+                      ` : ''}
                   </div>
               </div>
           `;
@@ -3712,6 +3722,29 @@ window.debugNomenclador = function() {
     console.log('🧪 === FIN DEBUG NOMENCLADOR ===');
 };
 
+// --- FUNCIÓN GLOBAL PARA ELIMINAR PACIENTE ---
+window.eliminarPaciente = async function(pacienteId) {
+    const ok = confirm('¿Estás seguro de que deseas eliminar este paciente? Esta acción no se puede deshacer.');
+    if (!ok) return;
+    try {
+        await window.firebaseDB.collection('pacientes').doc(pacienteId).delete();
+        showMessage('Paciente eliminado exitosamente', 'success');
+        if (typeof hideFichaPacienteModal === 'function') hideFichaPacienteModal();
+        // Mostrar y refrescar la lista de pacientes según el tipo de usuario
+        if (isAdmin) {
+            if (typeof showAdminPanel === 'function') await showAdminPanel();
+        } else {
+            const dashboardPacientesSection = document.getElementById('dashboardPacientesSection');
+            if (dashboardPacientesSection) dashboardPacientesSection.classList.remove('hidden');
+            if (typeof loadPatients === 'function' && window.firebaseAuth.currentUser) {
+                await loadPatients(window.firebaseAuth.currentUser.uid);
+            }
+        }
+    } catch (error) {
+        showMessage('Error al eliminar paciente: ' + (error.message || error), 'error');
+    }
+};
+
 // Función para probar una sesión completa con nomenclador
 window.probarSesionConNomenclador = function() {
     console.log('🧪 === PRUEBA SESIÓN CON NOMENCLADOR ===');
@@ -4547,16 +4580,23 @@ if (editPatientFormElement) {
                                 ` : ''}
                             </div>
                             <div class="flex flex-col gap-2">
-                                <button onclick="showEditPatientModal('${pacienteEditandoId}', ${JSON.stringify(p).replace(/"/g, '&quot;')})" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
-                                    ✏️ Editar
-                                </button>
+                                <div class="flex gap-2">
+                                    <button onclick="showEditPatientModal('${pacienteEditandoId}', ${JSON.stringify(p).replace(/"/g, '&quot;')})" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
+                                        ✏️ Editar
+                                    </button>
+                                    ${isAdmin ? `
+                                    <button onclick="abrirModalDerivarSeguro(this)"
+                                            data-paciente-id="${pacienteEditandoId}"
+                                            data-paciente-nombre="${(p.nombre || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
+                                            data-paciente-email="${(p.email || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
+                                            class="bg-orange-600 hover:bg-orange-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
+                                        🔄 Derivar
+                                    </button>
+                                    ` : ''}
+                                </div>
                                 ${isAdmin ? `
-                                <button onclick="abrirModalDerivarSeguro(this)" 
-                                        data-paciente-id="${pacienteEditandoId}" 
-                                        data-paciente-nombre="${(p.nombre || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}" 
-                                        data-paciente-email="${(p.email || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}" 
-                                        class="bg-orange-600 hover:bg-orange-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
-                                    🔄 Derivar
+                                <button onclick="eliminarPaciente('${pacienteEditandoId}')" class="bg-red-600 hover:bg-red-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1 w-full">
+                                    🗑️ Eliminar paciente
                                 </button>
                                 ` : ''}
                             </div>
