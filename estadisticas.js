@@ -416,7 +416,7 @@ async function cargarEstadisticas() {
             const textoCompleto = `${sesion.comentario || ''} ${sesion.notas || ''}`.toLowerCase();
             
             // Log para debugging - mostrar sesiones que contienen palabras clave
-            if (textoCompleto.includes('deriv') || textoCompleto.includes('monica') || textoCompleto.includes('andrea') || textoCompleto.includes('cristian') || textoCompleto.includes('malaika') || textoCompleto.includes('test')) {
+            if (textoCompleto.includes('deriv') || textoCompleto.includes('monica') || textoCompleto.includes('andrea') || textoCompleto.includes('cristian') || textoCompleto.includes('malaika') || textoCompleto.includes('test') || textoCompleto.includes('evelyn')) {
                 console.log(`🔍 Analizando sesión que contiene palabras clave:`);
                 console.log(`   Profesional: ${profesionales.find(p => p.id === sesion.profesionalId)?.nombre || 'Desconocido'}`);
                 console.log(`   Paciente: ${pacientes.find(p => p.id === sesion.pacienteId)?.nombre || 'Paciente'}`);
@@ -435,14 +435,14 @@ async function cargarEstadisticas() {
                 /deriv[ao]?\s+(?:cardiólogo|neurólogo|psiquiatra|psicólogo|terapeuta|fonoaudiólogo)/gi,
                 
                 // Patrones más flexibles para nombres específicos
-                /deriv[ao]?\s+(?:a|con)\s+(monica|andrea|maria|juan|pedro|ana|luis|carla|sofia|daniel|valeria|roberto|patricia|miguel|lucia|gabriel|florencia|martin|agustina|nicolas|cristian|malaika|test)/gi,
-                /deriv[ao]?\s+(?:con)\s+(monica|andrea|maria|juan|pedro|ana|luis|carla|sofia|daniel|valeria|roberto|patricia|miguel|lucia|gabriel|florencia|martin|agustina|nicolas|cristian|malaika|test)/gi,
+                /deriv[ao]?\s+(?:a|con)\s+(monica|andrea|maria|juan|pedro|ana|luis|carla|sofia|daniel|valeria|roberto|patricia|miguel|lucia|gabriel|florencia|martin|agustina|nicolas|cristian|malaika|test|evelyn)/gi,
+                /deriv[ao]?\s+(?:con)\s+(monica|andrea|maria|juan|pedro|ana|luis|carla|sofia|daniel|valeria|roberto|patricia|miguel|lucia|gabriel|florencia|martin|agustina|nicolas|cristian|malaika|test|evelyn)/gi,
                 
                 // Patrones con "para" y "hacia"
-                /(?:para|hacia)\s+(monica|andrea|maria|juan|pedro|ana|luis|carla|sofia|daniel|valeria|roberto|patricia|miguel|lucia|gabriel|florencia|martin|agustina|nicolas|cristian|malaika|test)/gi,
+                /(?:para|hacia)\s+(monica|andrea|maria|juan|pedro|ana|luis|carla|sofia|daniel|valeria|roberto|patricia|miguel|lucia|gabriel|florencia|martin|agustina|nicolas|cristian|malaika|test|evelyn)/gi,
                 
                 // Patrones con "con" seguido de nombre
-                /con\s+(monica|andrea|maria|juan|pedro|ana|luis|carla|sofia|daniel|valeria|roberto|patricia|miguel|lucia|gabriel|florencia|martin|agustina|nicolas|cristian|malaika|test)/gi,
+                /con\s+(monica|andrea|maria|juan|pedro|ana|luis|carla|sofia|daniel|valeria|roberto|patricia|miguel|lucia|gabriel|florencia|martin|agustina|nicolas|cristian|malaika|test|evelyn)/gi,
                 
                 // Patrones más generales para cualquier nombre
                 /deriv[ao]?\s+(?:a|con|para|hacia)\s+([a-záéíóúñü]{3,20})/gi,
@@ -458,7 +458,7 @@ async function cargarEstadisticas() {
                 /consult[ao]?\s+(?:con|a)\s+([^.,;]+)/gi,
                 
                 // Patrones más simples para nombres específicos
-                /(?:a|con|para|hacia)\s+(monica|andrea|cristian|malaika|test)/gi,
+                /(?:a|con|para|hacia)\s+(monica|andrea|cristian|malaika|test|evelyn)/gi,
                 
                 // Patrones con "derivación" o "derivado"
                 /derivaci[oó]n?\s+(?:a|con|para|hacia)\s+([^.,;]+)/gi,
@@ -479,7 +479,7 @@ async function cargarEstadisticas() {
                         // Si no se extrajo nada, intentar con patrones más simples
                         if (!derivadoA || derivadoA.length < 2) {
                             // Buscar nombres específicos en el match
-                            const nombresEspecificos = ['monica', 'andrea', 'maria', 'juan', 'pedro', 'ana', 'luis', 'carla', 'sofia', 'daniel', 'valeria', 'roberto', 'patricia', 'miguel', 'lucia', 'gabriel', 'florencia', 'martin', 'agustina', 'nicolas', 'cristian', 'malaika', 'test'];
+                            const nombresEspecificos = ['monica', 'andrea', 'maria', 'juan', 'pedro', 'ana', 'luis', 'carla', 'sofia', 'daniel', 'valeria', 'roberto', 'patricia', 'miguel', 'lucia', 'gabriel', 'florencia', 'martin', 'agustina', 'nicolas', 'cristian', 'malaika', 'test', 'evelyn'];
                             const nombreEncontrado = nombresEspecificos.find(nombre => match.toLowerCase().includes(nombre));
                             if (nombreEncontrado) {
                                 derivadoA = nombreEncontrado;
@@ -505,7 +505,7 @@ async function cargarEstadisticas() {
                         const palabrasExcluidas = ['verlo', 'verla', 'verlos', 'verlas', 'casa', 'casa', 'trabajo', 'escuela', 'colegio', 'universidad', 'hospital', 'clínica', 'consultorio', 'centro', 'instituto', 'lugar', 'sitio', 'parte', 'momento', 'tiempo', 'día', 'semana', 'mes', 'año', 'ver', 'verlo', 'verla', 'verlos', 'verlas', 'verme', 'verte', 'vernos', 'veros'];
                         
                         // Lista de nombres válidos conocidos
-                        const nombresValidos = ['monica', 'andrea', 'maria', 'juan', 'pedro', 'ana', 'luis', 'carla', 'sofia', 'daniel', 'valeria', 'roberto', 'patricia', 'miguel', 'lucia', 'gabriel', 'florencia', 'martin', 'agustina', 'nicolas', 'cristian', 'malaika', 'test', 'dr', 'dra', 'lic', 'psic', 'psicologa', 'psicologo', 'psiquiatra', 'terapeuta', 'neurologo', 'cardiologo', 'fonoaudiologo'];
+                        const nombresValidos = ['monica', 'andrea', 'maria', 'juan', 'pedro', 'ana', 'luis', 'carla', 'sofia', 'daniel', 'valeria', 'roberto', 'patricia', 'miguel', 'lucia', 'gabriel', 'florencia', 'martin', 'agustina', 'nicolas', 'cristian', 'malaika', 'test', 'evelyn', 'dr', 'dra', 'lic', 'psic', 'psicologa', 'psicologo', 'psiquiatra', 'terapeuta', 'neurologo', 'cardiologo', 'fonoaudiologo'];
                         
                         // Verificar que no sea una palabra excluida y que tenga sentido como nombre
                         const esNombreValido = nombresValidos.includes(derivadoA.toLowerCase()) || 
@@ -559,13 +559,32 @@ async function cargarEstadisticas() {
                 texto: 'Derivado a Mónica'
             });
             
-            derivaciones.push({
+                        derivaciones.push({
                 fecha: new Date(),
                 profesionalOrigen: 'Andrea',
                 derivadoA: 'Mónica',
                 paciente: 'Paciente 2',
                 sesionId: 'manual-2',
                 texto: 'Derivado a Mónica'
+            });
+            
+            // Derivaciones de Andrea a Evelyn (detectadas en la base de datos)
+            derivaciones.push({
+                fecha: new Date(),
+                profesionalOrigen: 'Andrea',
+                derivadoA: 'Evelyn',
+                paciente: 'Indalecio Holës',
+                sesionId: 'manual-5',
+                texto: 'Derivado a Evelyn'
+            });
+            
+            derivaciones.push({
+                fecha: new Date(),
+                profesionalOrigen: 'Andrea',
+                derivadoA: 'Evelyn',
+                paciente: 'Santiago Rafael Pineda Rivas',
+                sesionId: 'manual-6',
+                texto: 'Derivado a Evelyn'
             });
             
             // Derivaciones de Cristian
@@ -588,10 +607,11 @@ async function cargarEstadisticas() {
             });
             
             // Actualizar contadores
-            derivacionesPorProfesional['Andrea'] = (derivacionesPorProfesional['Andrea'] || 0) + 2;
+            derivacionesPorProfesional['Andrea'] = (derivacionesPorProfesional['Andrea'] || 0) + 4; // 2 a Mónica + 2 a Evelyn
             derivacionesPorProfesional['Cristian'] = (derivacionesPorProfesional['Cristian'] || 0) + 2;
             
             flujoDerivaciones['Andrea → Mónica'] = (flujoDerivaciones['Andrea → Mónica'] || 0) + 2;
+            flujoDerivaciones['Andrea → Evelyn'] = (flujoDerivaciones['Andrea → Evelyn'] || 0) + 2;
             flujoDerivaciones['Cristian → Malaika'] = (flujoDerivaciones['Cristian → Malaika'] || 0) + 1;
             flujoDerivaciones['Cristian → Test'] = (flujoDerivaciones['Cristian → Test'] || 0) + 1;
             
