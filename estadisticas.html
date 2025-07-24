@@ -95,6 +95,26 @@
         .leaflet-tooltip.custom-tooltip::before {
             border-top-color: rgba(0, 0, 0, 0.8) !important;
         }
+        
+        /* Forzar layout horizontal para métricas de Firebase */
+        .firebase-metrics-container {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            width: 100% !important;
+        }
+        
+        .firebase-metrics-container > * {
+            flex: 1 !important;
+            min-width: 0 !important;
+            max-width: 50% !important;
+        }
+        
+        /* Estilo adicional para forzar layout horizontal */
+        div[class*="firebase-metrics-container"] {
+            display: flex !important;
+            flex-direction: row !important;
+        }
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-darkbg text-gray-900 dark:text-darktext min-h-screen">
@@ -200,7 +220,7 @@
         <!-- Contenedor de estadísticas -->
         <div id="statsContainer" class="hidden">
             <!-- Cards de resumen -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
                 <!-- Total de Profesionales -->
                 <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border dark:border-darkborder p-6">
                     <div class="flex items-center justify-between">
@@ -278,72 +298,47 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Métricas de Firebase lado a lado -->
-            <div class="flex flex-col lg:flex-row gap-6 mb-8">
                 <!-- Uso de Almacenamiento -->
-                <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border dark:border-darkborder flex-1">
-                    <div class="p-4 cursor-pointer" onclick="toggleSection('almacenamiento')">
-                        <div class="flex items-center justify-between">
+                <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border dark:border-darkborder p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
                             <div class="flex items-center gap-2">
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Uso de Almacenamiento</h3>
-                            <div class="relative group">
-                                <div class="w-4 h-4 bg-indigo-500 rounded-full flex items-center justify-center cursor-help">
-                                    <span class="text-white text-xs font-bold">i</span>
-                                </div>
-                                <!-- Tooltip -->
-                                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
-                                    <div class="max-w-xs">
-                                        <p class="font-semibold mb-1">Estimación completa de Firebase</p>
-                                        <p class="text-gray-300">• Límite mostrado: 1 GB</p>
-                                        <p class="text-gray-300">• Incluye Firestore (documentos de texto)</p>
-                                        <p class="text-gray-300">• Incluye Storage (fotos de perfil e imágenes)</p>
-                                        <p class="text-gray-300">• Pasa el mouse sobre el valor para ver desglose</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Uso de Almacenamiento</p>
+                                <div class="relative group">
+                                    <div class="w-4 h-4 bg-indigo-500 rounded-full flex items-center justify-center cursor-help">
+                                        <span class="text-white text-xs font-bold">i</span>
                                     </div>
-                                    <!-- Flecha del tooltip -->
-                                    <div class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
+                                    <!-- Tooltip -->
+                                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
+                                        <div class="max-w-xs">
+                                            <p class="font-semibold mb-1">Estimación completa de Firebase</p>
+                                            <p class="text-gray-300">• Límite mostrado: 1 GB</p>
+                                            <p class="text-gray-300">• Incluye Firestore (documentos de texto)</p>
+                                            <p class="text-gray-300">• Incluye Storage (fotos de perfil e imágenes)</p>
+                                        </div>
+                                        <!-- Flecha del tooltip -->
+                                        <div class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-2">
-                                <div class="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-full">
-                                    <svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
-                                    </svg>
-                                </div>
-                                <svg id="almacenamiento-arrow" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                </svg>
-                            </div>
+                            <p id="espacioUsadoCard" class="text-3xl font-bold text-gray-900 dark:text-white">-</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">de 1 GB</p>
                         </div>
-                    </div>
-                    <div id="almacenamiento-content" class="px-4 pb-4 hidden">
-                        <div class="space-y-3">
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-600 dark:text-gray-400">Usado estimado:</span>
-                            <span id="espacioUsado" class="font-semibold text-gray-900 dark:text-white">-</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-600 dark:text-gray-400">Crecimiento diario:</span>
-                            <span id="crecimientoDiario" class="font-semibold text-gray-900 dark:text-white">-</span>
-                        </div>
-                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                            <div id="barraProgreso" class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
-                        </div>
-                        <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400">
-                            <span>0 MB</span>
-                            <span id="porcentajeUso" class="font-medium">0%</span>
-                            <span>1 GB</span>
+                        <div class="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-full">
+                            <svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
+                            </svg>
                         </div>
                     </div>
                 </div>
 
-                <!-- Consultas Diarias -->
-                <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border dark:border-darkborder flex-1">
-                    <div class="p-4 cursor-pointer" onclick="toggleSection('consultas')">
-                        <div class="flex items-center justify-between">
+                <!-- Consultas Estimadas -->
+                <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border dark:border-darkborder p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
                             <div class="flex items-center gap-2">
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Consultas Estimadas</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Consultas Estimadas</p>
                                 <div class="relative group">
                                     <div class="w-4 h-4 bg-emerald-500 rounded-full flex items-center justify-center cursor-help">
                                         <span class="text-white text-xs font-bold">i</span>
@@ -361,39 +356,19 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-2">
-                                <div class="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-full">
-                                    <svg class="w-6 h-6 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                                    </svg>
-                                </div>
-                                <svg id="consultas-arrow" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                </svg>
-                            </div>
+                            <p id="consultasDiariasCard" class="text-3xl font-bold text-gray-900 dark:text-white">-</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">por día</p>
                         </div>
-                    </div>
-                    <div id="consultas-content" class="px-4 pb-4 hidden">
-                        <div class="space-y-3">
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-600 dark:text-gray-400">Documentos totales:</span>
-                            <span id="totalDocumentos" class="font-semibold text-gray-900 dark:text-white">-</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-600 dark:text-gray-400">Estimado diario:</span>
-                            <span id="consultasDiarias" class="font-semibold text-gray-900 dark:text-white">-</span>
-                        </div>
-                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                            <div id="barraConsultas" class="bg-emerald-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
-                        </div>
-                        <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400">
-                            <span>0</span>
-                            <span id="porcentajeConsultas" class="font-medium">0%</span>
-                            <span>50,000/día</span>
+                        <div class="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-full">
+                            <svg class="w-6 h-6 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
                         </div>
                     </div>
                 </div>
             </div>
+
+
 
             <!-- Temas más recurrentes en sesiones -->
             <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border dark:border-darkborder mb-8">
@@ -462,6 +437,254 @@
                         </svg>
                         <p class="text-lg font-medium mb-2">No hay suficientes datos</p>
                         <p class="text-sm">Se necesitan más sesiones con comentarios o notas para analizar patrones</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estadísticas de Derivaciones -->
+            <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border dark:border-darkborder mb-8">
+                <div class="p-4 cursor-pointer" onclick="toggleSection('derivaciones')">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Estadísticas de Derivaciones</h3>
+                            <div class="relative group">
+                                <div class="w-4 h-4 bg-teal-500 rounded-full flex items-center justify-center cursor-help">
+                                    <span class="text-white text-xs font-bold">i</span>
+                                </div>
+                                <!-- Tooltip -->
+                                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
+                                    <div class="max-w-xs">
+                                        <p class="font-semibold mb-1">Análisis de derivaciones</p>
+                                        <p class="text-gray-300">• Total de derivaciones realizadas</p>
+                                        <p class="text-gray-300">• Derivaciones por profesional</p>
+                                        <p class="text-gray-300">• Flujo de derivaciones entre especialistas</p>
+                                    </div>
+                                    <!-- Flecha del tooltip -->
+                                    <div class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="p-3 bg-teal-100 dark:bg-teal-900/30 rounded-full">
+                                <svg class="w-6 h-6 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                                </svg>
+                            </div>
+                            <svg id="derivaciones-arrow" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="derivaciones-content" class="px-4 pb-4 hidden">
+                    <div id="derivacionesContainer" class="hidden">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- Resumen general -->
+                            <div class="lg:col-span-1">
+                                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                                    <h4 class="font-medium text-gray-900 dark:text-white mb-3">Resumen General</h4>
+                                    <div class="space-y-3">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm text-gray-600 dark:text-gray-400">Total derivaciones:</span>
+                                            <span id="totalDerivaciones" class="text-lg font-bold text-teal-600 dark:text-teal-400">-</span>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm text-gray-600 dark:text-gray-400">Profesionales que derivan:</span>
+                                            <span id="profesionalesQueDerivan" class="text-lg font-bold text-teal-600 dark:text-teal-400">-</span>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm text-gray-600 dark:text-gray-400">Promedio por profesional:</span>
+                                            <span id="promedioDerivaciones" class="text-lg font-bold text-teal-600 dark:text-teal-400">-</span>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm text-gray-600 dark:text-gray-400">Derivación más común:</span>
+                                            <span id="derivacionMasComun" class="text-sm font-medium text-gray-900 dark:text-white">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+
+                            
+                            <!-- Flujo de derivaciones -->
+                            <div class="lg:col-span-1">
+                                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                                    <h4 class="font-medium text-gray-900 dark:text-white mb-3">Flujo de Derivaciones</h4>
+                                    <div id="flujoDerivaciones" class="space-y-2">
+                                        <!-- Se llenará dinámicamente -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Lista detallada de derivaciones -->
+                        <div class="mt-6">
+                            <h4 class="font-medium text-gray-900 dark:text-white mb-3">Derivaciones Recientes</h4>
+                            <div id="listaDerivaciones" class="space-y-2">
+                                <!-- Se llenará dinámicamente -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="sinDerivaciones" class="text-center py-8 text-gray-500 dark:text-gray-400">
+                        <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                        </svg>
+                        <p class="text-lg font-medium mb-2">No hay derivaciones registradas</p>
+                        <p class="text-sm">Las derivaciones aparecerán aquí cuando se registren en las sesiones</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Análisis Demográfico y Presentismo -->
+            <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border dark:border-darkborder mb-8">
+                <div class="p-4 cursor-pointer" onclick="toggleSection('demografico')">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Análisis Demográfico y Presentismo</h3>
+                            <div class="relative group">
+                                <div class="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center cursor-help">
+                                    <span class="text-white text-xs font-bold">i</span>
+                                </div>
+                                <!-- Tooltip -->
+                                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
+                                    <div class="max-w-xs">
+                                        <p class="font-semibold mb-1">Análisis demográfico y asistencia</p>
+                                        <p class="text-gray-300">• Distribución por edad y rangos etarios</p>
+                                        <p class="text-gray-300">• Análisis de presentismo y faltas</p>
+                                        <p class="text-gray-300">• Frecuencia de sesiones por paciente</p>
+                                        <p class="text-gray-300">• Análisis temporal de actividad</p>
+                                    </div>
+                                    <!-- Flecha del tooltip -->
+                                    <div class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-full">
+                                <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                            </div>
+                            <svg id="demografico-arrow" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="demografico-content" class="px-4 pb-4 hidden">
+                    <div id="demograficoContainer" class="hidden">
+                        <!-- Demografía -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                            <!-- Edades -->
+                            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                                <h4 class="font-medium text-gray-900 dark:text-white mb-3">📊 Demografía de Pacientes</h4>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-gray-600 dark:text-gray-400">Edad promedio pacientes:</span>
+                                        <span id="edadPromedioPacientes" class="text-lg font-bold text-purple-600 dark:text-purple-400">-</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-gray-600 dark:text-gray-400">Edad promedio profesionales:</span>
+                                        <span id="edadPromedioProfesionales" class="text-lg font-bold text-purple-600 dark:text-purple-400">-</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-gray-600 dark:text-gray-400">Paciente más joven:</span>
+                                        <span id="pacienteMasJoven" class="text-sm font-medium text-gray-900 dark:text-white">-</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-gray-600 dark:text-gray-400">Paciente más grande:</span>
+                                        <span id="pacienteMasGrande" class="text-sm font-medium text-gray-900 dark:text-white">-</span>
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <h5 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Rangos etarios:</h5>
+                                    <div id="rangosEtarios" class="space-y-2">
+                                        <!-- Se llenará dinámicamente -->
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Presentismo -->
+                            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                                <h4 class="font-medium text-gray-900 dark:text-white mb-3">📈 Análisis de Presentismo</h4>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-gray-600 dark:text-gray-400">Tasa de asistencia:</span>
+                                        <span id="tasaAsistencia" class="text-lg font-bold text-green-600 dark:text-green-400">-</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-gray-600 dark:text-gray-400">Total ausencias:</span>
+                                        <span id="totalAusencias" class="text-lg font-bold text-red-600 dark:text-red-400">-</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-gray-600 dark:text-gray-400">Paciente con más faltas:</span>
+                                        <span id="pacienteMasFaltas" class="text-sm font-medium text-gray-900 dark:text-white">-</span>
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <h5 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Distribución de presentismo:</h5>
+                                    <div id="distribucionPresentismo" class="space-y-2">
+                                        <!-- Se llenará dinámicamente -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Frecuencia y Análisis Temporal -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                            <!-- Frecuencia de sesiones -->
+                            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                                <h4 class="font-medium text-gray-900 dark:text-white mb-3">🔄 Frecuencia de Sesiones</h4>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-gray-600 dark:text-gray-400">Promedio sesiones/paciente:</span>
+                                        <span id="promedioSesionesPaciente" class="text-lg font-bold text-blue-600 dark:text-blue-400">-</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-gray-600 dark:text-gray-400">Paciente con más sesiones:</span>
+                                        <span id="pacienteMasSesiones" class="text-sm font-medium text-gray-900 dark:text-white">-</span>
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <h5 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Top 5 pacientes con más sesiones:</h5>
+                                    <div id="topPacientesSesiones" class="space-y-2">
+                                        <!-- Se llenará dinámicamente -->
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Análisis temporal -->
+                            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                                <h4 class="font-medium text-gray-900 dark:text-white mb-3">⏰ Análisis Temporal</h4>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-gray-600 dark:text-gray-400">Día más activo:</span>
+                                        <span id="diaMasActivo" class="text-sm font-medium text-gray-900 dark:text-white">-</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-gray-600 dark:text-gray-400">Hora más popular:</span>
+                                        <span id="horaMasPopular" class="text-sm font-medium text-gray-900 dark:text-white">-</span>
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <h5 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Actividad por día:</h5>
+                                    <div id="actividadPorDia" class="space-y-2">
+                                        <!-- Se llenará dinámicamente -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="sinDatosDemograficos" class="text-center py-8 text-gray-500 dark:text-gray-400">
+                        <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                        <p class="text-lg font-medium mb-2">No hay suficientes datos demográficos</p>
+                        <p class="text-sm">Se necesitan más pacientes con fechas de nacimiento y sesiones registradas</p>
                     </div>
                 </div>
             </div>

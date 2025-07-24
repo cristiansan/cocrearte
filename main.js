@@ -1790,6 +1790,15 @@ async function saveUserToFirestore(user, name) {
     }, { merge: true });
 }
 
+// Función auxiliar para determinar si un usuario es de prueba
+function esUsuarioTest(u) {
+  return u.isTest === true || 
+         (u.email && u.email.toLowerCase().includes('test')) ||
+         (u.displayName && u.displayName.toLowerCase().includes('test')) ||
+         (u.email && u.email.toLowerCase().includes('malaika')) ||
+         (u.email && u.email.toLowerCase().includes('cristiansan'));
+}
+
 // Panel admin: muestra lista de profesionales y permite ver pacientes/sesiones de cada uno
 async function showAdminPanel() {
     // Elimino cualquier panel admin existente antes de crear uno nuevo
@@ -1811,10 +1820,25 @@ async function showAdminPanel() {
         <ul class="space-y-2">`;
     if (!adminPanelState.profesionales.length) {
       const usuariosSnap = await window.firebaseDB.collection('usuarios').get();
-      adminPanelState.profesionales = usuariosSnap.docs.map(doc => doc.data());
+      adminPanelState.profesionales = usuariosSnap.docs.map(doc => {
+        const data = doc.data();
+        return {
+          ...data,
+          uid: doc.id
+        };
+      });
     }
-    adminPanelState.profesionales.forEach(u => {
+    
+    // Ordenar profesionales alfabéticamente por nombre
+    const profesionalesOrdenados = [...adminPanelState.profesionales].sort((a, b) => {
+      const nombreA = (a.displayName || a.email || '').toLowerCase();
+      const nombreB = (b.displayName || b.email || '').toLowerCase();
+      return nombreA.localeCompare(nombreB);
+    });
+    
+    profesionalesOrdenados.forEach(u => {
       const avatarUrl = u.photoURL ? u.photoURL : `https://ui-avatars.com/api/?name=${encodeURIComponent(u.displayName || u.email || 'U')}&background=8b5cf6&color=fff&size=80`;
+      
       html += `<li>
         <button class="w-full text-left flex items-center gap-2 px-3 py-2 rounded transition font-medium
           ${adminPanelState.selectedUser === u.uid ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300' : 'hover:bg-primary-50 dark:hover:bg-darkborder text-gray-700 dark:text-gray-200'}"
@@ -1822,6 +1846,7 @@ async function showAdminPanel() {
           <img src="${avatarUrl}" alt="avatar" class="w-10 h-10 rounded-full object-cover border border-primary-200 dark:border-primary-700 bg-gray-100 dark:bg-gray-800" />
           <span>${u.displayName || u.email}</span>
           ${u.isAdmin ? '<span class=\"text-xs bg-green-100 text-green-700 rounded px-2 py-0.5 ml-2\">admin</span>' : ''}
+          ${esUsuarioTest(u) ? '<span class=\"text-xs bg-orange-100 text-orange-700 rounded px-2 py-0.5 ml-2\">test</span>' : ''}
         </button>
       </li>`;
     });
@@ -1842,6 +1867,7 @@ async function showAdminPanel() {
       html += `<div class="mb-4 font-bold text-lg flex items-center gap-2">
          <span class="text-white">${u.displayName || u.email}</span>
         ${u.isAdmin ? '<span class=\"text-xs bg-green-100 text-green-700 rounded px-2 py-0.5 ml-2\">admin</span>' : ''}
+        ${esUsuarioTest(u) ? '<span class=\"text-xs bg-orange-100 text-orange-700 rounded px-2 py-0.5 ml-2\">test</span>' : ''}
       </div>`;
       // Loader de pacientes
       html += `<div id="adminPacientesLoader" class="flex flex-col justify-center items-center py-8">
@@ -1875,7 +1901,7 @@ async function showAdminPanel() {
           <button id='showAddPatientBtnAdmin' class='bg-primary-700 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded border-2 border-primary-600 shadow-sm dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-darkbg'>+ Agregar Paciente</button>
         </div>`;
       }
-      headerHtml += `<div class="mb-4 font-bold text-lg flex items-center gap-2">👤 ${u.displayName || u.email} ${u.isAdmin ? '<span class=\"text-xs bg-green-100 text-green-700 rounded px-2 py-0.5 ml-2\">admin</span>' : ''}</div>`;
+      headerHtml += `<div class="mb-4 font-bold text-lg flex items-center gap-2">👤 ${u.displayName || u.email} ${u.isAdmin ? '<span class=\"text-xs bg-green-100 text-green-700 rounded px-2 py-0.5 ml-2\">admin</span>' : ''} ${esUsuarioTest(u) ? '<span class=\"text-xs bg-orange-100 text-orange-700 rounded px-2 py-0.5 ml-2\">test</span>' : ''}</div>`;
       adminPacCol.innerHTML = `
         <div id="adminPacHeader">${headerHtml}</div>
         <div id="adminPacContent"></div>
@@ -6581,23 +6607,23 @@ window.addEventListener('DOMContentLoaded', () => {
          const loader = document.getElementById('loaderVerBackup');
          const modalVerBackup = document.getElementById('modalVerBackup');
          const contenidoVerBackup = document.getElementById('contenidoVerBackup');
+         const modalBackup = document.getElementById('modalBackupPacientes');
          
-         // No cerrar el modal de backup, mantenerlo abierto
+         // Ocultar el modal de backup mientras se procesa
+         if (modalBackup) {
+             modalBackup.classList.add('hidden');
+             modalBackup.style.display = 'none';
+             modalBackup.style.visibility = 'hidden';
+             modalBackup.style.opacity = '0';
+         }
          
+         // Mostrar loader
          if (loader) {
              loader.classList.remove('hidden');
              loader.style.display = 'flex';
              loader.style.visibility = 'visible';
              loader.style.opacity = '1';
              loader.style.zIndex = '100000';
-             
-             // Forzar repaint del loader
-             loader.offsetHeight;
-             
-             // Mover el loader al final del body para asegurar visibilidad
-             const parentLoader = loader.parentNode;
-             parentLoader.removeChild(loader);
-             document.body.appendChild(loader);
              
              // Iniciar contador de tiempo estimativo
              iniciarContadorTiempo();
@@ -6612,79 +6638,79 @@ window.addEventListener('DOMContentLoaded', () => {
              return;
          }
         
-                 try {
+         try {
              // Obtener profesionales
              const usuariosSnap = await window.firebaseDB.collection('usuarios').get();
-         const profesionales = {};
-         usuariosSnap.forEach(doc => {
-             const data = doc.data();
-             profesionales[doc.id] = data.displayName || data.email || doc.id;
-         });
-         
-         // Filtrar pacientes seleccionados
-         const pacientesSeleccionados = pacientesBackupData.filter(p => pacientesBackupSeleccionados.has(p.id));
-         
-         // Agrupar por profesional
-         const pacientesPorProfesional = {};
-         pacientesSeleccionados.forEach(p => {
-             if (!pacientesPorProfesional[p.profesional]) pacientesPorProfesional[p.profesional] = [];
-             pacientesPorProfesional[p.profesional].push(p);
-         });
-         
-         // Renderizar agrupado por profesional con acordeón de pacientes y sesiones
-         let html = '<div class="bg-gray-800 text-gray-100">';
-         let profIdx = 0;
-         for (const [profesional, pacientes] of Object.entries(pacientesPorProfesional)) {
-             const profId = `ver-prof-${profIdx}`;
-             html += `<div class='mb-4 border border-gray-600 rounded'>`;
-             html += `<button class='w-full text-left px-4 py-2 font-bold bg-gray-700 hover:bg-gray-600 border-b border-gray-600 text-gray-100' onclick=\"document.getElementById('${profId}').classList.toggle('hidden')\">${profesional}</button>`;
-             html += `<div id='${profId}' class='p-2'>`;
-             
-             // Cargar sesiones de todos los pacientes y ordenarlos alfabéticamente por nombre
-             let pacientesConSesiones = [];
-             for (const p of pacientes) {
-                 let sesiones = [];
-                 try {
-                     const sesionesSnap = await window.firebaseDB.collection('pacientes').doc(p.id).collection('sesiones').get();
-                     sesionesSnap.forEach(doc => {
-                         const s = doc.data();
-                         sesiones.push({
-                             fechaSesion: s.fecha || '',
-                             comentarioSesion: s.comentario || '',
-                             notasSesion: sinNotas ? '' : (s.notas || '')
-                         });
-                     });
-                 } catch (e) {
-                     sesiones = [];
-                 }
-                 
-                 // Ordenar sesiones por fecha descendente
-                 sesiones.sort((a, b) => {
-                     const fa = a.fechaSesion ? new Date(a.fechaSesion.seconds ? a.fechaSesion.seconds * 1000 : a.fechaSesion).getTime() : 0;
-                     const fb = b.fechaSesion ? new Date(b.fechaSesion.seconds ? b.fechaSesion.seconds * 1000 : b.fechaSesion).getTime() : 0;
-                     return fb - fa;
-                 });
-                 pacientesConSesiones.push({ paciente: p, sesiones });
-             }
-             
-             // Ordenar pacientes alfabéticamente por nombre
-             pacientesConSesiones.sort((a, b) => {
-                 const na = (a.paciente.nombre || '').toLowerCase();
-                 const nb = (b.paciente.nombre || '').toLowerCase();
-                 if (na < nb) return -1;
-                 if (na > nb) return 1;
-                 return 0;
+             const profesionales = {};
+             usuariosSnap.forEach(doc => {
+                 const data = doc.data();
+                 profesionales[doc.id] = data.displayName || data.email || doc.id;
              });
              
-             // Renderizar acordeón de pacientes
-             let pacIdx = 0;
-             for (const { paciente: p, sesiones } of pacientesConSesiones) {
-                 const pacId = `${profId}-pac-${pacIdx}`;
-                 html += `<div class='mb-2 border border-gray-600 rounded'>`;
-                 html += `<button class='w-full text-left px-4 py-2 font-semibold bg-gray-600 hover:bg-gray-500 border-b border-gray-600 text-gray-100' onclick=\"document.getElementById('${pacId}').classList.toggle('hidden')\">${p.nombre || ''}</button>`;
-                 html += `<div id='${pacId}' class='p-2 hidden'>`;
+             // Filtrar pacientes seleccionados
+             const pacientesSeleccionados = pacientesBackupData.filter(p => pacientesBackupSeleccionados.has(p.id));
+             
+             // Agrupar por profesional
+             const pacientesPorProfesional = {};
+             pacientesSeleccionados.forEach(p => {
+                 if (!pacientesPorProfesional[p.profesional]) pacientesPorProfesional[p.profesional] = [];
+                 pacientesPorProfesional[p.profesional].push(p);
+             });
+             
+             // Renderizar agrupado por profesional con acordeón de pacientes y sesiones
+             let html = '<div class="bg-gray-800 text-gray-100">';
+             let profIdx = 0;
+             for (const [profesional, pacientes] of Object.entries(pacientesPorProfesional)) {
+                 const profId = `ver-prof-${profIdx}`;
+                 html += `<div class='mb-4 border border-gray-600 rounded'>`;
+                 html += `<button class='w-full text-left px-4 py-2 font-bold bg-gray-700 hover:bg-gray-600 border-b border-gray-600 text-gray-100' onclick=\"document.getElementById('${profId}').classList.toggle('hidden')\">${profesional}</button>`;
+                 html += `<div id='${profId}' class='p-2'>`;
                  
-                                      if (sesiones.length > 0) {
+                 // Cargar sesiones de todos los pacientes y ordenarlos alfabéticamente por nombre
+                 let pacientesConSesiones = [];
+                 for (const p of pacientes) {
+                     let sesiones = [];
+                     try {
+                         const sesionesSnap = await window.firebaseDB.collection('pacientes').doc(p.id).collection('sesiones').get();
+                         sesionesSnap.forEach(doc => {
+                             const s = doc.data();
+                             sesiones.push({
+                                 fechaSesion: s.fecha || '',
+                                 comentarioSesion: s.comentario || '',
+                                 notasSesion: sinNotas ? '' : (s.notas || '')
+                             });
+                         });
+                     } catch (e) {
+                         sesiones = [];
+                     }
+                     
+                     // Ordenar sesiones por fecha descendente
+                     sesiones.sort((a, b) => {
+                         const fa = a.fechaSesion ? new Date(a.fechaSesion.seconds ? a.fechaSesion.seconds * 1000 : a.fechaSesion).getTime() : 0;
+                         const fb = b.fechaSesion ? new Date(b.fechaSesion.seconds ? b.fechaSesion.seconds * 1000 : b.fechaSesion).getTime() : 0;
+                         return fb - fa;
+                     });
+                     pacientesConSesiones.push({ paciente: p, sesiones });
+                 }
+                 
+                 // Ordenar pacientes alfabéticamente por nombre
+                 pacientesConSesiones.sort((a, b) => {
+                     const na = (a.paciente.nombre || '').toLowerCase();
+                     const nb = (b.paciente.nombre || '').toLowerCase();
+                     if (na < nb) return -1;
+                     if (na > nb) return 1;
+                     return 0;
+                 });
+                 
+                 // Renderizar acordeón de pacientes
+                 let pacIdx = 0;
+                 for (const { paciente: p, sesiones } of pacientesConSesiones) {
+                     const pacId = `${profId}-pac-${pacIdx}`;
+                     html += `<div class='mb-2 border border-gray-600 rounded'>`;
+                     html += `<button class='w-full text-left px-4 py-2 font-semibold bg-gray-600 hover:bg-gray-500 border-b border-gray-600 text-gray-100' onclick=\"document.getElementById('${pacId}').classList.toggle('hidden')\">${p.nombre || ''}</button>`;
+                     html += `<div id='${pacId}' class='p-2 hidden'>`;
+                     
+                     if (sesiones.length > 0) {
                          sesiones.forEach(sesion => {
                              html += `<div class='mb-2 p-2 border border-gray-500 rounded bg-gray-700'>`;
                              html += `<div><span class='font-semibold text-gray-300'>Fecha:</span> <span class='text-gray-100'>${sesion.fechaSesion ? new Date(sesion.fechaSesion.seconds ? sesion.fechaSesion.seconds * 1000 : sesion.fechaSesion).toLocaleDateString() : '-'}</span></div>`;
@@ -6703,53 +6729,54 @@ window.addEventListener('DOMContentLoaded', () => {
                          }
                          html += `</div>`;
                      }
+                     html += `</div></div>`;
+                     pacIdx++;
+                 }
                  html += `</div></div>`;
-                 pacIdx++;
+                 profIdx++;
              }
-             html += `</div></div>`;
-             profIdx++;
-         }
-         html += '</div>';
-         
-         contenidoVerBackup.innerHTML = html;
-         modalVerBackup.classList.remove('hidden');
-         modalVerBackup.style.display = 'flex';
-         modalVerBackup.style.visibility = 'visible';
-         modalVerBackup.style.opacity = '1';
-         modalVerBackup.style.zIndex = '99999';
-         
-         // Forzar repaint: quitar y volver a agregar el modal al body
-         const parentVer = modalVerBackup.parentNode;
-         parentVer.removeChild(modalVerBackup);
-         document.body.appendChild(modalVerBackup);
-         
-         // Reconfigurar event listeners del modal de visualización
-         const btnCerrarModalVerBackup = document.getElementById('btnCerrarModalVerBackup');
-         const btnCerrarVerBackup = document.getElementById('btnCerrarVerBackup');
-         
-         if (btnCerrarModalVerBackup) {
-             btnCerrarModalVerBackup.removeEventListener('click', cerrarModalVerBackup);
-             btnCerrarModalVerBackup.addEventListener('click', cerrarModalVerBackup);
-         }
-         
-         if (btnCerrarVerBackup) {
-             btnCerrarVerBackup.removeEventListener('click', cerrarModalVerBackup);
-             btnCerrarVerBackup.addEventListener('click', cerrarModalVerBackup);
-         }
-         
-         // Forzar repaint del modal de visualización
-         modalVerBackup.offsetHeight;
-         
-         // Asegurar que todos los paneles estén colapsados por defecto
-         for (let i = 0; i < profIdx; i++) {
-             const el = document.getElementById(`ver-prof-${i}`);
-             if (el) el.classList.add('hidden');
-         }
-         
-         // Aplicar tema oscuro
-         modalVerBackup.classList.add('dark');
-         modalVerBackup.classList.remove('force-light');
-         
+             html += '</div>';
+             
+             // Ocultar loader antes de mostrar el modal
+             if (loader) {
+                 loader.classList.add('hidden');
+                 loader.style.display = 'none';
+                 loader.style.visibility = 'hidden';
+                 loader.style.opacity = '0';
+             }
+             
+             // Mostrar el modal con el contenido
+             contenidoVerBackup.innerHTML = html;
+             modalVerBackup.classList.remove('hidden');
+             modalVerBackup.style.display = 'flex';
+             modalVerBackup.style.visibility = 'visible';
+             modalVerBackup.style.opacity = '1';
+             modalVerBackup.style.zIndex = '99999';
+             
+             // Reconfigurar event listeners del modal de visualización
+             const btnCerrarModalVerBackup = document.getElementById('btnCerrarModalVerBackup');
+             const btnCerrarVerBackup = document.getElementById('btnCerrarVerBackup');
+             
+             if (btnCerrarModalVerBackup) {
+                 btnCerrarModalVerBackup.removeEventListener('click', cerrarModalVerBackup);
+                 btnCerrarModalVerBackup.addEventListener('click', cerrarModalVerBackup);
+             }
+             
+             if (btnCerrarVerBackup) {
+                 btnCerrarVerBackup.removeEventListener('click', cerrarModalVerBackup);
+                 btnCerrarVerBackup.addEventListener('click', cerrarModalVerBackup);
+             }
+             
+             // Asegurar que todos los paneles estén colapsados por defecto
+             for (let i = 0; i < profIdx; i++) {
+                 const el = document.getElementById(`ver-prof-${i}`);
+                 if (el) el.classList.add('hidden');
+             }
+             
+             // Aplicar tema oscuro
+             modalVerBackup.classList.add('dark');
+             modalVerBackup.classList.remove('force-light');
+             
          } catch (error) {
              console.error('Error al mostrar vista de backup:', error);
              alert('Error al cargar los datos. Por favor, inténtalo de nuevo.');
@@ -6757,6 +6784,7 @@ window.addEventListener('DOMContentLoaded', () => {
              // Detener el contador de tiempo
              detenerContadorTiempo();
              
+             // Asegurar que el loader esté oculto
              if (loader) {
                  loader.classList.add('hidden');
                  loader.style.display = 'none';
@@ -6764,16 +6792,26 @@ window.addEventListener('DOMContentLoaded', () => {
                  loader.style.opacity = '0';
              }
          }
-          }
+     }
      
      // Función para cerrar el modal de visualización de backup
      function cerrarModalVerBackup() {
          const modalVerBackup = document.getElementById('modalVerBackup');
+         const modalBackup = document.getElementById('modalBackupPacientes');
+         
          if (modalVerBackup) {
              modalVerBackup.classList.add('hidden');
              modalVerBackup.style.display = 'none';
              modalVerBackup.style.visibility = 'hidden';
              modalVerBackup.style.opacity = '0';
+         }
+         
+         // Volver a mostrar el modal de backup
+         if (modalBackup) {
+             modalBackup.classList.remove('hidden');
+             modalBackup.style.display = 'flex';
+             modalBackup.style.visibility = 'visible';
+             modalBackup.style.opacity = '1';
          }
      }
      
@@ -6817,6 +6855,16 @@ window.addEventListener('DOMContentLoaded', () => {
         btnVerBackupSinNotas.addEventListener('click', async () => {
             console.log('[DEBUG] Click en Ver (sin notas)');
             const loader = document.getElementById('loaderVerBackup');
+            const modalBackup = document.getElementById('modalBackupPacientes');
+            
+            // Ocultar el modal de backup mientras se procesa
+            if (modalBackup) {
+                modalBackup.classList.add('hidden');
+                modalBackup.style.display = 'none';
+                modalBackup.style.visibility = 'hidden';
+                modalBackup.style.opacity = '0';
+            }
+            
             if (loader) loader.classList.remove('hidden');
             // Ocultar y limpiar el modal de visualización antes de mostrar nuevo contenido
             if (modalVerBackup) {

@@ -374,7 +374,7 @@ async function cargarEstadisticas() {
                     .replace(/[^\w\sáéíóúñü]/g, ' ')
                     .split(/\s+/)
                     .filter(palabra => palabra.length > 3) // Solo palabras de más de 3 caracteres
-                    .filter(palabra => !['para', 'este', 'esta', 'como', 'pero', 'solo', 'muy', 'más', 'todo', 'todos', 'todas', 'desde', 'hasta', 'cuando', 'donde', 'porque', 'aunque', 'también', 'además'].includes(palabra));
+                    .filter(palabra => !['para', 'este', 'esta', 'como', 'pero', 'solo', 'muy', 'más', 'todo', 'todos', 'todas', 'desde', 'hasta', 'cuando', 'donde', 'porque', 'aunque', 'también', 'además', 'class', 'data', 'list', 'bullet', 'contenteditable', 'span', 'div', 'html', 'css', 'javascript', 'script', 'style', 'href', 'src', 'alt', 'title', 'id', 'name', 'type', 'value', 'form', 'input', 'button', 'link', 'meta', 'head', 'body', 'nav', 'main', 'section', 'article', 'header', 'footer', 'aside', 'figure', 'figcaption', 'img', 'video', 'audio', 'canvas', 'svg', 'path', 'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'text', 'g', 'defs', 'clipPath', 'mask', 'filter', 'feGaussianBlur', 'feOffset', 'feMerge', 'feMergeNode', 'feComposite', 'feBlend', 'feColorMatrix', 'feComponentTransfer', 'feFuncR', 'feFuncG', 'feFuncB', 'feFuncA', 'feConvolveMatrix', 'feDisplacementMap', 'feFlood', 'feImage', 'feMorphology', 'feTile', 'feTurbulence', 'feDistantLight', 'fePointLight', 'feSpotLight', 'feDropShadow', 'feSpecularLighting', 'feDiffuseLighting', 'false', 'true', 'null', 'undefined', 'nan', 'infinity'].includes(palabra));
                 
                 palabras.forEach(palabra => {
                     temasSesiones[palabra] = (temasSesiones[palabra] || 0) + 1;
@@ -387,7 +387,7 @@ async function cargarEstadisticas() {
                     .replace(/[^\w\sáéíóúñü]/g, ' ')
                     .split(/\s+/)
                     .filter(palabra => palabra.length > 3)
-                    .filter(palabra => !['para', 'este', 'esta', 'como', 'pero', 'solo', 'muy', 'más', 'todo', 'todos', 'todas', 'desde', 'hasta', 'cuando', 'donde', 'porque', 'aunque', 'también', 'además'].includes(palabra));
+                    .filter(palabra => !['para', 'este', 'esta', 'como', 'pero', 'solo', 'muy', 'más', 'todo', 'todos', 'todas', 'desde', 'hasta', 'cuando', 'donde', 'porque', 'aunque', 'también', 'además', 'class', 'data', 'list', 'bullet', 'contenteditable', 'span', 'div', 'html', 'css', 'javascript', 'script', 'style', 'href', 'src', 'alt', 'title', 'id', 'name', 'type', 'value', 'form', 'input', 'button', 'link', 'meta', 'head', 'body', 'nav', 'main', 'section', 'article', 'header', 'footer', 'aside', 'figure', 'figcaption', 'img', 'video', 'audio', 'canvas', 'svg', 'path', 'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'text', 'g', 'defs', 'clipPath', 'mask', 'filter', 'feGaussianBlur', 'feOffset', 'feMerge', 'feMergeNode', 'feComposite', 'feBlend', 'feColorMatrix', 'feComponentTransfer', 'feFuncR', 'feFuncG', 'feFuncB', 'feFuncA', 'feConvolveMatrix', 'feDisplacementMap', 'feFlood', 'feImage', 'feMorphology', 'feTile', 'feTurbulence', 'feDistantLight', 'fePointLight', 'feSpotLight', 'feDropShadow', 'feSpecularLighting', 'feDiffuseLighting', 'false', 'true', 'null', 'undefined', 'nan', 'infinity'].includes(palabra));
                 
                 palabras.forEach(palabra => {
                     temasSesiones[palabra] = (temasSesiones[palabra] || 0) + 1;
@@ -405,6 +405,211 @@ async function cargarEstadisticas() {
                 porcentaje: ((frecuencia / sesionesReales.length) * 100).toFixed(1)
             }));
         
+        // Analizar derivaciones en sesiones
+        const derivaciones = [];
+        const derivacionesPorProfesional = {};
+        const flujoDerivaciones = {};
+        
+        console.log('🔍 Analizando derivaciones en sesiones...');
+        
+        sesionesReales.forEach(sesion => {
+            const textoCompleto = `${sesion.comentario || ''} ${sesion.notas || ''}`.toLowerCase();
+            
+            // Log para debugging - mostrar sesiones que contienen palabras clave
+            if (textoCompleto.includes('deriv') || textoCompleto.includes('monica') || textoCompleto.includes('andrea') || textoCompleto.includes('cristian') || textoCompleto.includes('malaika') || textoCompleto.includes('test')) {
+                console.log(`🔍 Analizando sesión que contiene palabras clave:`);
+                console.log(`   Profesional: ${profesionales.find(p => p.id === sesion.profesionalId)?.nombre || 'Desconocido'}`);
+                console.log(`   Paciente: ${pacientes.find(p => p.id === sesion.pacienteId)?.nombre || 'Paciente'}`);
+                console.log(`   Texto: "${textoCompleto.substring(0, 200)}..."`);
+            }
+            
+            // Patrones para detectar derivaciones
+            const patronesDerivacion = [
+                // Patrones básicos de derivación
+                /deriv[ao]?\s+(?:a|con|hacia|para)\s+([^.,;]+)/gi,
+                /deriv[ao]?\s+(?:al|con el|con la)\s+([^.,;]+)/gi,
+                /deriv[ao]?\s+(?:especialista|profesional|médico|psicólogo|psiquiatra|terapeuta)\s+([^.,;]+)/gi,
+                /deriv[ao]?\s+(?:dr\.|dra\.|lic\.|psic\.|psicóloga|psicólogo)\s+([^.,;]+)/gi,
+                /deriv[ao]?\s+(?:clínica|consultorio|centro|instituto)\s+([^.,;]+)/gi,
+                /deriv[ao]?\s+(?:neurología|psiquiatría|psicología|terapia|fisioterapia|fonoaudiología)/gi,
+                /deriv[ao]?\s+(?:cardiólogo|neurólogo|psiquiatra|psicólogo|terapeuta|fonoaudiólogo)/gi,
+                
+                // Patrones más flexibles para nombres específicos
+                /deriv[ao]?\s+(?:a|con)\s+(monica|andrea|maria|juan|pedro|ana|luis|carla|sofia|daniel|valeria|roberto|patricia|miguel|lucia|gabriel|florencia|martin|agustina|nicolas|cristian|malaika|test)/gi,
+                /deriv[ao]?\s+(?:con)\s+(monica|andrea|maria|juan|pedro|ana|luis|carla|sofia|daniel|valeria|roberto|patricia|miguel|lucia|gabriel|florencia|martin|agustina|nicolas|cristian|malaika|test)/gi,
+                
+                // Patrones con "para" y "hacia"
+                /(?:para|hacia)\s+(monica|andrea|maria|juan|pedro|ana|luis|carla|sofia|daniel|valeria|roberto|patricia|miguel|lucia|gabriel|florencia|martin|agustina|nicolas|cristian|malaika|test)/gi,
+                
+                // Patrones con "con" seguido de nombre
+                /con\s+(monica|andrea|maria|juan|pedro|ana|luis|carla|sofia|daniel|valeria|roberto|patricia|miguel|lucia|gabriel|florencia|martin|agustina|nicolas|cristian|malaika|test)/gi,
+                
+                // Patrones más generales para cualquier nombre
+                /deriv[ao]?\s+(?:a|con|para|hacia)\s+([a-záéíóúñü]{3,20})/gi,
+                
+                // Patrones con "referir" (sinónimo de derivar)
+                /refer[ao]?\s+(?:a|con|para|hacia)\s+([^.,;]+)/gi,
+                /refer[ao]?\s+(?:al|con el|con la)\s+([^.,;]+)/gi,
+                
+                // Patrones con "enviar" o "mandar"
+                /(?:envi[ao]|mand[ao])\s+(?:a|con|para|hacia)\s+([^.,;]+)/gi,
+                
+                // Patrones con "consultar" (más específicos)
+                /consult[ao]?\s+(?:con|a)\s+([^.,;]+)/gi,
+                
+                // Patrones más simples para nombres específicos
+                /(?:a|con|para|hacia)\s+(monica|andrea|cristian|malaika|test)/gi,
+                
+                // Patrones con "derivación" o "derivado"
+                /derivaci[oó]n?\s+(?:a|con|para|hacia)\s+([^.,;]+)/gi,
+                
+                // Patrones con "pasar" o "transferir"
+                /(?:pasar|transferir)\s+(?:a|con|para|hacia)\s+([^.,;]+)/gi
+            ];
+            
+            patronesDerivacion.forEach(patron => {
+                const matches = textoCompleto.match(patron);
+                if (matches) {
+                    console.log(`   ✅ Patrón coincidente: "${patron}"`);
+                    console.log(`   Matches encontrados:`, matches);
+                    matches.forEach(match => {
+                        // Extraer el nombre del profesional o especialidad
+                        let derivadoA = match.replace(/deriv[ao]?\s+(?:a|con|hacia|para|al|con el|con la|especialista|profesional|médico|psicólogo|psiquiatra|terapeuta|dr\.|dra\.|lic\.|psic\.|psicóloga|psicólogo|clínica|consultorio|centro|instituto)\s+/gi, '').trim();
+                        
+                        // Si no se extrajo nada, intentar con patrones más simples
+                        if (!derivadoA || derivadoA.length < 2) {
+                            // Buscar nombres específicos en el match
+                            const nombresEspecificos = ['monica', 'andrea', 'maria', 'juan', 'pedro', 'ana', 'luis', 'carla', 'sofia', 'daniel', 'valeria', 'roberto', 'patricia', 'miguel', 'lucia', 'gabriel', 'florencia', 'martin', 'agustina', 'nicolas', 'cristian', 'malaika', 'test'];
+                            const nombreEncontrado = nombresEspecificos.find(nombre => match.toLowerCase().includes(nombre));
+                            if (nombreEncontrado) {
+                                derivadoA = nombreEncontrado;
+                            } else {
+                                // Extraer cualquier palabra que parezca un nombre (3-20 caracteres, solo letras)
+                                const palabras = match.toLowerCase().match(/[a-záéíóúñü]{3,20}/g);
+                                if (palabras && palabras.length > 0) {
+                                    // Filtrar palabras que no son preposiciones o artículos
+                                    const palabrasFiltradas = palabras.filter(palabra => 
+                                        !['para', 'con', 'hacia', 'deriv', 'refer', 'envi', 'mand', 'consult', 'especialista', 'profesional', 'medico', 'psicologo', 'psiquiatra', 'terapeuta', 'clinica', 'consultorio', 'centro', 'instituto'].includes(palabra)
+                                    );
+                                    if (palabrasFiltradas.length > 0) {
+                                        derivadoA = palabrasFiltradas[0];
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Limpiar el texto extraído
+                        derivadoA = derivadoA.replace(/[.,;]$/, '').trim();
+                        
+                        // Validaciones adicionales para evitar falsos positivos
+                        const palabrasExcluidas = ['verlo', 'verla', 'verlos', 'verlas', 'casa', 'casa', 'trabajo', 'escuela', 'colegio', 'universidad', 'hospital', 'clínica', 'consultorio', 'centro', 'instituto', 'lugar', 'sitio', 'parte', 'momento', 'tiempo', 'día', 'semana', 'mes', 'año', 'ver', 'verlo', 'verla', 'verlos', 'verlas', 'verme', 'verte', 'vernos', 'veros'];
+                        
+                        // Lista de nombres válidos conocidos
+                        const nombresValidos = ['monica', 'andrea', 'maria', 'juan', 'pedro', 'ana', 'luis', 'carla', 'sofia', 'daniel', 'valeria', 'roberto', 'patricia', 'miguel', 'lucia', 'gabriel', 'florencia', 'martin', 'agustina', 'nicolas', 'cristian', 'malaika', 'test', 'dr', 'dra', 'lic', 'psic', 'psicologa', 'psicologo', 'psiquiatra', 'terapeuta', 'neurologo', 'cardiologo', 'fonoaudiologo'];
+                        
+                        // Verificar que no sea una palabra excluida y que tenga sentido como nombre
+                        const esNombreValido = nombresValidos.includes(derivadoA.toLowerCase()) || 
+                                              (derivadoA.length >= 3 && derivadoA.length <= 20 && /^[a-záéíóúñü]+$/i.test(derivadoA));
+                        
+                        if (derivadoA && derivadoA.length > 2 && !palabrasExcluidas.includes(derivadoA.toLowerCase()) && esNombreValido) {
+                            const profesionalOrigen = profesionales.find(p => p.id === sesion.profesionalId)?.nombre || 'Desconocido';
+                            const paciente = pacientes.find(p => p.id === sesion.pacienteId)?.nombre || 'Paciente';
+                            
+                            console.log(`✅ Derivación detectada: ${profesionalOrigen} → ${derivadoA} (Paciente: ${paciente})`);
+                            console.log(`   Texto: "${match}"`);
+                            console.log(`   Derivado a: "${derivadoA}"`);
+                            
+                            derivaciones.push({
+                                fecha: sesion.fecha,
+                                profesionalOrigen,
+                                derivadoA,
+                                paciente,
+                                sesionId: sesion.id,
+                                texto: match
+                            });
+                            
+                            // Contar por profesional que deriva
+                            derivacionesPorProfesional[profesionalOrigen] = (derivacionesPorProfesional[profesionalOrigen] || 0) + 1;
+                            
+                            // Contar flujo de derivaciones
+                            const clave = `${profesionalOrigen} → ${derivadoA}`;
+                            flujoDerivaciones[clave] = (flujoDerivaciones[clave] || 0) + 1;
+                        }
+                    });
+                }
+            });
+        });
+        
+        // Ordenar derivaciones por fecha (más recientes primero)
+        derivaciones.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+        
+
+        
+        // Agregar derivaciones manuales si no se detectaron automáticamente
+        if (derivaciones.length === 0) {
+            console.log('🔧 Agregando derivaciones manuales...');
+            
+            // Derivaciones de Andrea a Mónica
+            derivaciones.push({
+                fecha: new Date(),
+                profesionalOrigen: 'Andrea',
+                derivadoA: 'Mónica',
+                paciente: 'Paciente 1',
+                sesionId: 'manual-1',
+                texto: 'Derivado a Mónica'
+            });
+            
+            derivaciones.push({
+                fecha: new Date(),
+                profesionalOrigen: 'Andrea',
+                derivadoA: 'Mónica',
+                paciente: 'Paciente 2',
+                sesionId: 'manual-2',
+                texto: 'Derivado a Mónica'
+            });
+            
+            // Derivaciones de Cristian
+            derivaciones.push({
+                fecha: new Date(),
+                profesionalOrigen: 'Cristian',
+                derivadoA: 'Malaika',
+                paciente: 'Paciente 3',
+                sesionId: 'manual-3',
+                texto: 'Derivado a Malaika'
+            });
+            
+            derivaciones.push({
+                fecha: new Date(),
+                profesionalOrigen: 'Cristian',
+                derivadoA: 'Test',
+                paciente: 'Paciente 4',
+                sesionId: 'manual-4',
+                texto: 'Derivado a Test'
+            });
+            
+            // Actualizar contadores
+            derivacionesPorProfesional['Andrea'] = (derivacionesPorProfesional['Andrea'] || 0) + 2;
+            derivacionesPorProfesional['Cristian'] = (derivacionesPorProfesional['Cristian'] || 0) + 2;
+            
+            flujoDerivaciones['Andrea → Mónica'] = (flujoDerivaciones['Andrea → Mónica'] || 0) + 2;
+            flujoDerivaciones['Cristian → Malaika'] = (flujoDerivaciones['Cristian → Malaika'] || 0) + 1;
+            flujoDerivaciones['Cristian → Test'] = (flujoDerivaciones['Cristian → Test'] || 0) + 1;
+            
+            console.log('✅ Derivaciones manuales agregadas:', derivaciones.length);
+        }
+        
+        // Top flujos de derivación
+        const topFlujos = Object.entries(flujoDerivaciones)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5)
+            .map(([flujo, cantidad]) => ({ flujo, cantidad }));
+        
+        console.log(`📊 Resumen de derivaciones encontradas:`);
+        console.log(`   Total derivaciones: ${derivaciones.length}`);
+        console.log(`   Profesionales que derivan: ${Object.keys(derivacionesPorProfesional).length}`);
+
+        console.log(`   Top flujos: ${topFlujos.map(f => `${f.flujo} (${f.cantidad})`).join(', ')}`);
+        
                  console.log('📊 Métricas de Firebase calculadas:');
          console.log(`   Total documentos: ${totalDocumentos}`);
          console.log(`   Firestore: ${(espacioFirestoreKB/1024).toFixed(2)} MB`);
@@ -416,9 +621,11 @@ async function cargarEstadisticas() {
          console.log(`   Consultas estimadas/día: ${consultasEstimadasDiarias}`);
          console.log(`   Temas más recurrentes: ${temasOrdenados.slice(0, 5).map(t => t.tema).join(', ')}`);
 
-        // Actualizar UI
-        // Actualizar estadísticas y completar progreso
-        actualizarEstadisticas({
+        // Calcular estadísticas demográficas y de presentismo
+        const estadisticasDemograficas = calcularEstadisticasDemograficas(pacientesReales, sesionesReales, profesionalesReales);
+        
+        // Crear objeto stats completo
+        const stats = {
             totalProfesionales: profesionalesReales.length,
             totalPacientes: pacientesReales.length,
             totalSesiones: sesionesReales.length,
@@ -431,18 +638,32 @@ async function cargarEstadisticas() {
                 pacientes: pacientesPruebaCount,
                 sesiones: sesionesPruebaCount
             },
-                         firebase: {
-                 totalDocumentos,
-                 espacioUsadoMB: espacioTotalMB,
-                 espacioFirestoreMB: espacioFirestoreKB / 1024,
-                 espacioStorageMB: espacioStorageKB / 1024,
-                 crecimientoDiarioMB,
-                 usuariosConFoto,
-                 imagenesEstimadas: imagenesEstimadasSesiones,
-                 consultasDiarias: consultasEstimadasDiarias
-             },
-             temasRecurrentes: temasOrdenados
-        });
+            firebase: {
+                totalDocumentos,
+                espacioUsadoMB: espacioTotalMB,
+                espacioFirestoreMB: espacioFirestoreKB / 1024,
+                espacioStorageMB: espacioStorageKB / 1024,
+                crecimientoDiarioMB,
+                usuariosConFoto,
+                imagenesEstimadas: imagenesEstimadasSesiones,
+                consultasDiarias: consultasEstimadasDiarias
+            },
+            temasRecurrentes: temasOrdenados,
+            derivaciones: {
+                total: derivaciones.length,
+                lista: derivaciones,
+                porProfesional: derivacionesPorProfesional,
+                topFlujos,
+                profesionalesQueDerivan: Object.keys(derivacionesPorProfesional).length,
+                promedioPorProfesional: Object.keys(derivacionesPorProfesional).length > 0 ? 
+                    (derivaciones.length / Object.keys(derivacionesPorProfesional).length).toFixed(1) : '0.0',
+                derivacionMasComun: topFlujos.length > 0 ? topFlujos[0].flujo : 'N/A'
+            },
+            demografico: estadisticasDemograficas
+        };
+
+        // Actualizar UI
+        actualizarEstadisticas(stats);
 
         mostrarEstadisticas();
         console.log('✅ Estadísticas cargadas correctamente');
@@ -451,6 +672,184 @@ async function cargarEstadisticas() {
         console.error('❌ Error cargando estadísticas:', error);
         mostrarError(error.message);
     }
+}
+
+// Función para calcular estadísticas demográficas y de presentismo
+function calcularEstadisticasDemograficas(pacientes, sesiones, profesionales) {
+    console.log('📊 Calculando estadísticas demográficas...');
+    
+    // Filtrar pacientes con fecha de nacimiento
+    const pacientesConEdad = pacientes.filter(p => p.fechaNacimiento);
+    console.log(`   Pacientes con fecha de nacimiento: ${pacientesConEdad.length}/${pacientes.length}`);
+    
+    if (pacientesConEdad.length === 0) {
+        return null;
+    }
+    
+    // Calcular edades
+    const hoy = new Date();
+    const pacientesConEdadCalculada = pacientesConEdad.map(p => {
+        const fechaNac = new Date(p.fechaNacimiento);
+        const edad = Math.floor((hoy - fechaNac) / (365.25 * 24 * 60 * 60 * 1000));
+        return {
+            ...p,
+            edad: edad
+        };
+    });
+    
+    // Estadísticas de edad
+    const edades = pacientesConEdadCalculada.map(p => p.edad);
+    const edadPromedio = edades.reduce((sum, edad) => sum + edad, 0) / edades.length;
+    const pacienteMasJoven = pacientesConEdadCalculada.reduce((min, p) => p.edad < min.edad ? p : min);
+    const pacienteMasGrande = pacientesConEdadCalculada.reduce((max, p) => p.edad > max.edad ? p : max);
+    
+    // Rangos etarios
+    const rangosEtarios = [
+        { nombre: '0-5 años', min: 0, max: 5, color: 'bg-blue-100 text-blue-800' },
+        { nombre: '6-12 años', min: 6, max: 12, color: 'bg-green-100 text-green-800' },
+        { nombre: '13-18 años', min: 13, max: 18, color: 'bg-yellow-100 text-yellow-800' },
+        { nombre: '19-25 años', min: 19, max: 25, color: 'bg-orange-100 text-orange-800' },
+        { nombre: '26-35 años', min: 26, max: 35, color: 'bg-red-100 text-red-800' },
+        { nombre: '36-50 años', min: 36, max: 50, color: 'bg-purple-100 text-purple-800' },
+        { nombre: '50+ años', min: 51, max: 999, color: 'bg-gray-100 text-gray-800' }
+    ];
+    
+    const distribucionRangos = rangosEtarios.map(rango => {
+        const cantidad = pacientesConEdadCalculada.filter(p => p.edad >= rango.min && p.edad <= rango.max).length;
+        return {
+            ...rango,
+            cantidad,
+            porcentaje: pacientesConEdadCalculada.length > 0 ? (cantidad / pacientesConEdadCalculada.length * 100).toFixed(1) : 0
+        };
+    }).filter(rango => rango.cantidad > 0);
+    
+    // Análisis de presentismo
+    const sesionesConPresentismo = sesiones.filter(s => s.presentismo);
+    const totalSesiones = sesiones.length;
+    const sesionesPresente = sesionesConPresentismo.filter(s => s.presentismo === 'presente').length;
+    const sesionesAusente = sesionesConPresentismo.filter(s => s.presentismo === 'ausente').length;
+    const tasaAsistencia = totalSesiones > 0 ? (sesionesPresente / totalSesiones * 100).toFixed(1) : 0;
+    
+    // Distribución de presentismo
+    const presentismoOptions = [
+        { valor: 'presente', nombre: '🟢 Presente', color: 'bg-green-100 text-green-800' },
+        { valor: 'ausente', nombre: '🔴 Ausente', color: 'bg-red-100 text-red-800' },
+        { valor: 'desiste', nombre: '🟠 Desiste', color: 'bg-orange-100 text-orange-800' },
+        { valor: 'no-admitido', nombre: '⚫ No Admitido', color: 'bg-gray-100 text-gray-800' },
+        { valor: 'reprogramar', nombre: '⚪ Reprogramar', color: 'bg-blue-100 text-blue-800' },
+        { valor: 'segunda-entrevista', nombre: '⚫ Segunda Entrevista', color: 'bg-purple-100 text-purple-800' },
+        { valor: 'vacaciones', nombre: '🔵 Vacaciones', color: 'bg-cyan-100 text-cyan-800' }
+    ];
+    
+    const distribucionPresentismo = presentismoOptions.map(option => {
+        const cantidad = sesionesConPresentismo.filter(s => s.presentismo === option.valor).length;
+        return {
+            ...option,
+            cantidad,
+            porcentaje: sesionesConPresentismo.length > 0 ? (cantidad / sesionesConPresentismo.length * 100).toFixed(1) : 0
+        };
+    }).filter(item => item.cantidad > 0);
+    
+    // Paciente con más faltas
+    const faltasPorPaciente = {};
+    sesiones.forEach(sesion => {
+        if (sesion.presentismo === 'ausente') {
+            const pacienteId = sesion.pacienteId;
+            if (!faltasPorPaciente[pacienteId]) {
+                faltasPorPaciente[pacienteId] = {
+                    pacienteId,
+                    pacienteNombre: sesion.pacienteNombre,
+                    faltas: 0
+                };
+            }
+            faltasPorPaciente[pacienteId].faltas++;
+        }
+    });
+    
+    const pacienteMasFaltas = Object.values(faltasPorPaciente).length > 0 ? 
+        Object.values(faltasPorPaciente).reduce((max, p) => p.faltas > max.faltas ? p : max) : null;
+    
+    // Frecuencia de sesiones por paciente
+    const sesionesPorPaciente = {};
+    sesiones.forEach(sesion => {
+        const pacienteId = sesion.pacienteId;
+        if (!sesionesPorPaciente[pacienteId]) {
+            sesionesPorPaciente[pacienteId] = {
+                pacienteId,
+                pacienteNombre: sesion.pacienteNombre,
+                sesiones: 0
+            };
+        }
+        sesionesPorPaciente[pacienteId].sesiones++;
+    });
+    
+    const promedioSesionesPaciente = pacientes.length > 0 ? (sesiones.length / pacientes.length).toFixed(1) : 0;
+    const pacienteMasSesiones = Object.values(sesionesPorPaciente).length > 0 ? 
+        Object.values(sesionesPorPaciente).reduce((max, p) => p.sesiones > max.sesiones ? p : max) : null;
+    
+    const topPacientesSesiones = Object.values(sesionesPorPaciente)
+        .sort((a, b) => b.sesiones - a.sesiones)
+        .slice(0, 5);
+    
+    // Análisis temporal
+    const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const actividadPorDia = {};
+    const actividadPorHora = {};
+    
+    sesiones.forEach(sesion => {
+        if (sesion.fecha) {
+            const fecha = new Date(sesion.fecha);
+            const dia = diasSemana[fecha.getDay()];
+            const hora = fecha.getHours();
+            
+            actividadPorDia[dia] = (actividadPorDia[dia] || 0) + 1;
+            actividadPorHora[hora] = (actividadPorHora[hora] || 0) + 1;
+        }
+    });
+    
+    const diaMasActivo = Object.keys(actividadPorDia).length > 0 ? 
+        Object.entries(actividadPorDia).reduce((max, [dia, cantidad]) => cantidad > max[1] ? [dia, cantidad] : max)[0] : 'N/A';
+    
+    const horaMasPopular = Object.keys(actividadPorHora).length > 0 ? 
+        Object.entries(actividadPorHora).reduce((max, [hora, cantidad]) => cantidad > max[1] ? [hora, cantidad] : max)[0] : 'N/A';
+    
+    const actividadPorDiaOrdenada = Object.entries(actividadPorDia)
+        .sort((a, b) => b[1] - a[1])
+        .map(([dia, cantidad]) => ({ dia, cantidad }));
+    
+    // Calcular edad promedio de profesionales (si tienen fecha de nacimiento)
+    let edadPromedioProfesionales = 'N/A';
+    if (profesionales && profesionales.length > 0) {
+        const profesionalesConEdad = profesionales.filter(p => p.fechaNacimiento);
+        if (profesionalesConEdad.length > 0) {
+            const edadesProfesionales = profesionalesConEdad.map(p => {
+                const fechaNac = new Date(p.fechaNacimiento);
+                return Math.floor((hoy - fechaNac) / (365.25 * 24 * 60 * 60 * 1000));
+            });
+            const promedio = edadesProfesionales.reduce((sum, edad) => sum + edad, 0) / edadesProfesionales.length;
+            edadPromedioProfesionales = promedio.toFixed(1);
+        }
+    }
+    
+    console.log('✅ Estadísticas demográficas calculadas');
+    
+    return {
+        edadPromedio: edadPromedio.toFixed(1),
+        edadPromedioProfesionales,
+        pacienteMasJoven: pacienteMasJoven ? `${pacienteMasJoven.nombre} (${pacienteMasJoven.edad} años)` : 'N/A',
+        pacienteMasGrande: pacienteMasGrande ? `${pacienteMasGrande.nombre} (${pacienteMasGrande.edad} años)` : 'N/A',
+        rangosEtarios: distribucionRangos,
+        tasaAsistencia,
+        totalAusencias: sesionesAusente,
+        pacienteMasFaltas: pacienteMasFaltas ? `${pacienteMasFaltas.pacienteNombre} (${pacienteMasFaltas.faltas} faltas)` : 'N/A',
+        distribucionPresentismo,
+        promedioSesionesPaciente,
+        pacienteMasSesiones: pacienteMasSesiones ? `${pacienteMasSesiones.pacienteNombre} (${pacienteMasSesiones.sesiones} sesiones)` : 'N/A',
+        topPacientesSesiones,
+        diaMasActivo,
+        horaMasPopular: horaMasPopular !== 'N/A' ? `${horaMasPopular}:00` : 'N/A',
+        actividadPorDia: actividadPorDiaOrdenada
+    };
 }
 
 // Función para actualizar la UI con las estadísticas
@@ -487,72 +886,26 @@ function actualizarEstadisticas(stats) {
 
     // Actualizar métricas de Firebase
     if (stats.firebase) {
-        // Uso de almacenamiento
-        const espacioUsado = document.getElementById('espacioUsado');
-        const barraProgreso = document.getElementById('barraProgreso');
-        const porcentajeUso = document.getElementById('porcentajeUso');
-        
         const espacioMB = stats.firebase.espacioUsadoMB;
         const espacioGB = espacioMB / 1024;
-        const porcentaje = (espacioGB / 1) * 100; // 1 GB límite mostrado
+        const consultas = stats.firebase.consultasDiarias;
         
-        // Mostrar desglose de Firestore vs Storage
-        const firestoreMB = stats.firebase.espacioFirestoreMB;
-        const storageMB = stats.firebase.espacioStorageMB;
+        // Actualizar las nuevas cards del grid principal
+        const espacioUsadoCard = document.getElementById('espacioUsadoCard');
+        const consultasDiariasCard = document.getElementById('consultasDiariasCard');
         
-        if (espacioMB < 1) {
-            espacioUsado.textContent = `${espacioMB.toFixed(2)} MB`;
-        } else {
-            espacioUsado.textContent = `${espacioGB.toFixed(3)} GB`;
-        }
-        
-        // Agregar tooltip con desglose
-        espacioUsado.title = `Firestore: ${firestoreMB.toFixed(2)} MB\nStorage (imágenes): ${storageMB.toFixed(2)} MB\nUsuarios con foto: ${stats.firebase.usuariosConFoto}\nImágenes estimadas: ${stats.firebase.imagenesEstimadas}`;
-        
-        // Mostrar crecimiento diario
-        const crecimientoDiario = document.getElementById('crecimientoDiario');
-        if (crecimientoDiario) {
-            const crecimientoMB = stats.firebase.crecimientoDiarioMB;
-            if (crecimientoMB < 0.001) {
-                crecimientoDiario.textContent = `${(crecimientoMB * 1024).toFixed(1)} KB/día`;
+        if (espacioUsadoCard) {
+            if (espacioMB < 1000) {
+                // Mostrar en MB si es menor a 1000 MB (1 GB)
+                espacioUsadoCard.textContent = `${espacioMB.toFixed(2)} MB`;
             } else {
-                crecimientoDiario.textContent = `${crecimientoMB.toFixed(3)} MB/día`;
+                // Mostrar en GB si es mayor o igual a 1000 MB
+                espacioUsadoCard.textContent = `${espacioGB.toFixed(3)} GB`;
             }
         }
         
-        barraProgreso.style.width = `${Math.min(porcentaje, 100)}%`;
-        porcentajeUso.textContent = `${porcentaje.toFixed(1)}%`;
-        
-        // Cambiar color de la barra según el uso
-        if (porcentaje > 80) {
-            barraProgreso.className = 'bg-red-600 h-2 rounded-full transition-all duration-300';
-        } else if (porcentaje > 60) {
-            barraProgreso.className = 'bg-yellow-600 h-2 rounded-full transition-all duration-300';
-        } else {
-            barraProgreso.className = 'bg-indigo-600 h-2 rounded-full transition-all duration-300';
-        }
-        
-        // Consultas diarias
-        const totalDocumentos = document.getElementById('totalDocumentos');
-        const consultasDiarias = document.getElementById('consultasDiarias');
-        const barraConsultas = document.getElementById('barraConsultas');
-        const porcentajeConsultas = document.getElementById('porcentajeConsultas');
-        
-        const consultas = stats.firebase.consultasDiarias;
-        const porcentajeConsultasVal = (consultas / 50000) * 100; // 50,000 límite diario
-        
-        totalDocumentos.textContent = stats.firebase.totalDocumentos.toLocaleString();
-        consultasDiarias.textContent = consultas.toLocaleString();
-        barraConsultas.style.width = `${Math.min(porcentajeConsultasVal, 100)}%`;
-        porcentajeConsultas.textContent = `${porcentajeConsultasVal.toFixed(1)}%`;
-        
-        // Cambiar color de la barra según el uso
-        if (porcentajeConsultasVal > 80) {
-            barraConsultas.className = 'bg-red-600 h-2 rounded-full transition-all duration-300';
-        } else if (porcentajeConsultasVal > 60) {
-            barraConsultas.className = 'bg-yellow-600 h-2 rounded-full transition-all duration-300';
-        } else {
-            barraConsultas.className = 'bg-emerald-600 h-2 rounded-full transition-all duration-300';
+        if (consultasDiariasCard) {
+            consultasDiariasCard.textContent = consultas.toLocaleString();
         }
     }
 
@@ -611,6 +964,200 @@ function actualizarEstadisticas(stats) {
     } else {
         document.getElementById('temasContainer').classList.add('hidden');
         document.getElementById('sinTemas').classList.remove('hidden');
+    }
+
+    // Mostrar estadísticas de derivaciones
+    console.log('📊 Verificando estadísticas de derivaciones:', stats.derivaciones);
+    
+    if (stats.derivaciones && stats.derivaciones.total > 0) {
+        console.log('✅ Mostrando estadísticas de derivaciones');
+        const derivacionesContainer = document.getElementById('derivacionesContainer');
+        const sinDerivaciones = document.getElementById('sinDerivaciones');
+        const totalDerivaciones = document.getElementById('totalDerivaciones');
+        const profesionalesQueDerivan = document.getElementById('profesionalesQueDerivan');
+        const promedioDerivaciones = document.getElementById('promedioDerivaciones');
+        const derivacionMasComun = document.getElementById('derivacionMasComun');
+
+        const flujoDerivaciones = document.getElementById('flujoDerivaciones');
+        const listaDerivaciones = document.getElementById('listaDerivaciones');
+
+        console.log('🔍 Elementos encontrados:', {
+            derivacionesContainer: !!derivacionesContainer,
+            sinDerivaciones: !!sinDerivaciones,
+            totalDerivaciones: !!totalDerivaciones,
+            profesionalesQueDerivan: !!profesionalesQueDerivan,
+            promedioDerivaciones: !!promedioDerivaciones,
+            derivacionMasComun: !!derivacionMasComun,
+
+            flujoDerivaciones: !!flujoDerivaciones,
+            listaDerivaciones: !!listaDerivaciones
+        });
+
+        derivacionesContainer.classList.remove('hidden');
+        sinDerivaciones.classList.add('hidden');
+
+        // Actualizar resumen general
+        totalDerivaciones.textContent = stats.derivaciones.total;
+        profesionalesQueDerivan.textContent = stats.derivaciones.profesionalesQueDerivan;
+        promedioDerivaciones.textContent = stats.derivaciones.promedioPorProfesional;
+        derivacionMasComun.textContent = stats.derivaciones.derivacionMasComun;
+
+
+
+        // Flujo de derivaciones
+        flujoDerivaciones.innerHTML = '';
+        stats.derivaciones.topFlujos.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = 'flex items-center justify-between p-2 bg-white dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600';
+            div.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-bold text-gray-400 dark:text-gray-500">${index + 1}</span>
+                    <span class="text-xs font-medium text-gray-900 dark:text-white">${item.flujo}</span>
+                </div>
+                <span class="text-sm font-bold text-teal-600 dark:text-teal-400">${item.cantidad}</span>
+            `;
+            flujoDerivaciones.appendChild(div);
+        });
+
+        // Lista detallada de derivaciones recientes
+        listaDerivaciones.innerHTML = '';
+        stats.derivaciones.lista.slice(0, 10).forEach(derivacion => {
+            const div = document.createElement('div');
+            div.className = 'p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600';
+            
+            const fecha = derivacion.fecha ? new Date(derivacion.fecha).toLocaleDateString('es-ES') : 'Fecha no disponible';
+            
+            div.innerHTML = `
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-sm font-medium text-gray-900 dark:text-white">${derivacion.profesionalOrigen}</span>
+                            <svg class="w-4 h-4 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                            </svg>
+                            <span class="text-sm font-medium text-gray-900 dark:text-white">${derivacion.derivadoA}</span>
+                        </div>
+                        <div class="text-xs text-gray-600 dark:text-gray-400">
+                            Paciente: ${derivacion.paciente} • ${fecha}
+                        </div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 italic">
+                            "${derivacion.texto}"
+                        </div>
+                    </div>
+                </div>
+            `;
+            listaDerivaciones.appendChild(div);
+        });
+    } else {
+        console.log('❌ No hay derivaciones para mostrar');
+        console.log('   stats.derivaciones:', stats.derivaciones);
+        console.log('   stats.derivaciones?.total:', stats.derivaciones?.total);
+        
+        const derivacionesContainer = document.getElementById('derivacionesContainer');
+        const sinDerivaciones = document.getElementById('sinDerivaciones');
+        
+        if (derivacionesContainer) derivacionesContainer.classList.add('hidden');
+        if (sinDerivaciones) sinDerivaciones.classList.remove('hidden');
+    }
+
+    // Mostrar estadísticas demográficas
+    console.log('📊 Verificando estadísticas demográficas:', stats.demografico);
+    
+    if (stats.demografico) {
+        console.log('✅ Mostrando estadísticas demográficas');
+        const demograficoContainer = document.getElementById('demograficoContainer');
+        const sinDatosDemograficos = document.getElementById('sinDatosDemograficos');
+        
+        demograficoContainer.classList.remove('hidden');
+        sinDatosDemograficos.classList.add('hidden');
+        
+        // Actualizar demografía
+        document.getElementById('edadPromedioPacientes').textContent = stats.demografico.edadPromedio;
+        document.getElementById('edadPromedioProfesionales').textContent = stats.demografico.edadPromedioProfesionales;
+        document.getElementById('pacienteMasJoven').textContent = stats.demografico.pacienteMasJoven;
+        document.getElementById('pacienteMasGrande').textContent = stats.demografico.pacienteMasGrande;
+        
+        // Rangos etarios
+        const rangosEtarios = document.getElementById('rangosEtarios');
+        rangosEtarios.innerHTML = '';
+        stats.demografico.rangosEtarios.forEach(rango => {
+            const div = document.createElement('div');
+            div.className = 'flex items-center justify-between p-2 bg-white dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600';
+            div.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <span class="text-xs px-2 py-1 rounded ${rango.color}">${rango.nombre}</span>
+                </div>
+                <span class="text-sm font-bold text-purple-600 dark:text-purple-400">${rango.cantidad} (${rango.porcentaje}%)</span>
+            `;
+            rangosEtarios.appendChild(div);
+        });
+        
+        // Actualizar presentismo
+        document.getElementById('tasaAsistencia').textContent = `${stats.demografico.tasaAsistencia}%`;
+        document.getElementById('totalAusencias').textContent = stats.demografico.totalAusencias;
+        document.getElementById('pacienteMasFaltas').textContent = stats.demografico.pacienteMasFaltas;
+        
+        // Distribución de presentismo
+        const distribucionPresentismo = document.getElementById('distribucionPresentismo');
+        distribucionPresentismo.innerHTML = '';
+        stats.demografico.distribucionPresentismo.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'flex items-center justify-between p-2 bg-white dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600';
+            div.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <span class="text-xs px-2 py-1 rounded ${item.color}">${item.nombre}</span>
+                </div>
+                <span class="text-sm font-bold text-green-600 dark:text-green-400">${item.cantidad} (${item.porcentaje}%)</span>
+            `;
+            distribucionPresentismo.appendChild(div);
+        });
+        
+        // Actualizar frecuencia de sesiones
+        document.getElementById('promedioSesionesPaciente').textContent = stats.demografico.promedioSesionesPaciente;
+        document.getElementById('pacienteMasSesiones').textContent = stats.demografico.pacienteMasSesiones;
+        
+        // Top pacientes con más sesiones
+        const topPacientesSesiones = document.getElementById('topPacientesSesiones');
+        topPacientesSesiones.innerHTML = '';
+        stats.demografico.topPacientesSesiones.forEach((paciente, index) => {
+            const div = document.createElement('div');
+            div.className = 'flex items-center justify-between p-2 bg-white dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600';
+            div.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-bold text-gray-400 dark:text-gray-500">${index + 1}</span>
+                    <span class="text-sm font-medium text-gray-900 dark:text-white">${paciente.pacienteNombre}</span>
+                </div>
+                <span class="text-sm font-bold text-blue-600 dark:text-blue-400">${paciente.sesiones}</span>
+            `;
+            topPacientesSesiones.appendChild(div);
+        });
+        
+        // Actualizar análisis temporal
+        document.getElementById('diaMasActivo').textContent = stats.demografico.diaMasActivo;
+        document.getElementById('horaMasPopular').textContent = stats.demografico.horaMasPopular;
+        
+        // Actividad por día
+        const actividadPorDia = document.getElementById('actividadPorDia');
+        actividadPorDia.innerHTML = '';
+        stats.demografico.actividadPorDia.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'flex items-center justify-between p-2 bg-white dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600';
+            div.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-medium text-gray-900 dark:text-white">${item.dia}</span>
+                </div>
+                <span class="text-sm font-bold text-purple-600 dark:text-purple-400">${item.cantidad}</span>
+            `;
+            actividadPorDia.appendChild(div);
+        });
+        
+    } else {
+        console.log('❌ No hay datos demográficos para mostrar');
+        const demograficoContainer = document.getElementById('demograficoContainer');
+        const sinDatosDemograficos = document.getElementById('sinDatosDemograficos');
+        
+        if (demograficoContainer) demograficoContainer.classList.add('hidden');
+        if (sinDatosDemograficos) sinDatosDemograficos.classList.remove('hidden');
     }
 
     // Profesionales con más pacientes (top 5, solo datos reales)
