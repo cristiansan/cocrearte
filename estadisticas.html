@@ -191,6 +191,35 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Checkbox para incluir datos de prueba -->
+            <div class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <div class="flex items-center gap-3">
+                    <input type="checkbox" id="incluirDatosPrueba" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                    <label for="incluirDatosPrueba" class="text-sm font-medium text-blue-800 dark:text-blue-200">
+                        Incluir datos de prueba en las estadísticas
+                    </label>
+                    <div class="relative group">
+                        <div class="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center cursor-help">
+                            <span class="text-white text-xs font-bold">i</span>
+                        </div>
+                        <!-- Tooltip -->
+                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
+                            <div class="max-w-xs">
+                                <p class="font-semibold mb-1">Datos de prueba</p>
+                                <p class="text-gray-300">• Incluye pacientes y sesiones de usuarios de prueba</p>
+                                <p class="text-gray-300">• Útil para ver tus propios datos durante desarrollo</p>
+                                <p class="text-gray-300">• Los datos de prueba se marcan claramente</p>
+                            </div>
+                            <!-- Flecha del tooltip -->
+                            <div class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-blue-700 dark:text-blue-300 mt-2 text-xs">
+                    Marca esta opción si quieres ver tus propios datos de prueba en las estadísticas. Útil durante el desarrollo y pruebas.
+                </p>
+            </div>
         </div>
 
         <!-- Loader -->
@@ -371,73 +400,74 @@
 
 
 
-            <!-- Temas más recurrentes en sesiones -->
+            <!-- Motivos de Consulta más comunes -->
             <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border dark:border-darkborder mb-8">
-                <div class="p-4 cursor-pointer" onclick="toggleSection('temas')">
+                <div class="p-4 cursor-pointer" onclick="toggleSection('motivos')">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Temas más recurrentes</h3>
-                    <div class="relative group">
-                        <div class="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center cursor-help">
-                            <span class="text-white text-xs font-bold">i</span>
-                        </div>
-                        <!-- Tooltip -->
-                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
-                            <div class="max-w-xs">
-                                <p class="font-semibold mb-1">Análisis de patrones en sesiones</p>
-                                <p class="text-gray-300">• Basado en comentarios y notas de sesiones</p>
-                                <p class="text-gray-300">• Ayuda a identificar temas recurrentes</p>
-                                <p class="text-gray-300">• Útil para detectar patrones de tratamiento</p>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Motivos de Consulta más comunes</h3>
+                            <div class="relative group">
+                                <div class="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center cursor-help">
+                                    <span class="text-white text-xs font-bold">i</span>
+                                </div>
+                                <!-- Tooltip -->
+                                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
+                                    <div class="max-w-xs">
+                                        <p class="font-semibold mb-1">Análisis de motivos de consulta</p>
+                                        <p class="text-gray-300">• Basado en motivos registrados al crear pacientes</p>
+                                        <p class="text-gray-300">• Muestra los motivos más frecuentes</p>
+                                        <p class="text-gray-300">• Útil para identificar necesidades comunes</p>
+                                    </div>
+                                    <!-- Flecha del tooltip -->
+                                    <div class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
+                                </div>
                             </div>
-                            <!-- Flecha del tooltip -->
-                            <div class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
-                        </div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <div class="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-full">
-                                <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                            <div class="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-full">
+                                <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                 </svg>
                             </div>
-                            <svg id="temas-arrow" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg id="motivos-arrow" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </div>
                     </div>
                 </div>
                 
-                <div id="temas-content" class="px-4 pb-4 hidden">
-                    <div id="temasContainer" class="hidden">
+                <div id="motivos-content" class="px-4 pb-4 hidden">
+                    <div id="motivosContainer" class="hidden">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div id="temasLista" class="space-y-3">
-                                <!-- Los temas se llenarán dinámicamente -->
+                            <div id="motivosLista" class="space-y-3">
+                                <!-- Los motivos se llenarán dinámicamente -->
                             </div>
                             <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
                                 <h4 class="font-medium text-gray-900 dark:text-white mb-3">Estadísticas de análisis</h4>
                                 <div class="space-y-2 text-sm">
                                     <div class="flex justify-between">
-                                        <span class="text-gray-600 dark:text-gray-400">Sesiones analizadas:</span>
-                                        <span id="sesionesAnalizadas" class="font-medium text-gray-900 dark:text-white">-</span>
+                                        <span class="text-gray-600 dark:text-gray-400">Pacientes analizados:</span>
+                                        <span id="pacientesAnalizados" class="font-medium text-gray-900 dark:text-white">-</span>
                                     </div>
                                     <div class="flex justify-between">
-                                        <span class="text-gray-600 dark:text-gray-400">Palabras únicas:</span>
-                                        <span id="palabrasUnicas" class="font-medium text-gray-900 dark:text-white">-</span>
+                                        <span class="text-gray-600 dark:text-gray-400">Motivos únicos:</span>
+                                        <span id="motivosUnicos" class="font-medium text-gray-900 dark:text-white">-</span>
                                     </div>
                                     <div class="flex justify-between">
-                                        <span class="text-gray-600 dark:text-gray-400">Tema más frecuente:</span>
-                                        <span id="temaMasFrecuente" class="font-medium text-gray-900 dark:text-white">-</span>
+                                        <span class="text-gray-600 dark:text-gray-400">Motivo más frecuente:</span>
+                                        <span id="motivoMasFrecuente" class="font-medium text-gray-900 dark:text-white">-</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
-                    <div id="sinTemas" class="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <div id="sinMotivos" class="text-center py-8 text-gray-500 dark:text-gray-400">
                         <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
                         <p class="text-lg font-medium mb-2">No hay suficientes datos</p>
-                        <p class="text-sm">Se necesitan más sesiones con comentarios o notas para analizar patrones</p>
+                        <p class="text-sm">Se necesitan más pacientes con motivos de consulta registrados</p>
                     </div>
                 </div>
             </div>

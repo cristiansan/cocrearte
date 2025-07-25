@@ -62,6 +62,29 @@ cocrearte/
 │   └── favicon.ico
 ```
 
+## 📋 Historial de versiones
+
+### v0.3.7 (Actual)
+- 🗺️ **Nuevo**: Sistema de geocodificación mejorado con múltiples variaciones
+- 📍 **Mejora**: Reconocimiento de todos los barrios de CABA (Balvanera, Palermo, etc.)
+- 🔧 **Funcionalidad**: Expansión automática de abreviaciones (Tte. Gral. → Teniente General)
+- ✅ **Validación**: Verificación de coordenadas por provincia para evitar ubicaciones incorrectas
+- 🎯 **Fallback**: Marcadores grises para direcciones no geocodificables
+- 📊 **Logging**: Proceso detallado de geocodificación con sugerencias de mejora
+
+### v0.3.6
+- ✨ **Nuevo**: Sistema de checkboxes para motivo de consulta
+- 🔄 **Mejora**: Interfaz más intuitiva para selección múltiple de motivos
+- 🎨 **Diseño**: Grid responsivo de 2 columnas con scroll automático
+- 📱 **UX**: Etiquetas clickeables y checkboxes pequeños
+- 🔧 **Funcionalidad**: Guardado como array y visualización como lista ordenada
+
+### v0.3.5
+- ✨ **Nuevo**: Campo "Motivo de consulta" con dropdown de selección única
+- 📍 **Posicionamiento**: Campo ubicado entre Información Personal y Contacto
+- 🔧 **Integración**: Guardado y carga en formularios de agregar/editar pacientes
+- 📋 **Visualización**: Mostrado en ficha clínica del paciente
+
 ## 👤 Autor
 - [Cristian](https://github.com/cristiansan)
 

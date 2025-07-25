@@ -986,6 +986,25 @@
                     </div>
                 </div>
 
+                <!-- Motivo de Consulta -->
+                <div class="border-b pb-4 mb-4">
+                    <h4 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">💭 Motivo de Consulta</h4>
+                    <div>
+                        <label class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-2">Seleccionar motivo(s) de consulta:</label>
+                        <div id="patientMotivoCheckboxes" class="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-60 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-800">
+                            <!-- Los checkboxes se cargarán dinámicamente desde JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <!-- Botón para abrir modal del Nomenclador CIE-10 -->
+                    <div class="flex justify-start mt-4">
+                        <button type="button" id="btnAbrirNomencladorAgregar" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg text-sm flex items-center gap-2 transition-colors">
+                            📋 Clasificación CIE-10
+                            <span id="nomencladorSeleccionadoAgregar" class="text-xs bg-blue-500 px-2 py-1 rounded hidden"></span>
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Información de Contacto -->
                 <div class="border-b pb-4 mb-4">
                     <h4 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">📞 Información de Contacto</h4>
@@ -1192,22 +1211,7 @@
                     </div>
                 </div>
 
-                <!-- Motivo de Consulta -->
-                <div>
-                    <h4 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">💭 Motivo de Consulta</h4>
-                    <div>
-                        <label for="patientMotivo" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Motivo de Consulta</label>
-                        <textarea id="patientMotivo" name="patientMotivo" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" rows="3" placeholder="Describe el motivo principal de la consulta"></textarea>
-                    </div>
-                    
-                    <!-- Botón para abrir modal del Nomenclador CIE-10 -->
-                    <div class="flex justify-start mt-4">
-                        <button type="button" id="btnAbrirNomencladorAgregar" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg text-sm flex items-center gap-2 transition-colors">
-                            📋 Clasificación CIE-10
-                            <span id="nomencladorSeleccionadoAgregar" class="text-xs bg-blue-500 px-2 py-1 rounded hidden"></span>
-                        </button>
-                    </div>
-                </div>
+
 
             </form>
             </div>
@@ -1260,6 +1264,25 @@
                             <label for="editPatientLugarNacimiento" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Lugar de Nacimiento</label>
                             <input id="editPatientLugarNacimiento" name="editPatientLugarNacimiento" type="text" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Ciudad, País">
                         </div>
+                    </div>
+                </div>
+
+                <!-- Motivo de Consulta -->
+                <div class="border-b pb-4 mb-4">
+                    <h4 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">💭 Motivo de Consulta</h4>
+                    <div>
+                        <label class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-2">Seleccionar motivo(s) de consulta:</label>
+                        <div id="editPatientMotivoCheckboxes" class="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-60 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-800">
+                            <!-- Los checkboxes se cargarán dinámicamente desde JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <!-- Botón para abrir modal del Nomenclador CIE-10 -->
+                    <div class="flex justify-start mt-4">
+                        <button type="button" id="btnAbrirNomencladorEditar" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg text-sm flex items-center gap-2 transition-colors">
+                            📋 Clasificación CIE-10
+                            <span id="nomencladorSeleccionadoEditar" class="text-xs bg-blue-500 px-2 py-1 rounded hidden"></span>
+                        </button>
                     </div>
                 </div>
 
@@ -1469,30 +1492,16 @@
                     </div>
                 </div>
 
-                <!-- Motivo de Consulta -->
-                <div>
-                    <h4 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">💭 Motivo de Consulta</h4>
-                    <div>
-                        <label for="editPatientMotivo" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Motivo de Consulta</label>
-                        <textarea id="editPatientMotivo" name="editPatientMotivo" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" rows="3" placeholder="Describe el motivo principal de la consulta"></textarea>
-                    </div>
-                    
-                    <!-- Botón para abrir modal del Nomenclador CIE-10 -->
-                    <div class="flex justify-start mt-4">
-                        <button type="button" id="btnAbrirNomencladorEditar" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg text-sm flex items-center gap-2 transition-colors">
-                            📋 Clasificación CIE-10
-                            <span id="nomencladorSeleccionadoEditar" class="text-xs bg-blue-500 px-2 py-1 rounded hidden"></span>
-                        </button>
-                    </div>
-                </div>
+
 
             </form>
             </div>
             
             <div class="border-t border-gray-200 dark:border-darkborder p-4 sm:p-6 shrink-0">
                 <div class="flex flex-col sm:flex-row justify-end gap-3">
-                    <button type="button" onclick="hideEditPatientModal()" class="w-full sm:w-auto bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-3 px-4 rounded-lg transition-colors order-2 sm:order-1 min-h-[48px]">Cancelar</button>
-                    <button type="submit" form="editPatientForm" class="w-full sm:w-auto bg-primary-700 hover:bg-primary-600 text-white font-bold py-3 px-4 rounded-lg transition-colors order-1 sm:order-2 min-h-[48px]">Guardar Cambios</button>
+                    <button type="button" onclick="hideEditPatientModal()" class="w-full sm:w-auto bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-3 px-4 rounded-lg transition-colors order-3 sm:order-1 min-h-[48px]">Cancelar</button>
+                    <button type="button" onclick="limpiarFormularioEdicion()" class="w-full sm:w-auto bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-3 px-4 rounded-lg transition-colors order-2 min-h-[48px]">Limpiar</button>
+                    <button type="submit" form="editPatientForm" class="w-full sm:w-auto bg-primary-700 hover:bg-primary-600 text-white font-bold py-3 px-4 rounded-lg transition-colors order-1 sm:order-3 min-h-[48px]">Guardar Cambios</button>
                 </div>
             </div>
         </div>

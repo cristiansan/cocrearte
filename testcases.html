@@ -179,7 +179,12 @@
         appWindow.document.getElementById('patientName').value = 'Test Paciente';
         appWindow.document.getElementById('patientEmail').value = 'test@paciente.com';
         appWindow.document.getElementById('patientTelefono').value = '123456789';
-        appWindow.document.getElementById('patientMotivo').value = 'Motivo de prueba';
+        // Seleccionar el primer motivo de la lista para el test
+        const motivoCheckboxes = appWindow.document.getElementById('patientMotivoCheckboxes');
+        if (motivoCheckboxes && motivoCheckboxes.querySelectorAll('input[type="checkbox"]').length > 0) {
+            const firstCheckbox = motivoCheckboxes.querySelector('input[type="checkbox"]');
+            firstCheckbox.checked = true; // Seleccionar el primer checkbox
+        }
         // Hace click en el botón Agregar
         const agregarBtn = Array.from(modal.querySelectorAll('button')).find(btn => btn.textContent.trim().toLowerCase() === 'agregar');
         if (agregarBtn) agregarBtn.click();

@@ -62,7 +62,7 @@ function mostrarError(mensaje = 'Error al cargar estadísticas') {
 
 // Función para mostrar estadísticas
 function mostrarEstadisticas() {
-    completarProgresoCarga();
+    completarProgresoCarga(false); // No es una recarga, es la carga inicial
 }
 
 // Función para verificar si el usuario es administrador
@@ -269,10 +269,14 @@ async function cargarEstadisticas() {
         // Calcular estadísticas
         console.log('🧮 Calculando estadísticas...');
         
+        // Verificar si incluir datos de prueba
+        const incluirDatosPrueba = document.getElementById('incluirDatosPrueba')?.checked || false;
+        console.log('🔧 Incluir datos de prueba:', incluirDatosPrueba);
+        
         // Separar datos reales de datos de prueba
-        const profesionalesReales = profesionales.filter(p => !p.esPrueba);
-        const pacientesReales = pacientes.filter(p => !p.esPrueba);
-        const sesionesReales = sesiones.filter(s => !s.esPrueba);
+        const profesionalesReales = incluirDatosPrueba ? profesionales : profesionales.filter(p => !p.esPrueba);
+        const pacientesReales = incluirDatosPrueba ? pacientes : pacientes.filter(p => !p.esPrueba);
+        const sesionesReales = incluirDatosPrueba ? sesiones : sesiones.filter(s => !s.esPrueba);
         
         // Datos de prueba para mostrar información
         const profesionalesPruebaCount = profesionales.filter(p => p.esPrueba).length;
@@ -283,6 +287,13 @@ async function cargarEstadisticas() {
         console.log(`   Profesionales reales: ${profesionalesReales.length}, de prueba: ${profesionalesPruebaCount}`);
         console.log(`   Pacientes reales: ${pacientesReales.length}, de prueba: ${pacientesPruebaCount}`);
         console.log(`   Sesiones reales: ${sesionesReales.length}, de prueba: ${sesionesPruebaCount}`);
+        
+        console.log('🔍 Pacientes con motivos de consulta:');
+        pacientes.forEach(p => {
+            if (p.motivos && Array.isArray(p.motivos) && p.motivos.length > 0) {
+                console.log(`   - ${p.nombre} (esPrueba: ${p.esPrueba}): ${p.motivos.join(', ')}`);
+            }
+        });
         
         // Estadísticas por profesional (solo datos reales)
         const statsPorProfesional = {};
@@ -365,44 +376,36 @@ async function cargarEstadisticas() {
         const crecimientoDiarioKB = (sesionesRecientes.length / 30) * 1.5; // KB por día basado en nuevas sesiones
         const crecimientoDiarioMB = crecimientoDiarioKB / 1024;
         
-        // Analizar temas más recurrentes en sesiones
-        const temasSesiones = {};
-        sesionesReales.forEach(sesion => {
-            if (sesion.comentario) {
-                // Extraer palabras clave del comentario
-                const palabras = sesion.comentario.toLowerCase()
-                    .replace(/[^\w\sáéíóúñü]/g, ' ')
-                    .split(/\s+/)
-                    .filter(palabra => palabra.length > 3) // Solo palabras de más de 3 caracteres
-                    .filter(palabra => !['para', 'este', 'esta', 'como', 'pero', 'solo', 'muy', 'más', 'todo', 'todos', 'todas', 'desde', 'hasta', 'cuando', 'donde', 'porque', 'aunque', 'también', 'además', 'class', 'data', 'list', 'bullet', 'contenteditable', 'span', 'div', 'html', 'css', 'javascript', 'script', 'style', 'href', 'src', 'alt', 'title', 'id', 'name', 'type', 'value', 'form', 'input', 'button', 'link', 'meta', 'head', 'body', 'nav', 'main', 'section', 'article', 'header', 'footer', 'aside', 'figure', 'figcaption', 'img', 'video', 'audio', 'canvas', 'svg', 'path', 'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'text', 'g', 'defs', 'clipPath', 'mask', 'filter', 'feGaussianBlur', 'feOffset', 'feMerge', 'feMergeNode', 'feComposite', 'feBlend', 'feColorMatrix', 'feComponentTransfer', 'feFuncR', 'feFuncG', 'feFuncB', 'feFuncA', 'feConvolveMatrix', 'feDisplacementMap', 'feFlood', 'feImage', 'feMorphology', 'feTile', 'feTurbulence', 'feDistantLight', 'fePointLight', 'feSpotLight', 'feDropShadow', 'feSpecularLighting', 'feDiffuseLighting', 'false', 'true', 'null', 'undefined', 'nan', 'infinity'].includes(palabra));
-                
-                palabras.forEach(palabra => {
-                    temasSesiones[palabra] = (temasSesiones[palabra] || 0) + 1;
+        // Analizar motivos de consulta más comunes
+        const motivosConsulta = {};
+        console.log('🔍 Analizando motivos de consulta...');
+        console.log('🔍 Total de pacientes reales:', pacientesReales.length);
+        console.log('🔍 Total de pacientes (incluyendo prueba):', pacientes.length);
+        
+        // Usar pacientes según el checkbox de datos de prueba
+        const pacientesParaMotivos = incluirDatosPrueba ? pacientes : pacientesReales;
+        
+        pacientesParaMotivos.forEach(paciente => {
+            if (paciente.motivos && Array.isArray(paciente.motivos)) {
+                console.log(`🔍 Paciente ${paciente.nombre} (esPrueba: ${paciente.esPrueba}): motivos =`, paciente.motivos);
+                paciente.motivos.forEach(motivo => {
+                    motivosConsulta[motivo] = (motivosConsulta[motivo] || 0) + 1;
                 });
-            }
-            
-            if (sesion.notas) {
-                // Extraer palabras clave de las notas
-                const palabras = sesion.notas.toLowerCase()
-                    .replace(/[^\w\sáéíóúñü]/g, ' ')
-                    .split(/\s+/)
-                    .filter(palabra => palabra.length > 3)
-                    .filter(palabra => !['para', 'este', 'esta', 'como', 'pero', 'solo', 'muy', 'más', 'todo', 'todos', 'todas', 'desde', 'hasta', 'cuando', 'donde', 'porque', 'aunque', 'también', 'además', 'class', 'data', 'list', 'bullet', 'contenteditable', 'span', 'div', 'html', 'css', 'javascript', 'script', 'style', 'href', 'src', 'alt', 'title', 'id', 'name', 'type', 'value', 'form', 'input', 'button', 'link', 'meta', 'head', 'body', 'nav', 'main', 'section', 'article', 'header', 'footer', 'aside', 'figure', 'figcaption', 'img', 'video', 'audio', 'canvas', 'svg', 'path', 'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'text', 'g', 'defs', 'clipPath', 'mask', 'filter', 'feGaussianBlur', 'feOffset', 'feMerge', 'feMergeNode', 'feComposite', 'feBlend', 'feColorMatrix', 'feComponentTransfer', 'feFuncR', 'feFuncG', 'feFuncB', 'feFuncA', 'feConvolveMatrix', 'feDisplacementMap', 'feFlood', 'feImage', 'feMorphology', 'feTile', 'feTurbulence', 'feDistantLight', 'fePointLight', 'feSpotLight', 'feDropShadow', 'feSpecularLighting', 'feDiffuseLighting', 'false', 'true', 'null', 'undefined', 'nan', 'infinity'].includes(palabra));
-                
-                palabras.forEach(palabra => {
-                    temasSesiones[palabra] = (temasSesiones[palabra] || 0) + 1;
-                });
+            } else {
+                console.log(`🔍 Paciente ${paciente.nombre} (esPrueba: ${paciente.esPrueba}): sin motivos o no es array`);
             }
         });
         
-        // Obtener los 10 temas más recurrentes
-        const temasOrdenados = Object.entries(temasSesiones)
+        console.log('🔍 Motivos encontrados:', motivosConsulta);
+        
+        // Obtener los 10 motivos más comunes
+        const motivosOrdenados = Object.entries(motivosConsulta)
             .sort((a, b) => b[1] - a[1])
             .slice(0, 10)
-            .map(([tema, frecuencia]) => ({
-                tema: tema.charAt(0).toUpperCase() + tema.slice(1),
+            .map(([motivo, frecuencia]) => ({
+                motivo: motivo,
                 frecuencia,
-                porcentaje: ((frecuencia / sesionesReales.length) * 100).toFixed(1)
+                porcentaje: ((frecuencia / pacientesParaMotivos.length) * 100).toFixed(1)
             }));
         
         // Analizar derivaciones en sesiones
@@ -639,7 +642,7 @@ async function cargarEstadisticas() {
          console.log(`   Usuarios con foto: ${usuariosConFoto}`);
          console.log(`   Imágenes estimadas en sesiones: ${imagenesEstimadasSesiones}`);
          console.log(`   Consultas estimadas/día: ${consultasEstimadasDiarias}`);
-         console.log(`   Temas más recurrentes: ${temasOrdenados.slice(0, 5).map(t => t.tema).join(', ')}`);
+         console.log(`   Motivos más comunes: ${motivosOrdenados.slice(0, 5).map(m => m.motivo).join(', ')}`);
 
         // Calcular estadísticas demográficas y de presentismo
         const estadisticasDemograficas = calcularEstadisticasDemograficas(pacientesReales, sesionesReales, profesionalesReales);
@@ -651,6 +654,7 @@ async function cargarEstadisticas() {
             totalSesiones: sesionesReales.length,
             promedioGeneral: pacientesReales.length > 0 ? 
                 (sesionesReales.length / pacientesReales.length).toFixed(1) : '0.0',
+            totalPacientesParaMotivos: pacientesParaMotivos.length, // Agregar para motivos
             statsPorProfesional,
             actividadReciente: actividadRecienteData,
             datosPrueba: {
@@ -668,7 +672,7 @@ async function cargarEstadisticas() {
                 imagenesEstimadas: imagenesEstimadasSesiones,
                 consultasDiarias: consultasEstimadasDiarias
             },
-            temasRecurrentes: temasOrdenados,
+            motivosRecurrentes: motivosOrdenados,
             derivaciones: {
                 total: derivaciones.length,
                 lista: derivaciones,
@@ -687,6 +691,33 @@ async function cargarEstadisticas() {
 
         mostrarEstadisticas();
         console.log('✅ Estadísticas cargadas correctamente');
+        
+        // Configurar event listener para el checkbox de datos de prueba
+        const checkboxDatosPrueba = document.getElementById('incluirDatosPrueba');
+        if (checkboxDatosPrueba) {
+            checkboxDatosPrueba.addEventListener('change', () => {
+                console.log('🔄 Checkbox de datos de prueba cambiado, recargando estadísticas...');
+                
+                // Mostrar el loader antes de recargar
+                if (statsLoader) statsLoader.classList.remove('hidden');
+                if (statsContainer) statsContainer.classList.add('hidden');
+                
+                cargarEstadisticas();
+            });
+        }
+        
+        // Mostrar/ocultar nota de datos de prueba según el checkbox
+        const notaDatosPrueba = document.getElementById('notaDatosPrueba');
+        if (notaDatosPrueba) {
+            if (incluirDatosPrueba) {
+                notaDatosPrueba.classList.add('hidden');
+            } else {
+                notaDatosPrueba.classList.remove('hidden');
+            }
+        }
+
+        // Completar el progreso de carga (es una recarga)
+        completarProgresoCarga(true);
 
     } catch (error) {
         console.error('❌ Error cargando estadísticas:', error);
@@ -929,25 +960,25 @@ function actualizarEstadisticas(stats) {
         }
     }
 
-    // Mostrar temas más recurrentes
-    if (stats.temasRecurrentes && stats.temasRecurrentes.length > 0) {
-        const temasContainer = document.getElementById('temasContainer');
-        const sinTemas = document.getElementById('sinTemas');
-        const temasLista = document.getElementById('temasLista');
-        const sesionesAnalizadas = document.getElementById('sesionesAnalizadas');
-        const palabrasUnicas = document.getElementById('palabrasUnicas');
-        const temaMasFrecuente = document.getElementById('temaMasFrecuente');
+    // Mostrar motivos de consulta más comunes
+    if (stats.motivosRecurrentes && stats.motivosRecurrentes.length > 0) {
+        const motivosContainer = document.getElementById('motivosContainer');
+        const sinMotivos = document.getElementById('sinMotivos');
+        const motivosLista = document.getElementById('motivosLista');
+        const pacientesAnalizados = document.getElementById('pacientesAnalizados');
+        const motivosUnicos = document.getElementById('motivosUnicos');
+        const motivoMasFrecuente = document.getElementById('motivoMasFrecuente');
 
-        temasContainer.classList.remove('hidden');
-        sinTemas.classList.add('hidden');
+        motivosContainer.classList.remove('hidden');
+        sinMotivos.classList.add('hidden');
 
         // Limpiar lista anterior
-        temasLista.innerHTML = '';
+        motivosLista.innerHTML = '';
 
-        // Agregar cada tema
-        stats.temasRecurrentes.forEach((tema, index) => {
-            const temaElement = document.createElement('div');
-            temaElement.className = 'flex items-center justify-between p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600';
+        // Agregar cada motivo
+        stats.motivosRecurrentes.forEach((motivo, index) => {
+            const motivoElement = document.createElement('div');
+            motivoElement.className = 'flex items-center justify-between p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600';
             
             const colorClasses = [
                 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
@@ -959,31 +990,31 @@ function actualizarEstadisticas(stats) {
             
             const colorClass = colorClasses[index % colorClasses.length];
             
-            temaElement.innerHTML = `
+            motivoElement.innerHTML = `
                 <div class="flex items-center gap-3">
                     <span class="text-lg font-bold text-gray-400 dark:text-gray-500">${index + 1}</span>
                     <div>
-                        <span class="font-medium text-gray-900 dark:text-white">${tema.tema}</span>
+                        <span class="font-medium text-gray-900 dark:text-white">${motivo.motivo}</span>
                         <div class="text-xs text-gray-500 dark:text-gray-400">
-                            ${tema.frecuencia} menciones (${tema.porcentaje}% de sesiones)
+                            ${motivo.frecuencia} pacientes (${motivo.porcentaje}% del total)
                         </div>
                     </div>
                 </div>
                 <span class="px-2 py-1 rounded-full text-xs font-medium ${colorClass}">
-                    ${tema.frecuencia}
+                    ${motivo.frecuencia}
                 </span>
             `;
             
-            temasLista.appendChild(temaElement);
+            motivosLista.appendChild(motivoElement);
         });
 
         // Actualizar estadísticas
-        sesionesAnalizadas.textContent = stats.totalSesiones;
-        palabrasUnicas.textContent = stats.temasRecurrentes.length;
-        temaMasFrecuente.textContent = stats.temasRecurrentes[0]?.tema || 'N/A';
+        pacientesAnalizados.textContent = stats.totalPacientesParaMotivos; // Usar total incluyendo prueba
+        motivosUnicos.textContent = stats.motivosRecurrentes.length;
+        motivoMasFrecuente.textContent = stats.motivosRecurrentes[0]?.motivo || 'N/A';
     } else {
-        document.getElementById('temasContainer').classList.add('hidden');
-        document.getElementById('sinTemas').classList.remove('hidden');
+        document.getElementById('motivosContainer').classList.add('hidden');
+        document.getElementById('sinMotivos').classList.remove('hidden');
     }
 
     // Mostrar estadísticas de derivaciones
@@ -1566,6 +1597,20 @@ async function cargarUbicacionesPacientes() {
             }
             
             console.log(`📊 Resultado: ${marcadoresExitosos}/${pacientesConDireccion.length} direcciones geocodificadas exitosamente`);
+            
+            // Mostrar resumen de geocodificación
+            if (marcadoresExitosos < pacientesConDireccion.length) {
+                const fallidos = pacientesConDireccion.length - marcadoresExitosos;
+                console.log(`⚠️ ${fallidos} direcciones no pudieron ser geocodificadas. Esto puede deberse a:`);
+                console.log(`   • Direcciones muy específicas o con errores de escritura`);
+                console.log(`   • Direcciones en barrios no reconocidos por OpenStreetMap`);
+                console.log(`   • Limitaciones de la API de geocodificación gratuita`);
+                console.log(`   • Direcciones que requieren más contexto (ciudad, provincia)`);
+                console.log(`💡 Sugerencia: Para mejorar la geocodificación, asegúrate de incluir:`);
+                console.log(`   • Ciudad y provincia (ej: "Sanchez 2143, CABA, Buenos Aires")`);
+                console.log(`   • Código postal si está disponible`);
+                console.log(`   • Nombre completo de la calle (ej: "Teniente General" en lugar de "Tte. Gral.")`);
+            }
         }
          
          // Actualizar lista de pacientes en el panel
@@ -1576,51 +1621,302 @@ async function cargarUbicacionesPacientes() {
     }
 }
 
+// Función para limpiar y normalizar una dirección
+function limpiarDireccion(direccion) {
+    if (!direccion) return '';
+    
+    let direccionLimpia = direccion
+        .replace(/\s+/g, ' ') // Reemplazar múltiples espacios con uno solo
+        .replace(/,\s*/g, ', ') // Normalizar comas
+        .replace(/\.\s*/g, '. ') // Normalizar puntos
+        .trim();
+    
+    // Expandir abreviaciones comunes
+    direccionLimpia = direccionLimpia
+        .replace(/\bTte\.?\s*Gral\.?\b/gi, 'Teniente General')
+        .replace(/\bGral\.?\b/gi, 'General')
+        .replace(/\bDr\.?\b/gi, 'Doctor')
+        .replace(/\bProf\.?\b/gi, 'Profesor')
+        .replace(/\bAv\.?\b/gi, 'Avenida')
+        .replace(/\bPte\.?\b/gi, 'Presidente')
+        .replace(/\bIng\.?\b/gi, 'Ingeniero')
+        .replace(/\bLic\.?\b/gi, 'Licenciado')
+        .replace(/\bSra\.?\b/gi, 'Señora')
+        .replace(/\bSr\.?\b/gi, 'Señor')
+        .replace(/\bSra\.?\b/gi, 'Señora')
+        .replace(/\bSta\.?\b/gi, 'Santa')
+        .replace(/\bSto\.?\b/gi, 'Santo');
+    
+    return direccionLimpia;
+}
+
+// Función para generar variaciones de una dirección
+function generarVariacionesDireccion(direccion) {
+    const variaciones = [];
+    
+    // Dirección original
+    variaciones.push(direccion);
+    
+    // Sin números de piso/apartamento
+    const sinPiso = direccion.replace(/\d+\s*(?:piso|p|°|º|floor|ap|apto|depto|departamento)/i, '').trim();
+    if (sinPiso !== direccion) {
+        variaciones.push(sinPiso);
+    }
+    
+    // Solo calle y número
+    const matchCalle = direccion.match(/^([^,]+?)(?:\s+\d+)?/);
+    if (matchCalle && matchCalle[1].trim() !== direccion) {
+        variaciones.push(matchCalle[1].trim());
+    }
+    
+    // Sin barrio/localidad si está al final
+    const sinBarrio = direccion.replace(/,\s*[^,]+$/, '').trim();
+    if (sinBarrio !== direccion && sinBarrio.length > 10) {
+        variaciones.push(sinBarrio);
+    }
+    
+    // Agregar contexto geográfico específico
+    const direccionLower = direccion.toLowerCase();
+    if (direccionLower.includes('caba') || direccionLower.includes('capital federal') || 
+        direccionLower.includes('balvanera') || direccionLower.includes('palermo') || 
+        direccionLower.includes('recoleta') || direccionLower.includes('villa crespo') ||
+        direccionLower.includes('villa del parque') || direccionLower.includes('caballito') ||
+        direccionLower.includes('flores') || direccionLower.includes('parque chacabuco') ||
+        direccionLower.includes('boedo') || direccionLower.includes('san cristobal') ||
+        direccionLower.includes('constitucion') || direccionLower.includes('san telmo') ||
+        direccionLower.includes('la boca') || direccionLower.includes('barracas') ||
+        direccionLower.includes('puerto madero') || direccionLower.includes('retiro') ||
+        direccionLower.includes('recoleta') || direccionLower.includes('palermo') ||
+        direccionLower.includes('belgrano') || direccionLower.includes('nuñez') ||
+        direccionLower.includes('coghlan') || direccionLower.includes('saavedra') ||
+        direccionLower.includes('villa urquiza') || direccionLower.includes('villa pueyrredon') ||
+        direccionLower.includes('agronomia') || direccionLower.includes('parque chacas') ||
+        direccionLower.includes('chacarita') || direccionLower.includes('villa ortuzar') ||
+        direccionLower.includes('villa santa rita') || direccionLower.includes('paternal') ||
+        direccionLower.includes('villa general mitre') || direccionLower.includes('villa devoto') ||
+        direccionLower.includes('monte castro') || direccionLower.includes('villa real') ||
+        direccionLower.includes('villa luro') || direccionLower.includes('mataderos') ||
+        direccionLower.includes('lugano') || direccionLower.includes('villa soldati') ||
+        direccionLower.includes('villa riachuelo') || direccionLower.includes('villa lugano') ||
+        direccionLower.includes('parque avellaneda') || direccionLower.includes('villa insuperable') ||
+        direccionLower.includes('villa celina') || direccionLower.includes('villa madero') ||
+        direccionLower.includes('villa dominico') || direccionLower.includes('villa fiorentino ameghino')) {
+        
+        // Para CABA y sus barrios, agregar variaciones con contexto específico
+        const sinCaba = direccion.replace(/,\s*caba/i, '').trim();
+        if (sinCaba !== direccion) {
+            variaciones.push(`${sinCaba}, CABA, Buenos Aires, Argentina`);
+            variaciones.push(`${sinCaba}, Capital Federal, Argentina`);
+        }
+        
+        // Para barrios específicos de CABA, agregar variaciones con el barrio
+        if (direccionLower.includes('balvanera')) {
+            const sinBarrio = direccion.replace(/,\s*balvanera/i, '').trim();
+            if (sinBarrio !== direccion) {
+                variaciones.push(`${sinBarrio}, Balvanera, CABA, Buenos Aires, Argentina`);
+                variaciones.push(`${sinBarrio}, Balvanera, Capital Federal, Argentina`);
+            }
+        }
+        
+        // Agregar variación solo con la calle y CABA
+        const matchCalle = direccion.match(/^([^,]+?)(?:\s+\d+)?/);
+        if (matchCalle) {
+            const calle = matchCalle[1].trim();
+            variaciones.push(`${calle}, CABA, Buenos Aires, Argentina`);
+            variaciones.push(`${calle}, Capital Federal, Argentina`);
+        }
+        
+    } else if (direccionLower.includes('buenos aires') && !direccionLower.includes('caba')) {
+        // Para provincia de Buenos Aires
+        const sinBa = direccion.replace(/,\s*buenos\s*aires/i, '').trim();
+        if (sinBa !== direccion) {
+            variaciones.push(`${sinBa}, Buenos Aires, Argentina`);
+        }
+    }
+    
+    return [...new Set(variaciones)]; // Eliminar duplicados
+}
+
 // Función para geocodificar una dirección y agregar marcador
 async function geocodificarYAgregarMarcador(paciente) {
-    const direccion = `${paciente.direccion}, Argentina`;
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(direccion)}&limit=1`;
+    const direccionOriginal = limpiarDireccion(paciente.direccion);
+    const variaciones = generarVariacionesDireccion(direccionOriginal);
     
-    try {
-        const response = await fetch(url);
-        const data = await response.json();
-        
-        if (data && data.length > 0) {
-            const lat = parseFloat(data[0].lat);
-            const lon = parseFloat(data[0].lon);
-            
-            // Crear marcador rojo más visible
-            const marker = L.circleMarker([lat, lon], {
-                color: '#dc2626',
-                fillColor: '#dc2626',
-                fillOpacity: 0.8,
-                radius: 10,
-                weight: 3
-            }).addTo(mapaInstancia);
-            
-            // Agregar popup con información del paciente
-            marker.bindPopup(`
-                <div class="p-3 min-w-[200px]">
-                    <h3 class="font-bold text-gray-900 text-base mb-1">${paciente.nombre}</h3>
-                    <p class="text-sm text-gray-600 mb-2">${paciente.direccion}</p>
-                    <p class="text-xs text-green-600 font-medium">📍 Paciente real</p>
-                </div>
-            `);
-            
-            // Tooltip que aparece al hacer hover
-            marker.bindTooltip(paciente.nombre, {
-                permanent: false,
-                direction: 'top',
-                offset: [0, -15],
-                className: 'custom-tooltip'
-            });
-            
-            console.log(`📍 Marcador agregado: ${paciente.nombre} en [${lat}, ${lon}]`);
-            return marker;
-        }
-    } catch (error) {
-        console.warn(`⚠️ Error geocodificando ${paciente.nombre}:`, error);
+    console.log(`🔍 Intentando geocodificar: ${paciente.nombre}`);
+    console.log(`   Dirección original: ${paciente.direccion}`);
+    console.log(`   Dirección limpia: ${direccionOriginal}`);
+    console.log(`   Variaciones a probar: ${variaciones.length}`);
+    if (variaciones.length > 1) {
+        console.log(`   Variaciones:`, variaciones);
     }
+    
+    for (let i = 0; i < variaciones.length; i++) {
+        const variacion = variaciones[i];
+        
+        // Determinar el contexto geográfico basado en la dirección original
+        let direccionCompleta;
+        const direccionLower = direccionOriginal.toLowerCase();
+        
+        if (direccionLower.includes('caba') || direccionLower.includes('capital federal')) {
+            // Para CABA, forzar búsqueda en Capital Federal
+            if (variacion.includes('Argentina')) {
+                direccionCompleta = variacion;
+            } else {
+                direccionCompleta = `${variacion}, CABA, Buenos Aires, Argentina`;
+            }
+        } else if (direccionLower.includes('buenos aires') && !direccionLower.includes('caba')) {
+            // Para provincia de Buenos Aires
+            if (variacion.includes('Argentina')) {
+                direccionCompleta = variacion;
+            } else {
+                direccionCompleta = `${variacion}, Buenos Aires, Argentina`;
+            }
+        } else {
+            // Para otras provincias
+            direccionCompleta = variacion.includes('Argentina') ? variacion : `${variacion}, Argentina`;
+        }
+        
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(direccionCompleta)}&limit=1&countrycodes=ar`;
+        
+        try {
+            console.log(`   Intento ${i + 1}/${variaciones.length}: "${variacion}"`);
+            console.log(`   🔍 Buscando: "${direccionCompleta}"`);
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                console.warn(`   ❌ Error HTTP: ${response.status} - ${response.statusText}`);
+                continue;
+            }
+            
+            const data = await response.json();
+            
+            if (data && data.length > 0) {
+                const lat = parseFloat(data[0].lat);
+                const lon = parseFloat(data[0].lon);
+                const displayName = data[0].display_name;
+                
+                // Verificar que las coordenadas estén en Argentina (aproximadamente)
+                if (lat < -55 || lat > -22 || lon < -74 || lon > -53) {
+                    console.warn(`   ⚠️ Coordenadas fuera de Argentina: [${lat}, ${lon}]`);
+                    continue;
+                }
+                
+                // Verificar que la ubicación esté en la provincia correcta según la dirección
+                const direccionLower = direccionOriginal.toLowerCase();
+                const displayNameLower = displayName.toLowerCase();
+                
+                // Validaciones específicas por provincia
+                let ubicacionCorrecta = true;
+                
+                if (direccionLower.includes('caba') || direccionLower.includes('capital federal') || direccionLower.includes('buenos aires')) {
+                    // Para CABA, verificar que esté en el área de Buenos Aires Capital
+                    if (!displayNameLower.includes('buenos aires') || 
+                        (lat < -34.8 || lat > -34.4 || lon < -58.6 || lon > -58.3)) {
+                        console.warn(`   ⚠️ CABA esperado pero encontrado en: ${displayName} [${lat}, ${lon}]`);
+                        ubicacionCorrecta = false;
+                    }
+                } else if (direccionLower.includes('buenos aires') && !direccionLower.includes('caba')) {
+                    // Para provincia de Buenos Aires (no CABA)
+                    if (!displayNameLower.includes('buenos aires') || 
+                        (lat < -35.5 || lat > -33.5 || lon < -59.5 || lon > -57.5)) {
+                        console.warn(`   ⚠️ Buenos Aires esperado pero encontrado en: ${displayName} [${lat}, ${lon}]`);
+                        ubicacionCorrecta = false;
+                    }
+                }
+                
+                if (!ubicacionCorrecta) {
+                    console.log(`   ❌ Ubicación incorrecta, probando siguiente variación...`);
+                    continue;
+                }
+                
+                // Crear marcador rojo más visible
+                const marker = L.circleMarker([lat, lon], {
+                    color: '#dc2626',
+                    fillColor: '#dc2626',
+                    fillOpacity: 0.8,
+                    radius: 10,
+                    weight: 3
+                }).addTo(mapaInstancia);
+                
+                // Agregar popup con información del paciente
+                marker.bindPopup(`
+                    <div class="p-3 min-w-[200px]">
+                        <h3 class="font-bold text-gray-900 text-base mb-1">${paciente.nombre}</h3>
+                        <p class="text-sm text-gray-600 mb-2">${paciente.direccion}</p>
+                        <p class="text-xs text-blue-600 mb-1">📍 Encontrado: ${displayName}</p>
+                        <p class="text-xs text-green-600 font-medium">📍 Paciente real</p>
+                    </div>
+                `);
+                
+                // Tooltip que aparece al hacer hover
+                marker.bindTooltip(paciente.nombre, {
+                    permanent: false,
+                    direction: 'top',
+                    offset: [0, -15],
+                    className: 'custom-tooltip'
+                });
+                
+                console.log(`   ✅ Éxito con variación ${i + 1}: [${lat}, ${lon}]`);
+                console.log(`   📍 Marcador agregado: ${paciente.nombre} en [${lat}, ${lon}]`);
+                return marker;
+            } else {
+                console.log(`   ❌ No se encontraron resultados para: "${variacion}"`);
+            }
+            
+            // Pequeña pausa entre intentos para no sobrecargar la API
+            if (i < variaciones.length - 1) {
+                await new Promise(resolve => setTimeout(resolve, 300));
+            }
+            
+        } catch (error) {
+            console.warn(`   ⚠️ Error en intento ${i + 1}:`, error.message);
+        }
+    }
+    
+    console.log(`❌ No se pudo geocodificar después de ${variaciones.length} intentos: ${paciente.nombre} - ${direccionOriginal}`);
+    
+    // Fallback: Agregar marcador en el centro de CABA con información de error
+    const direccionLower = direccionOriginal.toLowerCase();
+    if (direccionLower.includes('caba') || direccionLower.includes('capital federal') || 
+        direccionLower.includes('balvanera') || direccionLower.includes('buenos aires')) {
+        
+        console.log(`📍 Agregando marcador de fallback en CABA para: ${paciente.nombre}`);
+        
+        // Coordenadas del centro de CABA (Obelisco)
+        const lat = -34.6037;
+        const lon = -58.3816;
+        
+        // Crear marcador gris para indicar que no se pudo geocodificar
+        const marker = L.circleMarker([lat, lon], {
+            color: '#6b7280',
+            fillColor: '#6b7280',
+            fillOpacity: 0.6,
+            radius: 8,
+            weight: 2
+        }).addTo(mapaInstancia);
+        
+        // Agregar popup con información del paciente y error
+        marker.bindPopup(`
+            <div class="p-3 min-w-[200px]">
+                <h3 class="font-bold text-gray-900 text-base mb-1">${paciente.nombre}</h3>
+                <p class="text-sm text-gray-600 mb-2">${paciente.direccion}</p>
+                <p class="text-xs text-orange-600 mb-1">⚠️ Ubicación aproximada</p>
+                <p class="text-xs text-gray-500">No se pudo geocodificar la dirección exacta</p>
+                <p class="text-xs text-green-600 font-medium">📍 Paciente real</p>
+            </div>
+        `);
+        
+        // Tooltip que aparece al hacer hover
+        marker.bindTooltip(`${paciente.nombre} (ubicación aproximada)`, {
+            permanent: false,
+            direction: 'top',
+            offset: [0, -15],
+            className: 'custom-tooltip'
+        });
+        
+        return marker;
+    }
+    
     return null;
 }
 
@@ -1746,7 +2042,7 @@ function actualizarTiempoEstimado(tiempoTranscurrido) {
     }
 }
 
-function completarProgresoCarga() {
+function completarProgresoCarga(esRecarga = false) {
     if (progressInterval) {
         clearInterval(progressInterval);
         progressInterval = null;
@@ -1761,11 +2057,14 @@ function completarProgresoCarga() {
     if (loadingDetails) loadingDetails.textContent = 'Mostrando resultados...';
     if (estimatedTime) estimatedTime.textContent = 'Completado';
     
-    // Pequeña pausa antes de mostrar las estadísticas
-    setTimeout(() => {
-        if (statsLoader) statsLoader.classList.add('hidden');
-        if (statsContainer) statsContainer.classList.remove('hidden');
-    }, 500);
+    // Solo ocultar el loader si no es una recarga
+    if (!esRecarga) {
+        // Pequeña pausa antes de mostrar las estadísticas
+        setTimeout(() => {
+            if (statsLoader) statsLoader.classList.add('hidden');
+            if (statsContainer) statsContainer.classList.remove('hidden');
+        }, 500);
+    }
 }
 
 // Event Listeners

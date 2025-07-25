@@ -472,6 +472,45 @@ let adminPanel = null;
 // Panel admin: muestra lista de profesionales y permite ver pacientes/sesiones de cada uno
 let adminPanelState = { selectedUser: null, profesionales: [], pacientes: [], sesiones: {} };
 
+// Opciones para el selector múltiple de Motivo de Consulta
+const MOTIVOS_CONSULTA = [
+    'Retraso en el lenguaje o en el desarrollo',
+    'Trastornos del lenguaje (TDL)',
+    'Sospecha Trastorno del espectro autista (TEA)',
+    'Problemas de conducta',
+    'Trastornos del sueño',
+    'Ansiedad por separación / miedos intensos',
+    'Síntomas somáticos (dolores, vómitos, regresiones)',
+    'Regresiones evolutivas',
+    'Hipersensibilidad sensorial o conductas repetitivas',
+    'Problemas de atención / sospecha de TDAH',
+    'Dificultades en el aprendizaje',
+    'Dislexia',
+    'Discalculia',
+    'Disgrafía',
+    'Problemas de concentracion',
+    'Ansiedad escolar / fobia escolar',
+    'Baja autoestima',
+    'retraimiento social',
+    'bullying',
+    'Conflictos con figuras de autoridad',
+    'Síntomas depresivos',
+    'Celos entre hermanos',
+    'Miedos intensos o trastornos obsesivos (rituales, manías)',
+    'Consultas vinculadas a muerte, divorcio o mudanzas',
+    'Depresión / síntomas depresivos / desmotivación',
+    'Autolesiones',
+    'Problemas con la imagen corporal',
+    'Aislamiento social o problemas de vinculación con pares',
+    'Identidad de género u orientación sexual',
+    'Problemas de rendimiento escolar / abandono escolar',
+    'Consultas por demanda de terceros (escuela, pediatra, padres separados)',
+    'Situaciones de abuso (sexual, físico o emocional)',
+    'Violencia familiar (presenciada o sufrida)',
+    'Secretos Familiares (ocultar maternidad o paternidad)',
+    'Dependencia o uso excesivo de pantallas'
+];
+
 // Referencias al modal de nueva sesión
 const modalNuevaSesion = document.getElementById('modalNuevaSesion');
 const formNuevaSesion = document.getElementById('formNuevaSesion');
@@ -961,6 +1000,125 @@ logoutBtn.addEventListener('click', async () => {
     location.hash = '';
 });
 
+// Función para cargar opciones en los checkboxes de motivo de consulta
+function cargarOpcionesMotivoConsulta() {
+    const checkboxesAgregar = document.getElementById('patientMotivoCheckboxes');
+    const checkboxesEditar = document.getElementById('editPatientMotivoCheckboxes');
+    
+    console.log('📋 Cargando opciones de motivo de consulta...');
+    console.log('🔍 Checkboxes agregar encontrado:', !!checkboxesAgregar);
+    console.log('🔍 Checkboxes editar encontrado:', !!checkboxesEditar);
+    
+    if (checkboxesAgregar) {
+        checkboxesAgregar.innerHTML = '';
+        MOTIVOS_CONSULTA.forEach(motivo => {
+            const div = document.createElement('div');
+            div.className = 'flex items-center space-x-2';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = `patientMotivo_${motivo.replace(/\s+/g, '_')}`;
+            checkbox.name = 'patientMotivo';
+            checkbox.value = motivo;
+            checkbox.className = 'checkbox checkbox-sm checkbox-primary';
+            
+            const label = document.createElement('label');
+            label.htmlFor = `patientMotivo_${motivo.replace(/\s+/g, '_')}`;
+            label.className = 'text-sm text-gray-700 dark:text-gray-300 cursor-pointer';
+            label.textContent = motivo;
+            
+            div.appendChild(checkbox);
+            div.appendChild(label);
+            checkboxesAgregar.appendChild(div);
+        });
+        console.log('✅ Checkboxes cargados en agregar:', checkboxesAgregar.children.length);
+    }
+    
+    if (checkboxesEditar) {
+        checkboxesEditar.innerHTML = '';
+        console.log('🔧 Generando checkboxes para editar...');
+        MOTIVOS_CONSULTA.forEach((motivo, index) => {
+            const div = document.createElement('div');
+            div.className = 'flex items-center space-x-2';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = `editPatientMotivo_${motivo.replace(/\s+/g, '_')}`;
+            checkbox.name = 'editPatientMotivo';
+            checkbox.value = motivo;
+            checkbox.className = 'checkbox checkbox-sm checkbox-primary';
+            
+            console.log(`🔧 Checkbox ${index + 1} creado con valor:`, motivo);
+            
+            const label = document.createElement('label');
+            label.htmlFor = `editPatientMotivo_${motivo.replace(/\s+/g, '_')}`;
+            label.className = 'text-sm text-gray-700 dark:text-gray-300 cursor-pointer';
+            label.textContent = motivo;
+            
+            div.appendChild(checkbox);
+            div.appendChild(label);
+            checkboxesEditar.appendChild(div);
+            
+            console.log(`🔧 Checkbox ${index + 1} creado:`, motivo);
+        });
+        console.log('✅ Checkboxes cargados en editar:', checkboxesEditar.children.length);
+        console.log('✅ Checkboxes DOM generados:', checkboxesEditar.querySelectorAll('input[type="checkbox"]').length);
+    }
+}
+
+// Función para obtener los motivos seleccionados de los checkboxes
+function obtenerMotivosSeleccionados(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return [];
+    
+    const checkboxes = container.querySelectorAll('input[type="checkbox"]:checked');
+    return Array.from(checkboxes).map(checkbox => checkbox.value);
+}
+
+// Función para establecer los motivos seleccionados en los checkboxes
+function establecerMotivosSeleccionados(containerId, motivos) {
+    const container = document.getElementById(containerId);
+    console.log('🔧 Estableciendo motivos seleccionados para:', containerId);
+    console.log('🔧 Contenedor encontrado:', !!container);
+    console.log('🔧 Motivos recibidos:', motivos);
+    console.log('🔧 Es array:', Array.isArray(motivos));
+    
+    if (!container) {
+        console.error('❌ No se encontró el contenedor:', containerId);
+        return;
+    }
+    
+    if (!motivos || !Array.isArray(motivos)) {
+        console.log('⚠️ No hay motivos para establecer o no es un array');
+        return;
+    }
+    
+    // Primero desmarcar todos
+    const allCheckboxes = container.querySelectorAll('input[type="checkbox"]');
+    console.log('🔧 Total de checkboxes encontrados:', allCheckboxes.length);
+    
+    allCheckboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    
+    // Luego marcar los que están en la lista
+    let marcados = 0;
+    allCheckboxes.forEach(checkbox => {
+        console.log('🔍 Verificando checkbox:', checkbox.value, 'contra motivos:', motivos);
+        console.log('🔍 Checkbox value:', checkbox.value);
+        console.log('🔍 Motivos incluye este valor:', motivos.includes(checkbox.value));
+        if (motivos.includes(checkbox.value)) {
+            checkbox.checked = true;
+            marcados++;
+            console.log('✅ Marcado:', checkbox.value);
+        } else {
+            console.log('❌ No marcado:', checkbox.value);
+        }
+    });
+    
+    console.log('✅ Total de checkboxes marcados:', marcados);
+}
+
 // Mostrar/Ocultar modal de paciente
 window.hideAddPatientModal = function() {
     addPatientModal.classList.add('hidden');
@@ -980,6 +1138,8 @@ showAddPatientBtn.addEventListener('click', () => {
     addPatientModal.classList.remove('hidden');
     addPatientForm.reset();
     limpiarDatosFamilia('agregar');
+    // Cargar opciones del selector de motivos
+    cargarOpcionesMotivoConsulta();
     // Configurar botones de hermanos después de mostrar el modal
     setTimeout(() => configurarBotonesHermanos(), 100);
 });
@@ -1075,7 +1235,7 @@ addPatientForm.addEventListener('submit', async (e) => {
     const direccion = addPatientForm.patientDireccion.value;
     const educacion = addPatientForm.patientEducacion.value;
     const instituto = addPatientForm.patientInstituto.value;
-    const motivo = addPatientForm.patientMotivo.value;
+    const motivos = obtenerMotivosSeleccionados('patientMotivoCheckboxes');
 
     // Obtener datos del colegio
     const infoColegio = {
@@ -1142,7 +1302,7 @@ addPatientForm.addEventListener('submit', async (e) => {
             // Información del colegio
             infoColegio,
             // Motivo de consulta
-            motivo,
+            motivos,
             // Información de familia
             infoPadre,
             infoMadre,
@@ -1262,7 +1422,13 @@ patientsList.addEventListener('click', async (e) => {
                 </div>
                 
                 <!-- Motivo de Consulta -->
-                ${p.motivo ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded"><span class="font-semibold">Motivo:</span> ${p.motivo}</div>` : ''}
+                ${p.motivos && p.motivos.length > 0 ? `
+                <div class="text-[#4b5563] dark:text-gray-200 text-sm mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded">
+                    <span class="font-semibold">Motivos de Consulta:</span>
+                    <ul class="mt-1 list-disc list-inside space-y-1">
+                        ${p.motivos.map(motivo => `<li>${motivo}</li>`).join('')}
+                    </ul>
+                </div>` : ''}
                 
                 <!-- Clasificación CIE-10 -->
                 ${p.nomencladorCIE10 ? `
@@ -1597,6 +1763,9 @@ window.cerrarHistorialExpandido = function() {
 
 // Event listener para el botón de maximizar historial
 document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar selectores de motivo de consulta
+    cargarOpcionesMotivoConsulta();
+    
     setTimeout(() => {
         const historialMaxBtn = document.getElementById('historialMaximizeBtn');
         if (historialMaxBtn) {
@@ -2027,7 +2196,13 @@ async function showAdminPanel() {
                       </div>
                       
                       <!-- Motivo de Consulta -->
-                      ${p.motivo ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded"><span class="font-semibold">Motivo:</span> ${p.motivo}</div>` : ''}
+                      ${p.motivos && p.motivos.length > 0 ? `
+                      <div class="text-[#4b5563] dark:text-gray-200 text-sm mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded">
+                          <span class="font-semibold">Motivos de Consulta:</span>
+                          <ul class="mt-1 list-disc list-inside space-y-1">
+                              ${p.motivos.map(motivo => `<li>${motivo}</li>`).join('')}
+                          </ul>
+                      </div>` : ''}
                       
                       <!-- Clasificación CIE-10 -->
                       ${p.nomencladorCIE10 ? `
@@ -4310,9 +4485,16 @@ window.hideEditPatientModal = function() {
     }
     
     if (form) {
-        form.reset();
+        // No resetear el formulario para mantener los checkboxes seleccionados
+        // Solo limpiar los campos de texto
+        const textFields = form.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], input[type="date"], select, textarea');
+        textFields.forEach(field => {
+            field.value = '';
+        });
+        
+        // No resetear los checkboxes de motivos para mantener la selección
         limpiarDatosFamilia('editar');
-        console.log('✅ Formulario reseteado');
+        console.log('✅ Campos de texto limpiados, checkboxes preservados');
     } else {
         console.error('❌ No se encontró el formulario editPatientForm');
     }
@@ -4332,6 +4514,16 @@ window.hideEditPatientModal = function() {
     
     console.log('✅ Modal de edición cerrado completamente');
 };
+
+// Función para limpiar completamente el formulario de edición (incluyendo checkboxes)
+function limpiarFormularioEdicion() {
+    const form = document.getElementById('editPatientForm');
+    if (form) {
+        form.reset();
+        limpiarDatosFamilia('editar');
+        console.log('✅ Formulario de edición completamente reseteado');
+    }
+}
 
 // Función para abrir el modal de edición con los datos del paciente
 window.showEditPatientModal = function(pacienteId, pacienteData) {
@@ -4362,7 +4554,10 @@ window.showEditPatientModal = function(pacienteId, pacienteData) {
     const direccionField = document.getElementById('editPatientDireccion');
     const educacionField = document.getElementById('editPatientEducacion');
     const institutoField = document.getElementById('editPatientInstituto');
-    const motivoField = document.getElementById('editPatientMotivo');
+    
+    // Verificar que el contenedor de checkboxes existe
+    const motivoCheckboxesContainer = document.getElementById('editPatientMotivoCheckboxes');
+    console.log('🔍 Contenedor de checkboxes motivo encontrado:', !!motivoCheckboxesContainer);
     
     console.log('🔍 Campos encontrados:', {
         name: !!nameField,
@@ -4376,8 +4571,11 @@ window.showEditPatientModal = function(pacienteId, pacienteData) {
         direccion: !!direccionField,
         educacion: !!educacionField,
         instituto: !!institutoField,
-        motivo: !!motivoField
+        motivo: !!motivoCheckboxesContainer
     });
+    
+    // Cargar opciones del selector de motivos ANTES de prellenar los campos
+    cargarOpcionesMotivoConsulta();
     
     // Prellenar los campos con los datos actuales
     if (nameField) nameField.value = pacienteData.nombre || '';
@@ -4391,7 +4589,29 @@ window.showEditPatientModal = function(pacienteId, pacienteData) {
     if (direccionField) direccionField.value = pacienteData.direccion || '';
     if (educacionField) educacionField.value = pacienteData.educacion || '';
     if (institutoField) institutoField.value = pacienteData.instituto || '';
-    if (motivoField) motivoField.value = pacienteData.motivo || '';
+    
+    // Función para establecer motivos cuando los checkboxes estén listos
+    function establecerMotivosCuandoListos(intentos = 0) {
+        const checkboxesContainer = document.getElementById('editPatientMotivoCheckboxes');
+        const checkboxes = checkboxesContainer.querySelectorAll('input[type="checkbox"]');
+        
+        console.log('🔧 Verificando checkboxes...', checkboxes.length, 'intento:', intentos);
+        
+        if (checkboxes.length > 0) {
+            console.log('🔧 Datos de motivos del paciente:', pacienteData.motivos);
+            console.log('🔧 Tipo de datos de motivos:', typeof pacienteData.motivos);
+            console.log('🔧 Es array:', Array.isArray(pacienteData.motivos));
+            establecerMotivosSeleccionados('editPatientMotivoCheckboxes', pacienteData.motivos || []);
+        } else if (intentos < 20) { // Máximo 20 intentos (1 segundo)
+            console.log('⏳ Checkboxes aún no están listos, reintentando...');
+            setTimeout(() => establecerMotivosCuandoListos(intentos + 1), 50);
+        } else {
+            console.error('❌ No se pudieron generar los checkboxes después de 20 intentos');
+        }
+    }
+    
+    // Iniciar el proceso de establecimiento de motivos
+    establecerMotivosCuandoListos();
     
     // Cargar datos de familia
     cargarDatosFamilia(pacienteData, 'editar');
@@ -4503,7 +4723,8 @@ if (editPatientFormElement) {
         const direccion = editPatientFormElement.editPatientDireccion.value;
         const educacion = editPatientFormElement.editPatientEducacion.value;
         const instituto = editPatientFormElement.editPatientInstituto.value;
-        const motivo = editPatientFormElement.editPatientMotivo.value;
+        const motivos = obtenerMotivosSeleccionados('editPatientMotivoCheckboxes');
+        console.log('🔍 Motivos seleccionados en edición:', motivos);
 
         // Obtener datos del colegio
         const infoColegio = {
@@ -4554,7 +4775,7 @@ if (editPatientFormElement) {
             console.log('💾 Actualizando datos del paciente...');
             console.log('📋 Datos a actualizar:', { 
                 nombre, dni, fechaNacimiento, sexo, lugarNacimiento, 
-                email, telefono, contacto, direccion, educacion, instituto, infoColegio, motivo 
+                email, telefono, contacto, direccion, educacion, instituto, infoColegio, motivos 
             });
             console.log('🔍 Referencia del paciente:', pacienteEditandoRef);
             console.log('🔍 ID del paciente:', pacienteEditandoId);
@@ -4577,7 +4798,7 @@ if (editPatientFormElement) {
                 // Información del colegio
                 infoColegio,
                 // Motivo de consulta
-                motivo,
+                motivos,
                 // Información de familia
                 infoPadre,
                 infoMadre,
@@ -4585,6 +4806,9 @@ if (editPatientFormElement) {
                 // Metadatos
                 actualizado: new Date()
             };
+            
+            console.log('💾 Datos que se van a guardar en Firebase:', updateData);
+            console.log('🔍 Motivos específicos a guardar:', motivos);
 
             // Agregar o actualizar datos del nomenclador CIE-10
             if (datosCIE10) {
@@ -4595,8 +4819,9 @@ if (editPatientFormElement) {
             
             console.log('✅ Paciente actualizado exitosamente');
             
-            // Cerrar modal
+            // Cerrar modal y limpiar completamente el formulario
             hideEditPatientModal();
+            limpiarFormularioEdicion();
             
             // Limpiar datos del nomenclador después de guardar
             datosNomencladorSeleccionados.editar = null;
@@ -4669,7 +4894,13 @@ if (editPatientFormElement) {
                                 </div>
                                 
                                 <!-- Motivo de Consulta -->
-                                ${p.motivo ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded"><span class="font-semibold">Motivo:</span> ${p.motivo}</div>` : ''}
+                                ${p.motivos && p.motivos.length > 0 ? `
+                                <div class="text-[#4b5563] dark:text-gray-200 text-sm mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded">
+                                    <span class="font-semibold">Motivos de Consulta:</span>
+                                    <ul class="mt-1 list-disc list-inside space-y-1">
+                                        ${p.motivos.map(motivo => `<li>${motivo}</li>`).join('')}
+                                    </ul>
+                                </div>` : ''}
                                 
                                 <!-- Clasificación CIE-10 -->
                                 ${p.nomencladorCIE10 ? `
