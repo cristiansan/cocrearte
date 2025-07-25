@@ -740,7 +740,7 @@
                     </p>
                     <!-- Número de versión - Visible para todos los usuarios -->
                     <button id="versionBtn" class="text-xs text-gray-500 hover:text-gray-300 transition mt-2 sm:mt-0 cursor-pointer" onclick="abrirModalVersion()">
-                        v0.3.5
+                        v0.3.7
                     </button>
                 </div>
                 <div class="flex space-x-6 mt-4 md:mt-0">
@@ -842,7 +842,7 @@
             <div class="flex items-center gap-3">
                 <!-- Número de versión - Visible para todos los usuarios -->
                 <button id="versionBtnDashboard" class="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 dust:text-gray-400 dust:hover:text-gray-200 transition cursor-pointer px-2 py-1 rounded" onclick="abrirModalVersion()">
-                    v0.3.5
+                    v0.3.7
                 </button>
                 <button id="logoutBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded transition">Cerrar sesión</button>
                 <!-- Botón de tema -->
@@ -3405,7 +3405,7 @@
                     <span class="text-2xl">🚀</span>
                     <div>
                         <h3 class="text-xl font-bold text-primary-700 dark:text-primary-400">Historial de Versiones</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 dust:text-gray-400">Espacio Cocrearte v0.3.5</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 dust:text-gray-400">Espacio Cocrearte v0.3.7</p>
                     </div>
                 </div>
                 <button onclick="cerrarModalVersion()" class="text-gray-400 hover:text-gray-700 text-2xl p-1">×</button>
@@ -3415,23 +3415,22 @@
                 <!-- Versión 0.2.6 -->
                 <div class="border-l-4 border-green-600 pl-4 mb-4">
                   <div class="flex items-center gap-2 mb-2">
-                                            <span class="bg-green-100 text-green-800 text-sm font-medium px-2 py-1 rounded">v0.3.5</span>
+                                            <span class="bg-green-100 text-green-800 text-sm font-medium px-2 py-1 rounded">v0.3.7</span>
                     <span class="text-sm text-gray-500">Actual</span>
                   </div>
-                  <h4 class="font-bold text-lg text-gray-900 dark:text-white dust:text-dusttext mb-3">📊 Estadísticas Avanzadas y Derivaciones</h4>
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white dust:text-dusttext mb-3">🗺️ Mejoras en Geocodificación del Mapa</h4>
                   <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300 dust:text-dusttext">
-                    <li>• <strong>📈 Estadísticas de Derivaciones:</strong> Nueva sección completa para analizar patrones de derivación</li>
-                    <li>• <strong>🔍 Detección Automática:</strong> Sistema inteligente que detecta derivaciones en comentarios y notas</li>
-                    <li>• <strong>📋 Resumen General:</strong> Total de derivaciones, profesionales que derivan, promedio por profesional</li>
-                    <li>• <strong>🔄 Flujo de Derivaciones:</strong> Análisis de patrones "de quién a quién"</li>
-                    <li>• <strong>📝 Lista Detallada:</strong> Derivaciones recientes con contexto completo</li>
-                    <li>• <strong>👥 Análisis Demográfico:</strong> Distribución por edad, rangos etarios y estadísticas de pacientes</li>
-                    <li>• <strong>📈 Análisis de Presentismo:</strong> Tasa de asistencia, faltas y distribución de estados</li>
-                    <li>• <strong>🔄 Frecuencia de Sesiones:</strong> Promedio por paciente y ranking de pacientes más activos</li>
-                    <li>• <strong>⏰ Análisis Temporal:</strong> Días más activos, horarios populares y patrones de actividad</li>
-                    <li>• <strong>🎯 Temas Recurrentes Mejorados:</strong> Filtrado de términos técnicos para análisis más relevante</li>
-                    <li>• <strong>💾 Uso de Almacenamiento Optimizado:</strong> Visualización en MB para valores pequeños, GB para valores grandes</li>
-                    <li>• <strong>⚡ Actualización en Tiempo Real:</strong> Las estadísticas se actualizan automáticamente cada vez que se carga la página</li>
+                    <li>• <strong>🗺️ Sistema de Geocodificación Mejorado:</strong> Múltiples variaciones de direcciones para mayor precisión</li>
+                    <li>• <strong>📍 Reconocimiento de Barrios CABA:</strong> Balvanera, Palermo, Recoleta y todos los barrios de Capital Federal</li>
+                    <li>• <strong>🔧 Expansión Automática:</strong> Tte. Gral. → Teniente General y otras abreviaciones comunes</li>
+                    <li>• <strong>✅ Validación Geográfica:</strong> Verificación de coordenadas por provincia para evitar ubicaciones incorrectas</li>
+                    <li>• <strong>🎯 Sistema de Fallback:</strong> Marcadores grises para direcciones no geocodificables</li>
+                    <li>• <strong>📊 Logging Detallado:</strong> Proceso completo de geocodificación con sugerencias de mejora</li>
+                    <li>• <strong>🛡️ Prevención de Errores:</strong> Evita marcadores en provincias incorrectas (ej: CABA en Santa Fe)</li>
+                    <li>• <strong>🔍 Múltiples Intentos:</strong> Prueba diferentes variaciones hasta encontrar la ubicación correcta</li>
+                    <li>• <strong>📱 Marcadores Diferenciados:</strong> Rojos para ubicaciones exactas, grises para aproximadas</li>
+                    <li>• <strong>⚡ Pausas Inteligentes:</strong> Evita sobrecargar la API de geocodificación</li>
+                    <li>• <strong>💡 Sugerencias Automáticas:</strong> Consejos para mejorar direcciones problemáticas</li>
                   </ul>
                 </div>
                 
