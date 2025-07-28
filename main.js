@@ -825,6 +825,17 @@ async function showDashboard(user) {
         return '';
     }
     
+    // Función helper para verificar si un usuario es Evelyn o Triana (excepción especial)
+    function esUsuarioEspecial(displayName, email) {
+        if (!displayName && !email) return false;
+        
+        const nombreCompleto = displayName || email || '';
+        const nombreLower = nombreCompleto.toLowerCase();
+        
+        // Verificar si es Evelyn o Triana
+        return nombreLower.includes('evelyn') || nombreLower.includes('triana');
+    }
+    
     // Obtener primer nombre del displayName o email
     const primerNombre = obtenerPrimerNombre(user.displayName, user.email);
     
@@ -1231,10 +1242,18 @@ showAddPatientBtn.addEventListener('click', async () => {
     }
     
     // Verificar límites para plan Pro
-    if (planUsuario === 'pro' && cantidadPacientes >= 3) {
-        showMessage('Has alcanzado el límite de 3 pacientes para el plan Pro. Actualiza a Ultra para pacientes ilimitados.', 'error');
-        abrirModalPrecios();
-        return;
+    if (planUsuario === 'pro') {
+        const esEspecial = esUsuarioEspecial(user.displayName, user.email);
+        const limitePacientes = esEspecial ? 10 : 3;
+        
+        if (cantidadPacientes >= limitePacientes) {
+            const mensaje = esEspecial 
+                ? `Has alcanzado el límite de ${limitePacientes} pacientes. Actualiza a Ultra para pacientes ilimitados.`
+                : 'Has alcanzado el límite de 3 pacientes para el plan Pro. Actualiza a Ultra para pacientes ilimitados.';
+            showMessage(mensaje, 'error');
+            abrirModalPrecios();
+            return;
+        }
     }
     
     addPatientModal.classList.remove('hidden');
@@ -2390,10 +2409,18 @@ async function showAdminPanel() {
             }
             
             // Verificar límites para plan Pro
-            if (planUsuario === 'pro' && cantidadPacientes >= 3) {
-              showMessage('Has alcanzado el límite de 3 pacientes para el plan Pro. Actualiza a Ultra para pacientes ilimitados.', 'error');
-              abrirModalPrecios();
-              return;
+            if (planUsuario === 'pro') {
+              const esEspecial = esUsuarioEspecial(user.displayName, user.email);
+              const limitePacientes = esEspecial ? 10 : 3;
+              
+              if (cantidadPacientes >= limitePacientes) {
+                const mensaje = esEspecial 
+                  ? `Has alcanzado el límite de ${limitePacientes} pacientes. Actualiza a Ultra para pacientes ilimitados.`
+                  : 'Has alcanzado el límite de 3 pacientes para el plan Pro. Actualiza a Ultra para pacientes ilimitados.';
+                showMessage(mensaje, 'error');
+                abrirModalPrecios();
+                return;
+              }
             }
             
             addPatientModal.classList.remove('hidden');
