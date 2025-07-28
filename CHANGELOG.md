@@ -2,6 +2,35 @@
 
 Todos los cambios notables en este proyecto serán documentados en este archivo.
 
+## [0.4.1] - 2024-12-19
+
+### 🏷️ Añadido
+- Nuevas opciones de motivo de consulta: "Mutismo Selectivo" y "No controla esfínteres"
+- Tags en camel case para mejor legibilidad (Admin, Pro, Ultra, Gratis, Derivar, Test)
+- Mensaje de bienvenida personalizado que muestra solo el primer nombre del usuario
+- Redirección automática a página de precios para usuarios Gratis al intentar agregar pacientes
+
+### 🔄 Cambiado
+- Tags de usuario actualizados a camel case: "Admin", "Pro", "Ultra", "Gratis", "Derivar", "Test"
+- Mensaje de bienvenida ahora muestra "Bienvenido, Cristian" en lugar del email completo
+- Comportamiento del botón "Agregar Paciente" para usuarios Gratis: abre página de precios en lugar de mostrar error
+
+### 🎯 Funcionalidades
+- Sistema de extracción inteligente del primer nombre desde displayName o email
+- Redirección contextual a página de precios según el plan del usuario
+- Mensajes informativos mejorados para guiar a usuarios hacia planes premium
+
+### 🔧 Técnico
+- Nueva función `obtenerPrimerNombre()` para extraer primer nombre del displayName
+- Actualizada función `agregarTagsUsuario()` para usar camel case
+- Mejorada lógica de verificación de permisos en botones de agregar paciente
+- Debug logs para troubleshooting de tags y nombres de usuario
+
+### 🎨 UI/UX
+- Tags más legibles y profesionales en camel case
+- Experiencia más personalizada con nombres en lugar de emails
+- Flujo de conversión mejorado hacia planes de pago
+
 ## [0.4.0] - 2024-12-19
 
 ### 🏷️ Añadido

@@ -64,7 +64,7 @@ cocrearte/
 
 ## 📋 Historial de versiones
 
-### v0.4.0 (Actual)
+### v0.4.1 (Actual)
 - 🗺️ **Nuevo**: Sistema de geocodificación mejorado con múltiples variaciones
 - 📍 **Mejora**: Reconocimiento de todos los barrios de CABA (Balvanera, Palermo, etc.)
 - 🔧 **Funcionalidad**: Expansión automática de abreviaciones (Tte. Gral. → Teniente General)

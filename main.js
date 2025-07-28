@@ -509,7 +509,9 @@ const MOTIVOS_CONSULTA = [
     'Situaciones de abuso (sexual, físico o emocional)',
     'Violencia familiar (presenciada o sufrida)',
     'Secretos Familiares (ocultar maternidad o paternidad)',
-    'Dependencia o uso excesivo de pantallas'
+    'Dependencia o uso excesivo de pantallas',
+    'Mutismo Selectivo',
+    'No controla esfínteres'
 ];
 
 // Referencias al modal de nueva sesión

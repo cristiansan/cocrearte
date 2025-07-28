@@ -1,6 +1,6 @@
 {
   "name": "cocrearte",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Sistema de gestión de pacientes para psicología infantil",
   "dependencies": {
     "anthropic": "^0.0.0"
