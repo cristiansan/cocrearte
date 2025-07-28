@@ -432,6 +432,7 @@ const showRegisterFormBtn = document.getElementById('showRegisterForm');
 const showLoginFormBtn = document.getElementById('showLoginForm');
 const loginFormContainer = document.getElementById('loginFormContainer');
 const registerFormContainer = document.getElementById('registerFormContainer');
+const forgotPasswordFormContainer = document.getElementById('forgotPasswordFormContainer');
 
 // Referencias a elementos del dashboard
 const welcomeBlock = document.getElementById('welcomeBlock');
@@ -610,11 +611,19 @@ function hideAuthModal() {
 function showLoginForm() {
     loginFormContainer.classList.remove('hidden');
     registerFormContainer.classList.add('hidden');
+    forgotPasswordFormContainer.classList.add('hidden');
 }
 
 function showRegisterForm() {
     registerFormContainer.classList.remove('hidden');
     loginFormContainer.classList.add('hidden');
+    forgotPasswordFormContainer.classList.add('hidden');
+}
+
+function showForgotPasswordForm() {
+    forgotPasswordFormContainer.classList.remove('hidden');
+    loginFormContainer.classList.add('hidden');
+    registerFormContainer.classList.add('hidden');
 }
 
 // Función para sincronizar el estado del tema en el dashboard
@@ -642,6 +651,18 @@ ctaRegisterBtn2.addEventListener('click', () => {
 closeAuthModal.addEventListener('click', hideAuthModal);
 showRegisterFormBtn.addEventListener('click', showRegisterForm);
 showLoginFormBtn.addEventListener('click', showLoginForm);
+
+// Event listeners para recuperación de contraseña
+const showForgotPasswordFormBtn = document.getElementById('showForgotPasswordForm');
+const showLoginFormFromForgotBtn = document.getElementById('showLoginFormFromForgot');
+
+if (showForgotPasswordFormBtn) {
+    showForgotPasswordFormBtn.addEventListener('click', showForgotPasswordForm);
+}
+
+if (showLoginFormFromForgotBtn) {
+    showLoginFormFromForgotBtn.addEventListener('click', showLoginForm);
+}
 
 // Botones de demo y contacto (placeholder)
 contactBtn.addEventListener('click', () => {
@@ -767,16 +788,53 @@ async function cargarPacientesParaSelect() {
 }
 
 async function showDashboard(user) {
-    welcomeUser.textContent = `Bienvenido${user.displayName ? ', ' + user.displayName : ''}`;
+    // Detectar admin, derivador y plan del usuario
+    const userDoc = await window.firebaseDB.collection('usuarios').doc(user.uid).get();
+    isAdmin = userDoc.exists && userDoc.data().isAdmin === true;
+    window.isAdmin = isAdmin;
+    
+    // Verificar si es derivador
+    const isDerivador = userDoc.exists && userDoc.data().isDerivar === true;
+    window.isDerivador = isDerivador;
+    
+    // Verificar plan del usuario
+    const planUsuario = await verificarPlanUsuario(user.uid);
+    window.planUsuario = planUsuario;
+    
+    // Contar pacientes del usuario
+    const cantidadPacientes = await contarPacientesUsuario(user.uid);
+    window.cantidadPacientes = cantidadPacientes;
+    
+    // Función helper para extraer el primer nombre del displayName o email
+    function obtenerPrimerNombre(displayName, email) {
+        // Si hay displayName, usar ese
+        if (displayName && displayName.trim()) {
+            const palabras = displayName.trim().split(' ');
+            const primerNombre = palabras[0];
+            return primerNombre.charAt(0).toUpperCase() + primerNombre.slice(1);
+        }
+        
+        // Si no hay displayName, extraer del email
+        if (email && email.includes('@')) {
+            const parteLocal = email.split('@')[0];
+            return parteLocal.charAt(0).toUpperCase() + parteLocal.slice(1);
+        }
+        
+        return '';
+    }
+    
+    // Obtener primer nombre del displayName o email
+    const primerNombre = obtenerPrimerNombre(user.displayName, user.email);
+    
+    // Usar el primer nombre para los tags
+    const displayNameWithTags = await agregarTagsUsuario(user.uid, primerNombre);
+    
+    welcomeUser.innerHTML = `Bienvenido${primerNombre ? ', ' + displayNameWithTags : ''}`;
     userEmail.textContent = user.email;
     welcomeBlock.classList.remove('hidden');
     document.getElementById('calendarToggleBlock').classList.remove('hidden');
     document.getElementById('landingPage').classList.add('hidden');
     hideAuthModal();
-    // Detectar admin
-    const userDoc = await window.firebaseDB.collection('usuarios').doc(user.uid).get();
-    isAdmin = userDoc.exists && userDoc.data().isAdmin === true;
-    window.isAdmin = isAdmin;
     // Mostrar foto de perfil si existe
     const profileAvatar = document.getElementById('profileAvatar');
     if (profileAvatar) {
@@ -819,12 +877,6 @@ async function showDashboard(user) {
     const calendarTabs = document.getElementById('calendarTabs');
     if (calendarTabs) calendarTabs.classList.add('hidden');
     
-    // Asegurar que la sección de pacientes esté visible por defecto
-    const dashboardPacientesSection = document.getElementById('dashboardPacientesSection');
-    if (dashboardPacientesSection && !isAdmin) {
-        dashboardPacientesSection.classList.remove('hidden');
-    }
-    
     // Cargar recordatorios WhatsApp
     await mostrarRecordatoriosEnDashboard();
     
@@ -856,10 +908,10 @@ async function showDashboard(user) {
     setTimeout(async () => {
         await inicializarVersion(user);
     }, 100);
-    // Mostrar el botón Backup solo para admin
+    // Mostrar el botón Backup según el plan
     const btnBackup = document.getElementById('btnBackupPacientes');
     if (btnBackup) {
-        if (isAdmin) {
+        if (isAdmin || planUsuario === 'ultra') {
             btnBackup.classList.remove('hidden');
         } else {
             btnBackup.classList.add('hidden');
@@ -879,6 +931,16 @@ async function showDashboard(user) {
         btnEstadisticas.addEventListener('click', () => {
             window.location.href = 'estadisticas.html';
         });
+    }
+    
+    // Mostrar el botón Agenda Múltiple solo para Ultra y Admin
+    const btnAgendaMultiple = document.getElementById('tabAgendaMultiple');
+    if (btnAgendaMultiple) {
+        if (isAdmin || planUsuario === 'ultra') {
+            btnAgendaMultiple.classList.remove('hidden');
+        } else {
+            btnAgendaMultiple.classList.add('hidden');
+        }
     }
     
     // Sincronizar el estado del tema en el dashboard
@@ -914,6 +976,19 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
         await saveUserToFirestore(userCredential.user, name);
     } catch (error) {
         showMessage('Error al registrarse: ' + error.message);
+    }
+});
+
+// Recuperación de contraseña
+document.getElementById('forgotPasswordForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = e.target.forgotPasswordEmail.value;
+    try {
+        await window.firebaseAuth.sendPasswordResetEmail(email);
+        showMessage('Se ha enviado un email de recuperación a tu dirección de correo. Revisa tu bandeja de entrada y sigue las instrucciones.', 'success');
+        showLoginForm(); // Volver al formulario de login
+    } catch (error) {
+        showMessage('Error al enviar email de recuperación: ' + error.message);
     }
 });
 
@@ -1134,7 +1209,32 @@ window.hideAddPatientModal = function() {
     }
 };
 
-showAddPatientBtn.addEventListener('click', () => {
+showAddPatientBtn.addEventListener('click', async () => {
+    // Verificar límites según el plan
+    const planUsuario = window.planUsuario || 'gratis';
+    const cantidadPacientes = window.cantidadPacientes || 0;
+    
+    // Si es usuario Gratis, mostrar página de precios
+    if (planUsuario === 'gratis') {
+        showMessage('Para agregar pacientes, actualiza a un plan Pro o Ultra.', 'info');
+        abrirModalPrecios();
+        return;
+    }
+    
+    // Si es derivador, mostrar página de precios
+    if (window.isDerivador) {
+        showMessage('Para agregar pacientes, actualiza a un plan Pro o Ultra.', 'info');
+        abrirModalPrecios();
+        return;
+    }
+    
+    // Verificar límites para plan Pro
+    if (planUsuario === 'pro' && cantidadPacientes >= 3) {
+        showMessage('Has alcanzado el límite de 3 pacientes para el plan Pro. Actualiza a Ultra para pacientes ilimitados.', 'error');
+        abrirModalPrecios();
+        return;
+    }
+    
     addPatientModal.classList.remove('hidden');
     addPatientForm.reset();
     limpiarDatosFamilia('agregar');
@@ -1217,11 +1317,21 @@ async function loadPatients(uid) {
     }
 }
 
-// Agregar paciente
+    // Agregar paciente
 addPatientForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const user = window.firebaseAuth.currentUser;
     if (!user) return;
+    
+    // Verificar límites según el plan antes de agregar
+    const planUsuario = window.planUsuario || 'gratis';
+    const cantidadPacientes = window.cantidadPacientes || 0;
+    
+    if (planUsuario === 'pro' && cantidadPacientes >= 3) {
+        showMessage('Has alcanzado el límite de 3 pacientes para el plan Pro. Actualiza a Ultra para pacientes ilimitados.', 'error');
+        abrirModalPrecios();
+        return;
+    }
     
     // Obtener todos los valores del formulario
     const nombre = addPatientForm.patientName.value;
@@ -1319,6 +1429,10 @@ addPatientForm.addEventListener('submit', async (e) => {
 
         await window.firebaseDB.collection('pacientes').add(pacienteData);
         hideAddPatientModal();
+        
+        // Actualizar contador de pacientes
+        window.cantidadPacientes = (window.cantidadPacientes || 0) + 1;
+        
         // Limpiar datos del nomenclador después de guardar
         datosNomencladorSeleccionados.agregar = null;
         const spanAgregar = document.getElementById('nomencladorSeleccionadoAgregar');
@@ -2005,20 +2119,23 @@ async function showAdminPanel() {
       return nombreA.localeCompare(nombreB);
     });
     
-    profesionalesOrdenados.forEach(u => {
+    for (const u of profesionalesOrdenados) {
       const avatarUrl = u.photoURL ? u.photoURL : `https://ui-avatars.com/api/?name=${encodeURIComponent(u.displayName || u.email || 'U')}&background=8b5cf6&color=fff&size=80`;
+      
+      // Verificar si el usuario es derivador para agregar el tag
+      const displayNameWithTag = await agregarTagsUsuario(u.uid, u.displayName || u.email);
       
       html += `<li>
         <button class="w-full text-left flex items-center gap-2 px-3 py-2 rounded transition font-medium
           ${adminPanelState.selectedUser === u.uid ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300' : 'hover:bg-primary-50 dark:hover:bg-darkborder text-gray-700 dark:text-gray-200'}"
           data-uid="${u.uid}">
           <img src="${avatarUrl}" alt="avatar" class="w-10 h-10 rounded-full object-cover border border-primary-200 dark:border-primary-700 bg-gray-100 dark:bg-gray-800" />
-          <span>${u.displayName || u.email}</span>
+          <span>${displayNameWithTag}</span>
           ${u.isAdmin ? '<span class=\"text-xs bg-green-100 text-green-700 rounded px-2 py-0.5 ml-2\">admin</span>' : ''}
-          ${esUsuarioTest(u) ? '<span class=\"text-xs bg-orange-100 text-orange-700 rounded px-2 py-0.5 ml-2\">test</span>' : ''}
+          ${esUsuarioTest(u) ? '<span class=\"text-xs bg-orange-100 text-orange-700 rounded px-2 py-0.5 ml-2\">Test</span>' : ''}
         </button>
       </li>`;
-    });
+    }
     html += `</ul></div>`;
     // Columna de pacientes/sesiones
     html += `<div id="adminPacientesCol">`;
@@ -2033,10 +2150,13 @@ async function showAdminPanel() {
           <button id='showAddPatientBtnAdmin' class='bg-primary-700 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded border-2 border-primary-600 shadow-sm dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-darkbg'>+ Agregar Paciente</button>
         </div>`;
       }
+      // Verificar si el usuario es derivador para agregar el tag en el header
+      const displayNameWithTagHeader = await agregarTagsUsuario(u.uid, u.displayName || u.email);
+      
       html += `<div class="mb-4 font-bold text-lg flex items-center gap-2">
-         <span class="text-white">${u.displayName || u.email}</span>
+         <span class="text-white">${displayNameWithTagHeader}</span>
         ${u.isAdmin ? '<span class=\"text-xs bg-green-100 text-green-700 rounded px-2 py-0.5 ml-2\">admin</span>' : ''}
-        ${esUsuarioTest(u) ? '<span class=\"text-xs bg-orange-100 text-orange-700 rounded px-2 py-0.5 ml-2\">test</span>' : ''}
+        ${esUsuarioTest(u) ? '<span class=\"text-xs bg-orange-100 text-orange-700 rounded px-2 py-0.5 ml-2\">Test</span>' : ''}
       </div>`;
       // Loader de pacientes
       html += `<div id="adminPacientesLoader" class="flex flex-col justify-center items-center py-8">
@@ -2070,7 +2190,10 @@ async function showAdminPanel() {
           <button id='showAddPatientBtnAdmin' class='bg-primary-700 hover:bg-primary-600 text-white font-bold py-2 px-4 rounded border-2 border-primary-600 shadow-sm dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-darkbg'>+ Agregar Paciente</button>
         </div>`;
       }
-      headerHtml += `<div class="mb-4 font-bold text-lg flex items-center gap-2">👤 ${u.displayName || u.email} ${u.isAdmin ? '<span class=\"text-xs bg-green-100 text-green-700 rounded px-2 py-0.5 ml-2\">admin</span>' : ''} ${esUsuarioTest(u) ? '<span class=\"text-xs bg-orange-100 text-orange-700 rounded px-2 py-0.5 ml-2\">test</span>' : ''}</div>`;
+      // Verificar si el usuario es derivador para agregar el tag en el header
+      const displayNameWithTagHeader2 = await agregarTagsUsuario(u.uid, u.displayName || u.email);
+      
+      headerHtml += `<div class="mb-4 font-bold text-lg flex items-center gap-2">👤 ${displayNameWithTagHeader2} ${u.isAdmin ? '<span class=\"text-xs bg-green-100 text-green-700 rounded px-2 py-0.5 ml-2\">admin</span>' : ''} ${esUsuarioTest(u) ? '<span class=\"text-xs bg-orange-100 text-orange-700 rounded px-2 py-0.5 ml-2\">Test</span>' : ''}</div>`;
       adminPacCol.innerHTML = `
         <div id="adminPacHeader">${headerHtml}</div>
         <div id="adminPacContent"></div>
@@ -2245,8 +2368,39 @@ async function showAdminPanel() {
       setTimeout(() => {
         const btnAdmin = document.getElementById('showAddPatientBtnAdmin');
         if (btnAdmin) {
-          btnAdmin.addEventListener('click', () => {
+          btnAdmin.addEventListener('click', async () => {
+            // Verificar límites según el plan
+            const planUsuario = window.planUsuario || 'gratis';
+            const cantidadPacientes = window.cantidadPacientes || 0;
+            
+            // Si es usuario Gratis, mostrar página de precios
+            if (planUsuario === 'gratis') {
+              showMessage('Para agregar pacientes, actualiza a un plan Pro o Ultra.', 'info');
+              abrirModalPrecios();
+              return;
+            }
+            
+            // Si es derivador, mostrar página de precios
+            if (window.isDerivador) {
+              showMessage('Para agregar pacientes, actualiza a un plan Pro o Ultra.', 'info');
+              abrirModalPrecios();
+              return;
+            }
+            
+            // Verificar límites para plan Pro
+            if (planUsuario === 'pro' && cantidadPacientes >= 3) {
+              showMessage('Has alcanzado el límite de 3 pacientes para el plan Pro. Actualiza a Ultra para pacientes ilimitados.', 'error');
+              abrirModalPrecios();
+              return;
+            }
+            
             addPatientModal.classList.remove('hidden');
+            addPatientForm.reset();
+            limpiarDatosFamilia('agregar');
+            // Cargar opciones del selector de motivos
+            cargarOpcionesMotivoConsulta();
+            // Configurar botones de hermanos después de mostrar el modal
+            setTimeout(() => configurarBotonesHermanos(), 100);
           });
         }
       }, 0);
@@ -2841,6 +2995,15 @@ async function cargarEventosFiltrados() {
             
         } catch (error) {
             console.error(`❌ Error cargando datos para ${profesional.title}:`, error);
+            
+            // Manejar específicamente errores de permisos
+            if (error.message && (error.message.includes('permissions') || error.message.includes('Missing or insufficient permissions'))) {
+                console.warn(`⚠️ Error de permisos para ${profesional.title}, saltando...`);
+                continue;
+            } else {
+                console.error(`❌ Error inesperado para ${profesional.title}:`, error);
+                continue; // Continuar con el siguiente profesional
+            }
         }
     }
     
@@ -2878,6 +3041,31 @@ async function mostrarAgendaMultiple() {
     console.log('=== INICIANDO AGENDA MÚLTIPLE ===');
     console.log('📋 profesionalesSeleccionados al inicio:', profesionalesSeleccionados);
     
+    // Verificar permisos según el plan
+    const planUsuario = window.planUsuario || 'gratis';
+    const isAdmin = window.isAdmin || false;
+    
+    // Solo admin y ultra pueden ver agenda múltiple
+    if (!isAdmin && planUsuario !== 'ultra') {
+        showMessage('La agenda múltiple está disponible solo para el plan Ultra. Actualiza tu plan para acceder a esta función.', 'error');
+        abrirModalPrecios();
+        return;
+    }
+    
+    // Verificar que estemos en el estado correcto
+    const calendarTabs = document.getElementById('calendarTabs');
+    const dashboardPacientesSection = document.getElementById('dashboardPacientesSection');
+    
+    if (calendarTabs) {
+        calendarTabs.classList.remove('hidden');
+        console.log('✅ Mostrando calendarTabs');
+    }
+    
+    if (dashboardPacientesSection) {
+        dashboardPacientesSection.classList.add('hidden');
+        console.log('✅ Ocultando dashboardPacientesSection');
+    }
+    
     // SIEMPRE destruir el calendario anterior
     if (calendarMultipleInstance) {
         console.log('🗑️ Destruyendo calendario múltiple existente...');
@@ -2896,11 +3084,13 @@ async function mostrarAgendaMultiple() {
     console.log('Elementos encontrados:', { calendarEl, profesionalesFilter });
     
     if (!calendarEl) {
-        console.error('No se encontró el elemento calendar');
+        console.error('❌ No se encontró el elemento calendar');
+        showMessage('Error: No se encontró el elemento del calendario', 'error');
         return;
     }
     if (!window.FullCalendar) {
-        console.error('FullCalendar no está disponible');
+        console.error('❌ FullCalendar no está disponible');
+        showMessage('Error: FullCalendar no está disponible', 'error');
         return;
     }
     
@@ -2920,7 +3110,8 @@ async function mostrarAgendaMultiple() {
             classList: profesionalesFilter.classList.toString()
         });
     } else {
-        console.error('No se encontró el elemento profesionalesFilter');
+        console.error('❌ No se encontró el elemento profesionalesFilter');
+        showMessage('Error: No se encontró el filtro de profesionales', 'error');
     }
     
     // Usar la función que sabemos que funciona
@@ -2931,6 +3122,14 @@ async function mostrarAgendaMultiple() {
         
         if (profesionales && profesionales.length > 0) {
             console.log('✅ Profesionales cargados exitosamente desde Firebase:', profesionales.length);
+            // Asegurar que el filtro se muestre después de cargar
+            setTimeout(() => {
+                const profesionalesFilter = document.getElementById('profesionalesFilter');
+                if (profesionalesFilter) {
+                    profesionalesFilter.classList.remove('hidden');
+                    profesionalesFilter.style.display = 'flex';
+                }
+            }, 100);
         } else {
             console.warn('⚠️ No se pudieron cargar profesionales desde Firebase, usando fallback...');
             // Crear profesionales de prueba en caso de error
@@ -2987,8 +3186,21 @@ async function mostrarAgendaMultiple() {
     
     console.log('Iniciando calendario múltiple simple (sin recursos)');
     
-    // Usar la nueva función de carga filtrada
-    const eventos = await cargarEventosFiltrados();
+    // Usar la nueva función de carga filtrada con manejo de errores
+    let eventos = [];
+    try {
+        eventos = await cargarEventosFiltrados();
+        console.log('✅ Eventos cargados exitosamente:', eventos.length);
+    } catch (error) {
+        console.error('❌ Error cargando eventos:', error);
+        if (error.message && error.message.includes('permissions')) {
+            console.warn('⚠️ Error de permisos detectado, mostrando calendario vacío');
+            showMessage('No tienes permisos para ver eventos de otros profesionales. Mostrando calendario vacío.', 'warning');
+        } else {
+            showMessage('Error al cargar eventos del calendario: ' + error.message, 'error');
+        }
+        eventos = []; // Usar array vacío en caso de error
+    }
     
     if (eventos.length === 0) {
         console.warn('⚠️ No se encontraron eventos para mostrar');
@@ -3048,6 +3260,27 @@ async function mostrarAgendaMultiple() {
     console.log('=== CALENDARIO MÚLTIPLE SIMPLE RENDERIZADO ===');
     console.log(`📊 Eventos renderizados en el calendario: ${eventos.length}`);
     
+    // Verificar que el calendario sea visible
+    setTimeout(() => {
+        const calendarEl = document.getElementById('calendar');
+        if (calendarEl) {
+            const computedStyle = getComputedStyle(calendarEl);
+            console.log('👁️ Estado del calendario después del render:', {
+                display: computedStyle.display,
+                visibility: computedStyle.visibility,
+                height: computedStyle.height,
+                width: computedStyle.width
+            });
+            
+            // Si el calendario no es visible, intentar forzar la visibilidad
+            if (computedStyle.display === 'none' || computedStyle.visibility === 'hidden') {
+                console.warn('⚠️ El calendario no es visible, forzando visibilidad...');
+                calendarEl.style.display = 'block';
+                calendarEl.style.visibility = 'visible';
+            }
+        }
+    }, 200);
+    
     // Verificación final de que los eventos son correctos
     setTimeout(() => {
         const renderedEvents = calendarMultipleInstance.getEvents();
@@ -3086,6 +3319,19 @@ async function mostrarAgendaMultiple() {
 
 // Función para volver a la agenda individual
 function mostrarAgendaIndividual() {
+    // Ocultar sección de pacientes cuando se muestra el calendario
+    const dashboardPacientesSection = document.getElementById('dashboardPacientesSection');
+    if (dashboardPacientesSection) {
+        dashboardPacientesSection.classList.add('hidden');
+    }
+    
+    // Ocultar panel de administración si existe
+    const adminPanel = document.querySelector('#adminPanel');
+    if (adminPanel) {
+        adminPanel.classList.add('hidden');
+        adminPanel.style.display = 'none';
+    }
+    
     if (calendarMultipleInstance) {
         calendarMultipleInstance.destroy();
         calendarMultipleInstance = null;
@@ -3311,42 +3557,76 @@ if (tabPacientes && tabAgendaIndividual && tabAgendaMultiple && calendarTabs && 
     // Event listener para Agenda Múltiple
     tabAgendaMultiple.addEventListener('click', async () => {
         console.log('🎯 CLICK EN AGENDA MÚLTIPLE');
-        resetearBotones();
-        tabAgendaMultiple.classList.add('bg-primary-700', 'text-white');
-        tabAgendaMultiple.classList.remove('bg-gray-200', 'text-gray-800');
         
-        mostrarSoloCalendario();
-        activeTab = 'multiple';
-        
-        // Asegurar que el filtro se muestre inmediatamente ANTES de cargar la agenda
-        const profesionalesFilter = document.getElementById('profesionalesFilter');
-        if (profesionalesFilter) {
-            console.log('🎯 Mostrando filtro inmediatamente');
-            profesionalesFilter.classList.remove('hidden');
-            profesionalesFilter.style.display = 'flex';
-            profesionalesFilter.style.visibility = 'visible';
-            profesionalesFilter.style.opacity = '1';
-            console.log('✅ Filtro visible antes de cargar agenda');
-        }
-        
-        // Verificar si ya tenemos profesionales cargados
-        if (profesionalesDisponibles.length === 0) {
-            console.log('🔄 No hay profesionales cargados, cargando automáticamente...');
-            try {
-                await window.cargarProfesionalesFirebase();
-                console.log('✅ Profesionales cargados automáticamente');
-            } catch (error) {
-                console.error('❌ Error al cargar profesionales automáticamente:', error);
+        try {
+            resetearBotones();
+            tabAgendaMultiple.classList.add('bg-primary-700', 'text-white');
+            tabAgendaMultiple.classList.remove('bg-gray-200', 'text-gray-800');
+            
+            mostrarSoloCalendario();
+            activeTab = 'multiple';
+            
+            // Asegurar que el filtro se muestre inmediatamente ANTES de cargar la agenda
+            const profesionalesFilter = document.getElementById('profesionalesFilter');
+            if (profesionalesFilter) {
+                console.log('🎯 Mostrando filtro inmediatamente');
+                profesionalesFilter.classList.remove('hidden');
+                profesionalesFilter.style.display = 'flex';
+                profesionalesFilter.style.visibility = 'visible';
+                profesionalesFilter.style.opacity = '1';
+                console.log('✅ Filtro visible antes de cargar agenda');
             }
-        } else {
-            console.log('✅ Profesionales ya disponibles:', profesionalesDisponibles.length);
-            // Asegurar que el filtro esté cargado
-            cargarFiltrosProfesionales();
+            
+            // Verificar si ya tenemos profesionales cargados
+            if (profesionalesDisponibles.length === 0) {
+                console.log('🔄 No hay profesionales cargados, cargando automáticamente...');
+                try {
+                    await window.cargarProfesionalesFirebase();
+                    console.log('✅ Profesionales cargados automáticamente');
+                } catch (error) {
+                    console.error('❌ Error al cargar profesionales automáticamente:', error);
+                }
+            } else {
+                console.log('✅ Profesionales ya disponibles:', profesionalesDisponibles.length);
+                // Asegurar que el filtro esté cargado
+                cargarFiltrosProfesionales();
+            }
+            
+            console.log('🚀 Llamando a mostrarAgendaMultiple()');
+            await mostrarAgendaMultiple();
+            console.log('✅ Agenda múltiple mostrada exitosamente');
+            
+            // Verificación final después de un tiempo
+            setTimeout(() => {
+                const calendarEl = document.getElementById('calendar');
+                const profesionalesFilter = document.getElementById('profesionalesFilter');
+                
+                if (calendarEl && profesionalesFilter) {
+                    const calendarVisible = getComputedStyle(calendarEl).display !== 'none';
+                    const filterVisible = getComputedStyle(profesionalesFilter).display !== 'none';
+                    
+                    console.log('🔍 Verificación final:', {
+                        calendarVisible,
+                        filterVisible,
+                        calendarHeight: getComputedStyle(calendarEl).height
+                    });
+                    
+                    if (!calendarVisible || !filterVisible) {
+                        console.warn('⚠️ Problemas detectados, ejecutando reparación automática...');
+                        window.repararAgendaMultiple();
+                    }
+                }
+            }, 1000);
+            
+        } catch (error) {
+            console.error('❌ Error en agenda múltiple:', error);
+            showMessage('Error al cargar la agenda múltiple. Intentando reparación automática...', 'error');
+            
+            // Intentar reparación automática
+            setTimeout(() => {
+                window.repararAgendaMultiple();
+            }, 1000);
         }
-        
-        console.log('🚀 Llamando a mostrarAgendaMultiple()');
-        mostrarAgendaMultiple();
-        console.log('🔄 Mostrando agenda múltiple');
     });
 }
 
@@ -5404,6 +5684,228 @@ async function verificarSiEsAdmin(uid) {
         return false;
     }
 }
+
+// Función para verificar si el usuario es derivador
+async function verificarSiEsDerivador(uid) {
+    try {
+        const userDoc = await window.firebaseDB.collection('usuarios').doc(uid).get();
+        return userDoc.exists && userDoc.data().isDerivar === true;
+    } catch (error) {
+        console.error('Error verificando si es derivador:', error);
+        return false;
+    }
+}
+
+// Función para verificar el plan del usuario
+async function verificarPlanUsuario(uid) {
+    try {
+        const userDoc = await window.firebaseDB.collection('usuarios').doc(uid).get();
+        if (!userDoc.exists) {
+            console.log(`❌ Usuario ${uid} no existe en la base de datos`);
+            return 'gratis';
+        }
+        
+        const userData = userDoc.data();
+        console.log(`📊 Datos del usuario ${uid}:`, userData);
+        
+        // Priorizar Ultra sobre Admin para mostrar el tag correcto
+        if (userData.isUltra === true) return 'ultra';
+        if (userData.isPro === true) return 'pro';
+        if (userData.isAdmin === true) return 'admin';
+        
+        console.log(`ℹ️ Usuario ${uid} no tiene plan específico, usando 'gratis'`);
+        return 'gratis';
+    } catch (error) {
+        console.error('Error verificando plan del usuario:', error);
+        return 'gratis';
+    }
+}
+
+// Función para contar pacientes del usuario
+async function contarPacientesUsuario(uid) {
+    try {
+        const pacientesSnapshot = await window.firebaseDB.collection('pacientes')
+            .where('profesionalId', '==', uid)
+            .get();
+        return pacientesSnapshot.size;
+    } catch (error) {
+        console.error('Error contando pacientes:', error);
+        return 0;
+    }
+}
+
+// Función helper para agregar tags según el plan y derivador
+async function agregarTagsUsuario(uid, displayName) {
+    try {
+        const [isDerivador, planUsuario] = await Promise.all([
+            verificarSiEsDerivador(uid),
+            verificarPlanUsuario(uid)
+        ]);
+        
+        // Debug: mostrar información del usuario
+        console.log(`🔍 Debug tags para ${displayName} (${uid}):`, {
+            isDerivador,
+            planUsuario,
+            displayName
+        });
+        
+        let tags = displayName;
+        
+        // Agregar tag de plan
+        if (planUsuario === 'pro') {
+            tags += ' <span class="text-xs bg-purple-100 text-purple-700 rounded px-2 py-0.5 ml-2">Pro</span>';
+        } else if (planUsuario === 'ultra') {
+            tags += ' <span class="text-xs bg-yellow-100 text-yellow-700 rounded px-2 py-0.5 ml-2">Ultra</span>';
+        } else if (planUsuario === 'admin') {
+            tags += ' <span class="text-xs bg-green-100 text-green-700 rounded px-2 py-0.5 ml-2">Admin</span>';
+        } else {
+            // Plan gratuito por defecto
+            tags += ' <span class="text-xs bg-gray-100 text-gray-700 rounded px-2 py-0.5 ml-2">Gratis</span>';
+        }
+        
+        // Agregar tag de derivador
+        if (isDerivador) {
+            tags += ' <span class="text-xs bg-blue-100 text-blue-700 rounded px-2 py-0.5 ml-2">Derivar</span>';
+        }
+        
+        return tags;
+    } catch (error) {
+        console.error('Error agregando tags de usuario:', error);
+        return displayName;
+    }
+}
+
+// Función helper para agregar tag "Derivar" si el usuario es derivador (mantener compatibilidad)
+async function agregarTagDerivador(uid, displayName) {
+    try {
+        const isDerivador = await verificarSiEsDerivador(uid);
+        return isDerivador ? `${displayName} <span class="text-xs bg-blue-100 text-blue-700 rounded px-2 py-0.5 ml-2">Derivar</span>` : displayName;
+    } catch (error) {
+        console.error('Error agregando tag derivador:', error);
+        return displayName;
+    }
+}
+
+// Funciones para el modal de precios
+window.abrirModalPrecios = function() {
+    const modal = document.getElementById('modalPrecios');
+    if (modal) {
+        modal.classList.remove('hidden');
+        // Configurar toggle de facturación
+        configurarTogglePrecios();
+    }
+};
+
+window.cerrarModalPrecios = function() {
+    const modal = document.getElementById('modalPrecios');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+};
+
+function configurarTogglePrecios() {
+    const toggleMensual = document.getElementById('toggleMensual');
+    const toggleAnual = document.getElementById('toggleAnual');
+    const precioPro = document.getElementById('precioPro');
+    const precioUltra = document.getElementById('precioUltra');
+    const periodoPro = document.getElementById('periodoPro');
+    const periodoUltra = document.getElementById('periodoUltra');
+    
+    if (!toggleMensual || !toggleAnual) return;
+    
+    // Precios mensuales
+    const preciosMensuales = {
+        pro: 15,
+        ultra: 25
+    };
+    
+    // Precios anuales (precios fijos en USD)
+    const preciosAnuales = {
+        pro: 100,
+        ultra: 150
+    };
+    
+    toggleMensual.addEventListener('click', function() {
+        // Activar toggle mensual
+        toggleMensual.classList.add('bg-white', 'dark:bg-gray-700', 'text-gray-900', 'dark:text-white', 'shadow-sm');
+        toggleMensual.classList.remove('text-gray-600', 'dark:text-gray-400');
+        toggleAnual.classList.remove('bg-white', 'dark:bg-gray-700', 'text-gray-900', 'dark:text-white', 'shadow-sm');
+        toggleAnual.classList.add('text-gray-600', 'dark:text-gray-400');
+        
+        // Actualizar precios
+        if (precioPro) precioPro.textContent = `$${preciosMensuales.pro} USD`;
+        if (precioUltra) precioUltra.textContent = `$${preciosMensuales.ultra} USD`;
+        if (periodoPro) periodoPro.textContent = 'por mes';
+        if (periodoUltra) periodoUltra.textContent = 'por mes';
+    });
+    
+    toggleAnual.addEventListener('click', function() {
+        // Activar toggle anual
+        toggleAnual.classList.add('bg-white', 'dark:bg-gray-700', 'text-gray-900', 'dark:text-white', 'shadow-sm');
+        toggleAnual.classList.remove('text-gray-600', 'dark:text-gray-400');
+        toggleMensual.classList.remove('bg-white', 'dark:bg-gray-700', 'text-gray-900', 'dark:text-white', 'shadow-sm');
+        toggleMensual.classList.add('text-gray-600', 'dark:text-gray-400');
+        
+        // Actualizar precios
+        if (precioPro) precioPro.textContent = `$${preciosAnuales.pro} USD`;
+        if (precioUltra) precioUltra.textContent = `$${preciosAnuales.ultra} USD`;
+        if (periodoPro) periodoPro.textContent = 'por año';
+        if (periodoUltra) periodoUltra.textContent = 'por año';
+    });
+    
+    // Cerrar modal con ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('modalPrecios');
+            if (modal && !modal.classList.contains('hidden')) {
+                cerrarModalPrecios();
+            }
+        }
+    });
+    
+    // Cerrar modal haciendo clic fuera
+    const modal = document.getElementById('modalPrecios');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                cerrarModalPrecios();
+            }
+        });
+    }
+}
+
+// Función para abrir modal de registro
+window.abrirModalRegistro = function() {
+    // Cerrar modal de precios primero
+    cerrarModalPrecios();
+    
+    // Abrir modal de registro
+    const authModal = document.getElementById('authModal');
+    const loginFormContainer = document.getElementById('loginFormContainer');
+    const registerFormContainer = document.getElementById('registerFormContainer');
+    
+    if (authModal && loginFormContainer && registerFormContainer) {
+        // Mostrar formulario de registro
+        loginFormContainer.classList.add('hidden');
+        registerFormContainer.classList.remove('hidden');
+        
+        // Mostrar modal
+        authModal.classList.remove('hidden');
+    }
+};
+
+// Función para abrir WhatsApp con mensaje personalizado
+window.abrirWhatsApp = function(plan) {
+    const numero = '1166251922';
+    const mensaje = encodeURIComponent(`Hola! Me interesa el plan ${plan} de Espacio Cocrearte. ¿Podrías darme información sobre las opciones de pago?`);
+    const url = `https://wa.me/${numero}?text=${mensaje}`;
+    
+    // Cerrar modal de precios
+    cerrarModalPrecios();
+    
+    // Abrir WhatsApp en nueva pestaña
+    window.open(url, '_blank');
+};
 
 // Función para mostrar/ocultar el botón de versión (ahora siempre visible)
 function actualizarVisibilidadVersion(esAdmin) {
@@ -8709,6 +9211,149 @@ window.confirmarDerivacion = async function(event) {
 };
 
 console.log('🔄 Sistema de derivación de pacientes inicializado');
+
+// Función de diagnóstico para agenda múltiple
+window.diagnosticarAgendaMultiple = async function() {
+    console.log('🔍 === DIAGNÓSTICO AGENDA MÚLTIPLE ===');
+    
+    // 1. Verificar elementos del DOM
+    const calendarEl = document.getElementById('calendar');
+    const profesionalesFilter = document.getElementById('profesionalesFilter');
+    const profesionalesSelect = document.getElementById('profesionalesSelect');
+    const tabAgendaMultiple = document.getElementById('tabAgendaMultiple');
+    const calendarTabs = document.getElementById('calendarTabs');
+    
+    console.log('📋 Elementos DOM encontrados:', {
+        calendar: !!calendarEl,
+        profesionalesFilter: !!profesionalesFilter,
+        profesionalesSelect: !!profesionalesSelect,
+        tabAgendaMultiple: !!tabAgendaMultiple,
+        calendarTabs: !!calendarTabs
+    });
+    
+    // 2. Verificar FullCalendar
+    console.log('📅 FullCalendar disponible:', !!window.FullCalendar);
+    
+    // 3. Verificar Firebase
+    console.log('🔥 Firebase DB disponible:', !!window.firebaseDB);
+    
+    // 4. Verificar variables globales
+    console.log('📊 Variables globales:', {
+        profesionalesDisponibles: profesionalesDisponibles?.length || 0,
+        profesionalesSeleccionados: profesionalesSeleccionados?.length || 0,
+        calendarMultipleInstance: !!calendarMultipleInstance
+    });
+    
+    // 5. Verificar visibilidad de elementos
+    if (profesionalesFilter) {
+        const computedStyle = getComputedStyle(profesionalesFilter);
+        console.log('👁️ Visibilidad del filtro:', {
+            display: computedStyle.display,
+            visibility: computedStyle.visibility,
+            opacity: computedStyle.opacity,
+            hasHiddenClass: profesionalesFilter.classList.contains('hidden')
+        });
+    }
+    
+    if (calendarTabs) {
+        const computedStyle = getComputedStyle(calendarTabs);
+        console.log('👁️ Visibilidad de calendarTabs:', {
+            display: computedStyle.display,
+            hasHiddenClass: calendarTabs.classList.contains('hidden')
+        });
+    }
+    
+    // 6. Verificar opciones en el select
+    if (profesionalesSelect) {
+        console.log('📋 Opciones en select:', profesionalesSelect.options.length);
+        for (let i = 0; i < profesionalesSelect.options.length; i++) {
+            console.log(`  ${i}: ${profesionalesSelect.options[i].value} - ${profesionalesSelect.options[i].text}`);
+        }
+    }
+    
+    // 7. Intentar cargar profesionales
+    try {
+        console.log('🔄 Intentando cargar profesionales...');
+        const profesionales = await window.cargarProfesionalesFirebase();
+        console.log('✅ Profesionales cargados:', profesionales?.length || 0);
+    } catch (error) {
+        console.error('❌ Error cargando profesionales:', error);
+    }
+    
+    // 8. Verificar eventos
+    try {
+        console.log('🔄 Intentando cargar eventos...');
+        const eventos = await cargarEventosFiltrados();
+        console.log('✅ Eventos cargados:', eventos?.length || 0);
+    } catch (error) {
+        console.error('❌ Error cargando eventos:', error);
+    }
+    
+    console.log('🔍 === FIN DIAGNÓSTICO ===');
+};
+
+// Función de reparación automática para agenda múltiple
+window.repararAgendaMultiple = async function() {
+    console.log('🔧 === REPARACIÓN AGENDA MÚLTIPLE ===');
+    
+    // 1. Forzar visibilidad de elementos críticos
+    const calendarTabs = document.getElementById('calendarTabs');
+    const profesionalesFilter = document.getElementById('profesionalesFilter');
+    const dashboardPacientesSection = document.getElementById('dashboardPacientesSection');
+    
+    if (calendarTabs) {
+        calendarTabs.classList.remove('hidden');
+        calendarTabs.style.display = 'block';
+        console.log('✅ calendarTabs forzado a visible');
+    }
+    
+    if (profesionalesFilter) {
+        profesionalesFilter.classList.remove('hidden');
+        profesionalesFilter.style.display = 'flex';
+        profesionalesFilter.style.visibility = 'visible';
+        profesionalesFilter.style.opacity = '1';
+        console.log('✅ profesionalesFilter forzado a visible');
+    }
+    
+    if (dashboardPacientesSection) {
+        dashboardPacientesSection.classList.add('hidden');
+        console.log('✅ dashboardPacientesSection ocultado');
+    }
+    
+    // 2. Destruir calendario existente si existe
+    if (calendarMultipleInstance) {
+        calendarMultipleInstance.destroy();
+        calendarMultipleInstance = null;
+        console.log('✅ Calendario existente destruido');
+    }
+    
+    // 3. Limpiar contenedor del calendario
+    const calendarEl = document.getElementById('calendar');
+    if (calendarEl) {
+        calendarEl.innerHTML = '';
+        console.log('✅ Contenedor del calendario limpiado');
+    }
+    
+    // 4. Recargar profesionales
+    try {
+        await window.cargarProfesionalesFirebase();
+        console.log('✅ Profesionales recargados');
+    } catch (error) {
+        console.error('❌ Error recargando profesionales:', error);
+    }
+    
+    // 5. Recrear calendario
+    setTimeout(async () => {
+        try {
+            await mostrarAgendaMultiple();
+            console.log('✅ Calendario recreado exitosamente');
+        } catch (error) {
+            console.error('❌ Error recreando calendario:', error);
+        }
+    }, 500);
+    
+    console.log('🔧 === FIN REPARACIÓN ===');
+};
 
 // Función de debugging para ejecutar desde consola
 window.debugDerivacion = function() {

@@ -2,6 +2,51 @@
 
 Todos los cambios notables en este proyecto serán documentados en este archivo.
 
+## [0.4.0] - 2024-12-19
+
+### 🏷️ Añadido
+- Sistema completo de planes y permisos (Gratis, Pro, Ultra)
+- Tags visuales para identificar el plan de cada usuario (GRATIS, PRO, ULTRA, ADMIN)
+- Página de precios con modal interactivo y toggle mensual/anual
+- Restricciones de funcionalidades según el plan del usuario
+- Límite de 3 pacientes para plan Pro
+- Pacientes ilimitados para plan Ultra
+- Acceso a agenda múltiple solo para Ultra y Admin
+- Acceso a backup solo para Ultra y Admin
+
+### 🔐 Permisos por Plan
+- **Gratis**: Recibir pacientes derivados, calendario individual
+- **Pro**: Hasta 3 pacientes nuevos, ficha clínica, backup básico
+- **Ultra**: Pacientes ilimitados, agenda múltiple, backup completo, reminders WhatsApp
+- **Admin**: Acceso completo a todas las funciones
+
+### 💰 Página de Precios
+- Modal moderno con diseño similar a plataformas premium
+- Toggle entre facturación mensual y anual (+44% descuento)
+- Precios en USD: Gratis $0, Pro $15/mes, Ultra $25/mes
+- Precios anuales: Pro $100, Ultra $150
+- Botones de acción que redirigen a registro o WhatsApp
+
+### 🎯 Funcionalidades
+- Verificación automática de límites al agregar pacientes
+- Mensajes informativos cuando se alcanzan límites
+- Redirección automática a página de precios
+- Contador dinámico de pacientes por usuario
+- Navegación actualizada con enlace "Precios"
+
+### 🔧 Técnico
+- Nuevas funciones: `verificarPlanUsuario()`, `contarPacientesUsuario()`, `agregarTagsUsuario()`
+- Sistema de verificación de permisos en tiempo real
+- Integración con Firebase para campos `isPro` e `isUltra`
+- Debug logs para troubleshooting de permisos
+- Priorización de tags (Ultra > Pro > Admin > Gratis)
+
+### 🎨 UI/UX
+- Tags con colores distintivos: Gris (Gratis), Púrpura (Pro), Amarillo (Ultra), Verde (Admin)
+- Diseño responsive para página de precios
+- Integración con sistema de temas claro/oscuro
+- Botones de acción contextuales según el plan
+
 ## [0.3.7] - 2024-12-19
 
 ### 🗺️ Añadido

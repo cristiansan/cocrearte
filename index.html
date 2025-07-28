@@ -429,6 +429,7 @@
                     <a href="#inicio" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition">Inicio</a>
                     <a href="#caracteristicas" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition">Características</a>
                     <a href="#beneficios" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition">Beneficios</a>
+                    <a href="#" onclick="abrirModalPrecios()" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition">Precios</a>
                     <a href="#contacto" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition">Contacto</a>
                 </nav>
 
@@ -460,6 +461,7 @@
                 <a href="#inicio" class="block py-3 px-4 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition">Inicio</a>
                 <a href="#caracteristicas" class="block py-3 px-4 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition">Características</a>
                 <a href="#beneficios" class="block py-3 px-4 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition">Beneficios</a>
+                <a href="#" onclick="abrirModalPrecios()" class="block py-3 px-4 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition">Precios</a>
                 <a href="#contacto" class="block py-3 px-4 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition">Contacto</a>
                 <div class="border-t border-gray-200 dark:border-gray-600 pt-3 mt-3">
                     <button id="loginBtnMobile" class="block w-full text-left py-3 px-4 text-primary-600 dark:text-primary-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition font-medium">Iniciar Sesión</button>
@@ -717,7 +719,7 @@
                     <ul class="space-y-2 text-gray-400">
                         <li><a href="#caracteristicas" class="hover:text-white transition">Características</a></li>
                         <li><a href="#beneficios" class="hover:text-white transition">Beneficios</a></li>
-                        <li><a href="#" class="hover:text-white transition">Precios</a></li>
+                        <li><a href="#" class="hover:text-white transition" onclick="abrirModalPrecios()">Precios</a></li>
                         <li><a href="#" class="hover:text-white transition">Demo</a></li>
                     </ul>
                 </div>
@@ -740,7 +742,7 @@
                     </p>
                     <!-- Número de versión - Visible para todos los usuarios -->
                     <button id="versionBtn" class="text-xs text-gray-500 hover:text-gray-300 transition mt-2 sm:mt-0 cursor-pointer" onclick="abrirModalVersion()">
-                        v0.3.7
+                        v0.4.0
                     </button>
                 </div>
                 <div class="flex space-x-6 mt-4 md:mt-0">
@@ -777,9 +779,12 @@
                         Iniciar Sesión
                     </button>
                 </form>
-                <div class="mt-4 text-center">
-                    <button id="showRegisterForm" class="text-primary-600 hover:text-primary-700 text-sm">
+                <div class="mt-4 text-center space-y-2">
+                    <button id="showRegisterForm" class="text-primary-600 hover:text-primary-700 text-sm block">
                         ¿No tienes cuenta? Regístrate
+                    </button>
+                    <button id="showForgotPasswordForm" class="text-gray-500 hover:text-gray-700 text-sm block">
+                        ¿Olvidaste tu contraseña?
                     </button>
                 </div>
             </div>
@@ -816,6 +821,30 @@
                     </button>
                 </div>
             </div>
+
+            <!-- Forgot Password Form -->
+            <div id="forgotPasswordFormContainer" class="hidden">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">Recuperar Contraseña</h2>
+                <p class="text-gray-600 dark:text-gray-300 text-center mb-6">
+                    Ingresa tu dirección de email y te enviaremos un enlace para restablecer tu contraseña.
+                </p>
+                <form id="forgotPasswordForm" class="space-y-4">
+                    <div>
+                        <label for="forgotPasswordEmail" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+                        <input id="forgotPasswordEmail" name="forgotPasswordEmail" type="email" required 
+                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800 dark:text-white" 
+                               placeholder="tu@email.com">
+                    </div>
+                    <button type="submit" class="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+                        Enviar Email de Recuperación
+                    </button>
+                </form>
+                <div class="mt-4 text-center">
+                    <button id="showLoginFormFromForgot" class="text-primary-600 hover:text-primary-700 text-sm">
+                        ← Volver al inicio de sesión
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
     </div>
@@ -842,7 +871,7 @@
             <div class="flex items-center gap-3">
                 <!-- Número de versión - Visible para todos los usuarios -->
                 <button id="versionBtnDashboard" class="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 dust:text-gray-400 dust:hover:text-gray-200 transition cursor-pointer px-2 py-1 rounded" onclick="abrirModalVersion()">
-                    v0.3.7
+                    v0.4.0
                 </button>
                 <button id="logoutBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded transition">Cerrar sesión</button>
                 <!-- Botón de tema -->
@@ -859,6 +888,7 @@
             <button id="tabAgendaMultiple" class="tab-calendar bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-t">Agenda múltiple</button>
             <button id="btnEstadisticas" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-t hidden">Estadísticas</button>
             <button id="btnBackupPacientes" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-t hidden">Backup</button>
+
         </div>
         <div id="calendarTabs" class="hidden">
             <div id="calendarViewButtons" class="flex items-center gap-2 mb-4">
@@ -3405,7 +3435,7 @@
                     <span class="text-2xl">🚀</span>
                     <div>
                         <h3 class="text-xl font-bold text-primary-700 dark:text-primary-400">Historial de Versiones</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 dust:text-gray-400">Espacio Cocrearte v0.3.7</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 dust:text-gray-400">Espacio Cocrearte v0.4.0</p>
                     </div>
                 </div>
                 <button onclick="cerrarModalVersion()" class="text-gray-400 hover:text-gray-700 text-2xl p-1">×</button>
@@ -3415,7 +3445,7 @@
                 <!-- Versión 0.2.6 -->
                 <div class="border-l-4 border-green-600 pl-4 mb-4">
                   <div class="flex items-center gap-2 mb-2">
-                                            <span class="bg-green-100 text-green-800 text-sm font-medium px-2 py-1 rounded">v0.3.7</span>
+                                            <span class="bg-green-100 text-green-800 text-sm font-medium px-2 py-1 rounded">v0.4.0</span>
                     <span class="text-sm text-gray-500">Actual</span>
                   </div>
                   <h4 class="font-bold text-lg text-gray-900 dark:text-white dust:text-dusttext mb-3">🗺️ Mejoras en Geocodificación del Mapa</h4>
@@ -4410,6 +4440,217 @@
         <button id="confirmPhotoBtn" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg transition mb-2 hidden">Usar esta foto</button>
         <button id="retakePhotoBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-6 rounded-lg transition hidden">Repetir</button>
       </div>
+    </div>
+
+    <!-- Modal de Precios -->
+    <div id="modalPrecios" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden p-4">
+        <div class="bg-white dark:bg-darkcard rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
+            <!-- Header del modal -->
+            <div class="sticky top-0 bg-white dark:bg-darkcard border-b border-gray-200 dark:border-darkborder px-8 py-6 rounded-t-2xl">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Precios</h1>
+                        <p class="text-gray-600 dark:text-gray-400 mt-2">Elige el plan que mejor se adapte a tus necesidades</p>
+                    </div>
+                    <button onclick="cerrarModalPrecios()" class="text-gray-400 hover:text-gray-700 text-2xl font-bold">×</button>
+                </div>
+                
+                <!-- Toggle de facturación -->
+                <div class="flex justify-center mt-8">
+                    <div class="bg-gray-100 dark:bg-gray-800 rounded-lg p-1 flex">
+                        <button id="toggleMensual" class="px-6 py-2 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-medium shadow-sm transition-all">
+                            MENSUAL
+                        </button>
+                        <button id="toggleAnual" class="px-6 py-2 rounded-md text-gray-600 dark:text-gray-400 font-medium transition-all">
+                            ANUAL (+44%)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenido del modal -->
+            <div class="p-8">
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-8">Planes Individuales</h2>
+                
+                <!-- Cards de precios -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    
+                    <!-- Plan Gratis -->
+                    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+                        <div class="text-center mb-6">
+                            <h3 class="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">Gratis</h3>
+                            <div class="text-4xl font-bold text-gray-900 dark:text-white mb-1">$0</div>
+                            <p class="text-gray-500 dark:text-gray-400 text-sm">Para siempre</p>
+                        </div>
+                        
+                        <div class="border-t border-gray-200 dark:border-gray-700 pt-6 mb-6">
+                            <h4 class="font-medium text-gray-900 dark:text-white mb-4">Incluye:</h4>
+                            <ul class="space-y-3">
+                                <li class="flex items-center">
+                                    <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="text-gray-700 dark:text-gray-300">Recibir pacientes derivados</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="text-gray-700 dark:text-gray-300">Cargar observaciones y notas</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="text-gray-700 dark:text-gray-300">Usar calendario para gestionar sesiones</span>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <button onclick="abrirModalRegistro()" class="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-semibold py-3 px-4 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition">
+                                Comenzar Gratis
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Plan Pro -->
+                    <div class="bg-white dark:bg-gray-800 border-2 border-primary-500 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow relative">
+                        <!-- Badge "Más Popular" -->
+                        <div class="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                            <span class="bg-primary-500 text-white px-4 py-1 rounded-full text-sm font-medium">Más Popular</span>
+                        </div>
+                        
+                        <div class="text-center mb-6">
+                            <h3 class="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">Pro</h3>
+                            <div class="text-4xl font-bold text-gray-900 dark:text-white mb-1">
+                                <span id="precioPro">$15 USD</span>
+                            </div>
+                            <p class="text-gray-500 dark:text-gray-400 text-sm">
+                                <span id="periodoPro">por mes</span>
+                            </p>
+                        </div>
+                        
+                        <div class="border-t border-gray-200 dark:border-gray-700 pt-6 mb-6">
+                            <h4 class="font-medium text-gray-900 dark:text-white mb-4">Todo lo de Gratis, más:</h4>
+                            <ul class="space-y-3">
+                                <li class="flex items-center">
+                                    <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="text-gray-700 dark:text-gray-300">Agregar hasta 3 pacientes nuevos</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="text-gray-700 dark:text-gray-300">Crear ficha clínica del paciente</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="text-gray-700 dark:text-gray-300">Backup de sesiones y ficha clínica</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="text-gray-700 dark:text-gray-300">Recibir y derivar pacientes</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="text-gray-700 dark:text-gray-300">Usar/compartir calendario con profesionales</span>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <button onclick="abrirWhatsApp('Pro')" class="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-4 rounded-lg transition">
+                                Obtener Pro
+                            </button>
+                        </div>
+                        
+                        <!-- Gradiente decorativo -->
+                        <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-pink-500 via-purple-500 to-yellow-500 rounded-b-xl"></div>
+                    </div>
+
+                    <!-- Plan Ultra -->
+                    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+                        <div class="text-center mb-6">
+                            <h3 class="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">Ultra</h3>
+                            <div class="text-4xl font-bold text-gray-900 dark:text-white mb-1">
+                                <span id="precioUltra">$25 USD</span>
+                            </div>
+                            <p class="text-gray-500 dark:text-gray-400 text-sm">
+                                <span id="periodoUltra">por mes</span>
+                            </p>
+                        </div>
+                        
+                        <div class="border-t border-gray-200 dark:border-gray-700 pt-6 mb-6">
+                            <h4 class="font-medium text-gray-900 dark:text-white mb-4">Todo lo de Pro, más:</h4>
+                            <ul class="space-y-3">
+                                <li class="flex items-center">
+                                    <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="text-gray-700 dark:text-gray-300">Agregar pacientes ilimitados</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="text-gray-700 dark:text-gray-300">Administrar ficha clínica del paciente</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="text-gray-700 dark:text-gray-300">Backup de sesiones y descarga</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="text-gray-700 dark:text-gray-300">Recibir y derivar pacientes</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="text-gray-700 dark:text-gray-300">Usar/compartir calendario</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="text-gray-700 dark:text-gray-300">Reminders por WhatsApp a los pacientes</span>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <button onclick="abrirWhatsApp('Ultra')" class="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-semibold py-3 px-4 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition">
+                                Obtener Ultra
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información adicional -->
+                <div class="mt-12 text-center">
+                    <p class="text-gray-600 dark:text-gray-400 mb-4">
+                        ¿Necesitas un plan personalizado para tu equipo? 
+                        <a href="#" class="text-primary-600 hover:text-primary-700 font-medium">Contáctanos</a>
+                    </p>
+                    <p class="text-sm text-gray-500 dark:text-gray-500">
+                        Todos los planes incluyen actualizaciones gratuitas y soporte técnico
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
 </script>
 </body>
