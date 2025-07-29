@@ -742,7 +742,7 @@
                     </p>
                     <!-- Número de versión - Visible para todos los usuarios -->
                     <button id="versionBtn" class="text-xs text-gray-500 hover:text-gray-300 transition mt-2 sm:mt-0 cursor-pointer" onclick="abrirModalVersion()">
-                        v0.4.1
+                        v0.4.2
                     </button>
                 </div>
                 <div class="flex space-x-6 mt-4 md:mt-0">
@@ -871,7 +871,7 @@
             <div class="flex items-center gap-3">
                 <!-- Número de versión - Visible para todos los usuarios -->
                 <button id="versionBtnDashboard" class="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 dust:text-gray-400 dust:hover:text-gray-200 transition cursor-pointer px-2 py-1 rounded" onclick="abrirModalVersion()">
-                    v0.4.1
+                    v0.4.2
                 </button>
                 <button id="logoutBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded transition">Cerrar sesión</button>
                 <!-- Botón de tema -->
@@ -883,6 +883,7 @@
       </div>
       <div id="calendarToggleBlock" class="w-full mt-2 hidden">
         <div class="flex gap-2 mb-4">
+            <button id="tabMiPerfil" class="tab-calendar bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-t">Mi Perfil</button>
             <button id="tabPacientes" class="tab-calendar bg-primary-700 text-white font-semibold py-2 px-4 rounded-t">Pacientes</button>
             <button id="tabAgendaIndividual" class="tab-calendar bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-t">Agenda individual</button>
             <button id="tabAgendaMultiple" class="tab-calendar bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-t">Agenda múltiple</button>
@@ -937,6 +938,8 @@
           </div>
         </div>
       </section>
+
+
 
       <!-- Panel de pacientes -->
       <section id="dashboardPacientesSection" class="w-full mt-0 hidden">
@@ -3435,7 +3438,7 @@
                     <span class="text-2xl">🚀</span>
                     <div>
                         <h3 class="text-xl font-bold text-primary-700 dark:text-primary-400">Historial de Versiones</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 dust:text-gray-400">Espacio Cocrearte v0.4.1</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 dust:text-gray-400">Espacio Cocrearte v0.4.2</p>
                     </div>
                 </div>
                 <button onclick="cerrarModalVersion()" class="text-gray-400 hover:text-gray-700 text-2xl p-1">×</button>
@@ -3445,25 +3448,197 @@
                 <!-- Versión 0.2.6 -->
                 <div class="border-l-4 border-green-600 pl-4 mb-4">
                   <div class="flex items-center gap-2 mb-2">
-                                            <span class="bg-green-100 text-green-800 text-sm font-medium px-2 py-1 rounded">v0.4.1</span>
+                                            <span class="bg-green-100 text-green-800 text-sm font-medium px-2 py-1 rounded">v0.4.2</span>
                     <span class="text-sm text-gray-500">Actual</span>
                   </div>
-                  <h4 class="font-bold text-lg text-gray-900 dark:text-white dust:text-dusttext mb-3">🗺️ Mejoras en Geocodificación del Mapa</h4>
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white dust:text-dusttext mb-3">👤 Nueva Página de Perfil Profesional</h4>
                   <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300 dust:text-dusttext">
-                    <li>• <strong>🗺️ Sistema de Geocodificación Mejorado:</strong> Múltiples variaciones de direcciones para mayor precisión</li>
-                    <li>• <strong>📍 Reconocimiento de Barrios CABA:</strong> Balvanera, Palermo, Recoleta y todos los barrios de Capital Federal</li>
-                    <li>• <strong>🔧 Expansión Automática:</strong> Tte. Gral. → Teniente General y otras abreviaciones comunes</li>
-                    <li>• <strong>✅ Validación Geográfica:</strong> Verificación de coordenadas por provincia para evitar ubicaciones incorrectas</li>
-                    <li>• <strong>🎯 Sistema de Fallback:</strong> Marcadores grises para direcciones no geocodificables</li>
-                    <li>• <strong>📊 Logging Detallado:</strong> Proceso completo de geocodificación con sugerencias de mejora</li>
-                    <li>• <strong>🛡️ Prevención de Errores:</strong> Evita marcadores en provincias incorrectas (ej: CABA en Santa Fe)</li>
-                    <li>• <strong>🔍 Múltiples Intentos:</strong> Prueba diferentes variaciones hasta encontrar la ubicación correcta</li>
-                    <li>• <strong>📱 Marcadores Diferenciados:</strong> Rojos para ubicaciones exactas, grises para aproximadas</li>
-                    <li>• <strong>⚡ Pausas Inteligentes:</strong> Evita sobrecargar la API de geocodificación</li>
-                    <li>• <strong>💡 Sugerencias Automáticas:</strong> Consejos para mejorar direcciones problemáticas</li>
+                    <li>• <strong>👤 Página de Perfil Completa:</strong> Nueva página `perfil.html` con formulario profesional completo</li>
+                    <li>• <strong>📝 Campos Profesionales:</strong> Nombre y Apellido, Email, Teléfono, Dirección, Especialidad, LinkedIn</li>
+                    <li>• <strong>🎨 Tema Oscuro:</strong> Diseño consistente con el resto de la aplicación</li>
+                    <li>• <strong>📸 Sistema de Fotos:</strong> Botón de cámara con modal de selección (Tomar Foto / Subir Imagen)</li>
+                    <li>• <strong>☁️ Firebase Storage:</strong> Integración completa para almacenamiento de fotos de perfil</li>
+                    <li>• <strong>🔄 Sincronización:</strong> Fotos sincronizadas entre dashboard y página de perfil</li>
+                    <li>• <strong>🔙 Navegación:</strong> Botón de regreso al dashboard</li>
+                    <li>• <strong>✅ Validación:</strong> Archivos de imagen con límite de 2MB</li>
+                    <li>• <strong>💾 Persistencia:</strong> Datos guardados en Firestore</li>
+                    <li>• <strong>🛡️ Manejo de Errores:</strong> Sistema robusto para elementos del DOM</li>
+                    <li>• <strong>🎯 Dashboard Mejorado:</strong> Botón "Mi Perfil" agregado junto a "Pacientes"</li>
                   </ul>
                 </div>
                 
+                <!-- Versión 0.4.1 -->
+                <div class="border-l-4 border-blue-600 pl-4 mb-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded">v0.4.1</span>
+                    <span class="text-sm text-gray-500">Anterior</span>
+                  </div>
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white dust:text-dusttext mb-3">💰 Sistema de Precios y Planes Implementado</h4>
+                  <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300 dust:text-dusttext">
+                    <li>• <strong>💰 Modal de Precios:</strong> 3 planes: Gratis ($0), Pro ($15 USD), Ultra ($25 USD)</li>
+                    <li>• <strong>📅 Planes Anuales:</strong> Pro ($100 USD), Ultra ($150 USD) con descuentos</li>
+                    <li>• <strong>📱 WhatsApp Integration:</strong> Botones de pago redirigen a WhatsApp</li>
+                    <li>• <strong>🔐 Control de Acceso:</strong> Usuarios Gratis: solo calendario personal</li>
+                    <li>• <strong>👥 Usuarios Pro:</strong> Hasta 10 pacientes, calendario común</li>
+                    <li>• <strong>⭐ Usuarios Ultra:</strong> Pacientes ilimitados, calendario compartido, backups</li>
+                    <li>• <strong>🏷️ Tags Visuales:</strong> "Pro", "Ultra", "Admin", "Gratis", "Derivar"</li>
+                    <li>• <strong>📋 Nuevos Motivos:</strong> "Mutismo Selectivo" y "No controla esfínteres"</li>
+                    <li>• <strong>👋 Bienvenida Personalizada:</strong> Muestra primer nombre del displayName</li>
+                    <li>• <strong>🔄 Redirección Inteligente:</strong> Usuarios Gratis van a página de precios</li>
+                  </ul>
+                </div>
+
+                <!-- Versión 0.4.0 -->
+                <div class="border-l-4 border-blue-600 pl-4 mb-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded">v0.4.0</span>
+                    <span class="text-sm text-gray-500">Anterior</span>
+                  </div>
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white dust:text-dusttext mb-3">🔐 Sistema de Roles y Permisos</h4>
+                  <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300 dust:text-dusttext">
+                    <li>• <strong>🔐 Campo isDerivar:</strong> Usuarios derivadores con tag "D"</li>
+                    <li>• <strong>🚫 Restricciones:</strong> Usuarios derivadores no pueden agregar pacientes</li>
+                    <li>• <strong>💳 Campos isPro/isUltra:</strong> Control de acceso basado en planes</li>
+                    <li>• <strong>📅 Agenda Individual/Múltiple:</strong> Filtros por profesionales</li>
+                    <li>• <strong>🏷️ Tags Visuales:</strong> Identificación de tipos de usuario</li>
+                    <li>• <strong>📋 Mensajes Personalizados:</strong> Permisos específicos por usuario</li>
+                    <li>• <strong>🔍 Navegación Mejorada:</strong> Entre vistas según permisos</li>
+                    <li>• <strong>🛡️ Correcciones:</strong> Visibilidad en agenda múltiple</li>
+                    <li>• <strong>🔧 Errores de Firebase:</strong> Manejo de permisos</li>
+                    <li>• <strong>⚙️ Estados de Usuario:</strong> Gestión mejorada</li>
+                  </ul>
+                </div>
+
+                <!-- Versión 0.3.7 -->
+                <div class="border-l-4 border-gray-400 pl-4 mb-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="bg-gray-100 text-gray-800 text-sm font-medium px-2 py-1 rounded">v0.3.7</span>
+                    <span class="text-sm text-gray-500">Anterior</span>
+                  </div>
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white dust:text-dusttext mb-3">📱 Recordatorios por WhatsApp</h4>
+                  <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300 dust:text-dusttext">
+                    <li>• <strong>📱 Configuración de Mensajes:</strong> Personalización de recordatorios</li>
+                    <li>• <strong>🔄 Envío Automático:</strong> Recordatorios programados</li>
+                    <li>• <strong>🔗 Integración WhatsApp:</strong> API de WhatsApp integrada</li>
+                    <li>• <strong>📅 Gestión de Sesiones:</strong> Interfaz mejorada</li>
+                    <li>• <strong>✅ Validaciones:</strong> Adicionales para sesiones</li>
+                    <li>• <strong>🛡️ Manejo de Errores:</strong> Mejor gestión de errores</li>
+                  </ul>
+                </div>
+
+                <!-- Versión 0.3.6 -->
+                <div class="border-l-4 border-gray-400 pl-4 mb-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="bg-gray-100 text-gray-800 text-sm font-medium px-2 py-1 rounded">v0.3.6</span>
+                    <span class="text-sm text-gray-500">Anterior</span>
+                  </div>
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white dust:text-dusttext mb-3">💾 Sistema de Backup y Restauración</h4>
+                  <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300 dust:text-dusttext">
+                    <li>• <strong>💾 Exportación de Datos:</strong> Datos de pacientes exportables</li>
+                    <li>• <strong>📥 Importación de Datos:</strong> Restauración de información</li>
+                    <li>• <strong>📋 Respaldo de Sesiones:</strong> Backup completo de sesiones</li>
+                    <li>• <strong>⚡ Optimizaciones:</strong> Carga más rápida de datos</li>
+                    <li>• <strong>🧠 Manejo de Memoria:</strong> Mejor gestión de recursos</li>
+                  </ul>
+                </div>
+
+                <!-- Versión 0.3.5 -->
+                <div class="border-l-4 border-gray-400 pl-4 mb-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="bg-gray-100 text-gray-800 text-sm font-medium px-2 py-1 rounded">v0.3.5</span>
+                    <span class="text-sm text-gray-500">Anterior</span>
+                  </div>
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white dust:text-dusttext mb-3">🏥 Nomenclador CIE-10</h4>
+                  <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300 dust:text-dusttext">
+                    <li>• <strong>🔍 Búsqueda de Códigos:</strong> Códigos de diagnóstico CIE-10</li>
+                    <li>• <strong>📝 Integración en Formularios:</strong> Formularios de pacientes</li>
+                    <li>• <strong>⚡ Autocompletado:</strong> Inteligente para diagnósticos</li>
+                    <li>• <strong>✅ Validaciones:</strong> Mejoradas en formularios</li>
+                    <li>• <strong>🎨 Interfaz Intuitiva:</strong> Mejor experiencia de usuario</li>
+                  </ul>
+                </div>
+
+                <!-- Versión 0.3.4 -->
+                <div class="border-l-4 border-gray-400 pl-4 mb-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="bg-gray-100 text-gray-800 text-sm font-medium px-2 py-1 rounded">v0.3.4</span>
+                    <span class="text-sm text-gray-500">Anterior</span>
+                  </div>
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white dust:text-dusttext mb-3">👨‍👩‍👧‍👦 Historial Médico Familiar</h4>
+                  <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300 dust:text-dusttext">
+                    <li>• <strong>👨‍👩‍👧‍👦 Datos de Padres:</strong> Información completa de padres</li>
+                    <li>• <strong>👥 Información de Hermanos:</strong> Historial de hermanos</li>
+                    <li>• <strong>🏥 Historial de Salud:</strong> Familiar completo</li>
+                    <li>• <strong>📋 Expansión de Fichas:</strong> Más campos de información</li>
+                    <li>• <strong>📊 Organización:</strong> Mejor estructura de datos</li>
+                  </ul>
+                </div>
+
+                <!-- Versión 0.3.3 -->
+                <div class="border-l-4 border-gray-400 pl-4 mb-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="bg-gray-100 text-gray-800 text-sm font-medium px-2 py-1 rounded">v0.3.3</span>
+                    <span class="text-sm text-gray-500">Anterior</span>
+                  </div>
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white dust:text-dusttext mb-3">📋 Motivos de Consulta Múltiples</h4>
+                  <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300 dust:text-dusttext">
+                    <li>• <strong>☑️ Checkboxes Múltiples:</strong> Selección de múltiples motivos</li>
+                    <li>• <strong>📊 Categorización:</strong> Organización de motivos</li>
+                    <li>• <strong>🔍 Filtros:</strong> Por motivos de consulta</li>
+                    <li>• <strong>🎨 Interfaz Intuitiva:</strong> Mejor gestión de pacientes</li>
+                    <li>• <strong>📋 Organización:</strong> Mejor información</li>
+                  </ul>
+                </div>
+
+                <!-- Versión 0.3.2 -->
+                <div class="border-l-4 border-gray-400 pl-4 mb-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="bg-gray-100 text-gray-800 text-sm font-medium px-2 py-1 rounded">v0.3.2</span>
+                    <span class="text-sm text-gray-500">Anterior</span>
+                  </div>
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white dust:text-dusttext mb-3">📊 Sistema de Presentismo</h4>
+                  <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300 dust:text-dusttext">
+                    <li>• <strong>✅ Registro de Asistencia:</strong> Control de presentismo</li>
+                    <li>• <strong>📊 Estadísticas:</strong> De presentismo</li>
+                    <li>• <strong>📋 Reportes:</strong> De asistencia</li>
+                    <li>• <strong>📅 Calendario Mejorado:</strong> Vista mejorada de sesiones</li>
+                    <li>• <strong>🎯 Manejo de Eventos:</strong> Mejor gestión</li>
+                  </ul>
+                </div>
+
+                <!-- Versión 0.3.1 -->
+                <div class="border-l-4 border-gray-400 pl-4 mb-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="bg-gray-100 text-gray-800 text-sm font-medium px-2 py-1 rounded">v0.3.1</span>
+                    <span class="text-sm text-gray-500">Anterior</span>
+                  </div>
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white dust:text-dusttext mb-3">📝 Sistema de Sesiones Mejorado</h4>
+                  <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300 dust:text-dusttext">
+                    <li>• <strong>📝 Notas de Sesión:</strong> Editor rico para notas</li>
+                    <li>• <strong>📋 Historial:</strong> De sesiones completo</li>
+                    <li>• <strong>🔍 Búsqueda y Filtros:</strong> Para sesiones</li>
+                    <li>• <strong>🎨 Interfaz Moderna:</strong> Diseño mejorado</li>
+                    <li>• <strong>👤 Experiencia de Usuario:</strong> Mejor UX</li>
+                  </ul>
+                </div>
+
+                <!-- Versión 0.3.0 -->
+                <div class="border-l-4 border-gray-400 pl-4 mb-4">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="bg-gray-100 text-gray-800 text-sm font-medium px-2 py-1 rounded">v0.3.0</span>
+                    <span class="text-sm text-gray-500">Anterior</span>
+                  </div>
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white dust:text-dusttext mb-3">🔐 Sistema de Autenticación Completo</h4>
+                  <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300 dust:text-dusttext">
+                    <li>• <strong>👤 Registro de Usuarios:</strong> Sistema completo de registro</li>
+                    <li>• <strong>🔑 Inicio de Sesión:</strong> Autenticación segura</li>
+                    <li>• <strong>🔓 Recuperación de Contraseña:</strong> Sistema de recuperación</li>
+                    <li>• <strong>👑 Roles de Administrador:</strong> Gestión de permisos</li>
+                    <li>• <strong>🏗️ Arquitectura:</strong> Separación de responsabilidades</li>
+                    <li>• <strong>📁 Organización:</strong> Mejor estructura del código</li>
+                  </ul>
+                </div>
+
                 <!-- Versión 0.2.9 -->
                 <div class="border-l-4 border-gray-400 pl-4 mb-4">
                   <div class="flex items-center gap-2 mb-2">

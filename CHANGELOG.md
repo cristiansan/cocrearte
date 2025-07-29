@@ -1,164 +1,224 @@
 # Changelog
 
-Todos los cambios notables en este proyecto serán documentados en este archivo.
+## [0.4.2] - 2024-12-19
 
-## [0.4.1] - 2024-12-19
+### Added
+- **Nueva página de perfil de usuario** (`perfil.html`)
+  - Formulario completo de perfil profesional con campos: Nombre y Apellido, Email, Teléfono, Dirección, Especialidad, LinkedIn
+  - Vista de solo lectura y modo de edición
+  - Tema oscuro consistente con el resto de la aplicación
+  - Botón de cámara para cambiar foto de perfil con modal de selección (Tomar Foto / Subir Imagen)
+  - Integración completa con Firebase Storage para fotos de perfil
+  - Sincronización de fotos entre dashboard y página de perfil
+  - Botón de navegación de regreso al dashboard
+  - Validación de archivos de imagen (máximo 2MB)
+  - Persistencia de datos en Firestore
+  - Manejo de errores robusto para elementos del DOM
 
-### 🏷️ Añadido
-- Nuevas opciones de motivo de consulta: "Mutismo Selectivo" y "No controla esfínteres"
-- Tags en camel case para mejor legibilidad (Admin, Pro, Ultra, Gratis, Derivar, Test)
-- Mensaje de bienvenida personalizado que muestra solo el primer nombre del usuario
-- Redirección automática a página de precios para usuarios Gratis al intentar agregar pacientes
+### Changed
+- **Dashboard mejorado**
+  - Agregado botón "Mi Perfil" a la izquierda del botón "Pacientes"
+  - El botón redirige a la nueva página `perfil.html`
+  - Sincronización de fotos de perfil entre dashboard y página de perfil
+  - Sistema unificado de almacenamiento de fotos usando Firebase Storage
 
-### 🔄 Cambiado
-- Tags de usuario actualizados a camel case: "Admin", "Pro", "Ultra", "Gratis", "Derivar", "Test"
-- Mensaje de bienvenida ahora muestra "Bienvenido, Cristian" en lugar del email completo
-- Comportamiento del botón "Agregar Paciente" para usuarios Gratis: abre página de precios en lugar de mostrar error
+### Fixed
+- **Correcciones en sistema de fotos**
+  - Sincronización completa entre dashboard y página de perfil
+  - Manejo correcto de errores al subir fotos
+  - Validación de tamaño de archivos
+  - Restauración de iniciales si falla la subida
 
-### 🎯 Funcionalidades
-- Sistema de extracción inteligente del primer nombre desde displayName o email
-- Redirección contextual a página de precios según el plan del usuario
-- Mensajes informativos mejorados para guiar a usuarios hacia planes premium
+### Technical
+- **Firebase Storage**
+  - Agregado SDK de Firebase Storage a `firebase-config.js`
+  - Configuración completa para almacenamiento de fotos de perfil
+  - Sistema unificado de URLs en Firestore
 
-### 🔧 Técnico
-- Nueva función `obtenerPrimerNombre()` para extraer primer nombre del displayName
-- Actualizada función `agregarTagsUsuario()` para usar camel case
-- Mejorada lógica de verificación de permisos en botones de agregar paciente
-- Debug logs para troubleshooting de tags y nombres de usuario
+## [0.4.1] - 2024-12-18
 
-### 🎨 UI/UX
-- Tags más legibles y profesionales en camel case
-- Experiencia más personalizada con nombres en lugar de emails
-- Flujo de conversión mejorado hacia planes de pago
+### Added
+- **Sistema de precios implementado**
+  - Modal de precios con 3 planes: Gratis, Pro ($15 USD), Ultra ($25 USD)
+  - Planes anuales: Pro ($100 USD), Ultra ($150 USD) con descuentos
+  - Integración con WhatsApp para solicitudes de pago
+  - Enlace "Precios" en navegación principal
+  - Redirección a página de precios desde botones "Agregar Paciente" para usuarios sin permisos
 
-## [0.4.0] - 2024-12-19
+- **Control de acceso basado en planes**
+  - Usuarios "Gratis": Solo calendario personal, límite de pacientes
+  - Usuarios "Pro": Hasta 10 pacientes (excepción para Evelyn y Triana), calendario común
+  - Usuarios "Ultra": Pacientes ilimitados, calendario compartido, backups con descarga
+  - Usuarios "Admin": Acceso completo a todas las funciones
+  - Tags visuales: "Pro", "Ultra", "Admin", "Gratis", "Derivar"
 
-### 🏷️ Añadido
-- Sistema completo de planes y permisos (Gratis, Pro, Ultra)
-- Tags visuales para identificar el plan de cada usuario (GRATIS, PRO, ULTRA, ADMIN)
-- Página de precios con modal interactivo y toggle mensual/anual
-- Restricciones de funcionalidades según el plan del usuario
-- Límite de 3 pacientes para plan Pro
-- Pacientes ilimitados para plan Ultra
-- Acceso a agenda múltiple solo para Ultra y Admin
-- Acceso a backup solo para Ultra y Admin
+- **Nuevas opciones de motivo de consulta**
+  - "Mutismo Selectivo"
+  - "No controla esfínteres"
 
-### 🔐 Permisos por Plan
-- **Gratis**: Recibir pacientes derivados, calendario individual
-- **Pro**: Hasta 3 pacientes nuevos, ficha clínica, backup básico
-- **Ultra**: Pacientes ilimitados, agenda múltiple, backup completo, reminders WhatsApp
-- **Admin**: Acceso completo a todas las funciones
+### Changed
+- **Mejoras en experiencia de usuario**
+  - Mensaje de bienvenida personalizado usando primer nombre del `displayName`
+  - Tags en camel case: "Pro", "Ultra", "Admin", "Gratis", "Derivar", "Test"
+  - Redirección a página de precios en lugar de mensajes de error
+  - Vista por defecto "Pacientes" al iniciar sesión
 
-### 💰 Página de Precios
-- Modal moderno con diseño similar a plataformas premium
-- Toggle entre facturación mensual y anual (+44% descuento)
-- Precios en USD: Gratis $0, Pro $15/mes, Ultra $25/mes
-- Precios anuales: Pro $100, Ultra $150
-- Botones de acción que redirigen a registro o WhatsApp
+### Fixed
+- **Correcciones de visibilidad**
+  - Calendario y lista de usuarios no se superponen
+  - Manejo de errores de permisos de Firebase
+  - Corrección de lógica de verificación de planes de usuario
 
-### 🎯 Funcionalidades
-- Verificación automática de límites al agregar pacientes
-- Mensajes informativos cuando se alcanzan límites
-- Redirección automática a página de precios
-- Contador dinámico de pacientes por usuario
-- Navegación actualizada con enlace "Precios"
+## [0.4.0] - 2024-12-17
 
-### 🔧 Técnico
-- Nuevas funciones: `verificarPlanUsuario()`, `contarPacientesUsuario()`, `agregarTagsUsuario()`
-- Sistema de verificación de permisos en tiempo real
-- Integración con Firebase para campos `isPro` e `isUltra`
-- Debug logs para troubleshooting de permisos
-- Priorización de tags (Ultra > Pro > Admin > Gratis)
+### Added
+- **Sistema de roles y permisos**
+  - Campo `isDerivar` para usuarios derivadores
+  - Tags "D" para usuarios derivadores
+  - Restricciones de acceso para usuarios derivadores
+  - Campos `isPro` e `isUltra` para planes de pago
+  - Control de acceso basado en planes de usuario
 
-### 🎨 UI/UX
-- Tags con colores distintivos: Gris (Gratis), Púrpura (Pro), Amarillo (Ultra), Verde (Admin)
-- Diseño responsive para página de precios
-- Integración con sistema de temas claro/oscuro
-- Botones de acción contextuales según el plan
+- **Funcionalidades de agenda**
+  - Agenda individual y múltiple
+  - Filtros por profesionales
+  - Manejo de permisos para diferentes tipos de usuario
 
-## [0.3.7] - 2024-12-19
+### Changed
+- **Mejoras en la interfaz**
+  - Tags visuales para diferentes tipos de usuario
+  - Mensajes de permisos personalizados
+  - Navegación mejorada entre vistas
 
-### 🗺️ Añadido
-- Sistema de geocodificación mejorado con múltiples variaciones de direcciones
-- Reconocimiento de todos los barrios de CABA (Balvanera, Palermo, Recoleta, etc.)
-- Expansión automática de abreviaciones comunes (Tte. Gral. → Teniente General)
-- Validación de coordenadas por provincia para evitar ubicaciones incorrectas
-- Sistema de fallback con marcadores grises para direcciones no geocodificables
-- Logging detallado del proceso de geocodificación
+### Fixed
+- **Correcciones de bugs**
+  - Problemas de visibilidad en agenda múltiple
+  - Errores de permisos de Firebase
+  - Manejo de estados de usuario
 
-### 🔄 Cambiado
-- Proceso de geocodificación más robusto con múltiples intentos
-- Marcadores diferenciados: rojos para ubicaciones exactas, grises para aproximadas
-- Mejor manejo de errores en geocodificación de direcciones
+## [0.3.7] - 2024-12-16
 
-### ✅ Mejorado
-- Precisión de ubicaciones en el mapa de pacientes
-- Validación geográfica para evitar marcadores en provincias incorrectas
-- Sugerencias para mejorar direcciones problemáticas
+### Added
+- **Sistema de recordatorios por WhatsApp**
+  - Configuración de mensajes personalizados
+  - Envío automático de recordatorios
+  - Integración con API de WhatsApp
 
-### 🔧 Técnico
-- Nuevas funciones `limpiarDireccion()` y `generarVariacionesDireccion()`
-- Validación de coordenadas por región geográfica
-- Sistema de fallback para direcciones no reconocidas
-- Logging mejorado para debugging de geocodificación
+### Changed
+- **Mejoras en la gestión de sesiones**
+  - Interfaz mejorada para crear sesiones
+  - Validaciones adicionales
+  - Mejor manejo de errores
 
-## [0.3.6] - 2024-12-19
+## [0.3.6] - 2024-12-15
 
-### ✨ Añadido
-- Sistema de checkboxes para selección múltiple de motivos de consulta
-- Grid responsivo de 2 columnas para mejor organización visual
-- Scroll automático cuando hay muchas opciones
-- Etiquetas clickeables para facilitar la selección
+### Added
+- **Sistema de backup y restauración**
+  - Exportación de datos de pacientes
+  - Importación de datos
+  - Respaldo de sesiones
 
-### 🔄 Cambiado
-- Reemplazado dropdown único por checkboxes múltiples
-- Interfaz más intuitiva para selección de motivos
-- Guardado de motivos como array en lugar de string único
-- Visualización como lista ordenada en ficha clínica
+### Changed
+- **Optimizaciones de rendimiento**
+  - Carga más rápida de datos
+  - Mejor manejo de memoria
 
-### 🎨 Mejorado
-- Diseño más moderno y accesible
-- Mejor experiencia de usuario para selección múltiple
-- Checkboxes pequeños que no ocupan mucho espacio
-- Colores temáticos que se adaptan al tema claro/oscuro
+## [0.3.5] - 2024-12-14
 
-### 🔧 Técnico
-- Actualizada función `cargarOpcionesMotivoConsulta()` para generar checkboxes
-- Nuevas funciones `obtenerMotivosSeleccionados()` y `establecerMotivosSeleccionados()`
-- Actualizado manejo de datos en formularios de agregar y editar pacientes
-- Modificada visualización en todas las fichas clínicas
-- Actualizado test case para funcionar con checkboxes
+### Added
+- **Nomenclador CIE-10**
+  - Búsqueda de códigos de diagnóstico
+  - Integración en formularios de pacientes
+  - Autocompletado inteligente
 
-## [0.3.5] - 2024-12-19
+### Changed
+- **Mejoras en formularios**
+  - Validaciones mejoradas
+  - Interfaz más intuitiva
 
-### ✨ Añadido
-- Campo "Motivo de consulta" con dropdown de selección única
-- Lista de 35 opciones predefinidas de motivos de consulta
-- Integración completa en formularios de agregar y editar pacientes
+## [0.3.4] - 2024-12-13
 
-### 📍 Posicionamiento
-- Campo ubicado entre "Información Personal" y "Información de Contacto"
-- Consistente en ambos formularios (agregar y editar)
+### Added
+- **Sistema de historial médico familiar**
+  - Datos de padres
+  - Información de hermanos
+  - Historial de salud familiar
 
-### 🔧 Técnico
-- Constante `MOTIVOS_CONSULTA` con todas las opciones
-- Funciones para cargar, obtener y establecer motivos seleccionados
-- Integración con Firebase para guardado y carga de datos
-- Visualización en ficha clínica del paciente
+### Changed
+- **Expansión de fichas de pacientes**
+  - Más campos de información
+  - Mejor organización de datos
 
-## [0.3.4] - 2024-12-19
+## [0.3.3] - 2024-12-12
 
-### ✨ Añadido
-- Sistema de autenticación con Firebase
-- Gestión de pacientes con CRUD completo
-- Documentación de sesiones
-- Subida de archivos clínicos
-- Tema claro/oscuro
-- Interfaz responsive
+### Added
+- **Sistema de motivos de consulta múltiples**
+  - Checkboxes para seleccionar múltiples motivos
+  - Categorización de motivos
+  - Filtros por motivos
 
-### 🔧 Técnico
-- Integración con Firebase Auth, Firestore y Storage
-- Sistema de modales para formularios
-- Validación de datos
-- Manejo de archivos
-- Diseño con Tailwind CSS 
+### Changed
+- **Mejoras en la gestión de pacientes**
+  - Interfaz más intuitiva
+  - Mejor organización de información
+
+## [0.3.2] - 2024-12-11
+
+### Added
+- **Sistema de presentismo**
+  - Registro de asistencia
+  - Estadísticas de presentismo
+  - Reportes de asistencia
+
+### Changed
+- **Mejoras en el calendario**
+  - Vista mejorada de sesiones
+  - Mejor manejo de eventos
+
+## [0.3.1] - 2024-12-10
+
+### Added
+- **Sistema de sesiones mejorado**
+  - Notas de sesión con editor rico
+  - Historial de sesiones
+  - Búsqueda y filtros
+
+### Changed
+- **Interfaz de usuario mejorada**
+  - Diseño más moderno
+  - Mejor experiencia de usuario
+
+## [0.3.0] - 2024-12-09
+
+### Added
+- **Sistema de autenticación completo**
+  - Registro de usuarios
+  - Inicio de sesión
+  - Recuperación de contraseña
+  - Roles de administrador
+
+### Changed
+- **Arquitectura de la aplicación**
+  - Separación de responsabilidades
+  - Mejor organización del código
+
+## [0.2.0] - 2024-12-08
+
+### Added
+- **Sistema de pacientes**
+  - CRUD completo de pacientes
+  - Fichas médicas
+  - Historial de consultas
+
+### Changed
+- **Base de datos**
+  - Migración a Firebase Firestore
+  - Estructura de datos optimizada
+
+## [0.1.0] - 2024-12-07
+
+### Added
+- **Versión inicial**
+  - Interfaz básica
+  - Sistema de calendario
+  - Gestión de citas 

@@ -1008,6 +1008,15 @@ document.getElementById('forgotPasswordForm').addEventListener('submit', async (
 // Mantener sesión iniciada
 window.firebaseAuth.onAuthStateChanged(user => {
     if (user) {
+        // Verificar si debe ir directamente al dashboard
+        const goToDashboard = sessionStorage.getItem('goToDashboard');
+        if (goToDashboard === 'true') {
+            // Limpiar la bandera
+            sessionStorage.removeItem('goToDashboard');
+            // Ocultar landing page inmediatamente
+            document.getElementById('landingPage').classList.add('hidden');
+        }
+        
         showDashboard(user);
     } else {
         // Ocultar todos los elementos del dashboard
@@ -3555,9 +3564,25 @@ if (tabPacientes && tabAgendaIndividual && tabAgendaMultiple && calendarTabs && 
             adminPanel.style.display = 'none';
         }
         
+        // Ocultar perfil
+        const dashboardMiPerfilSection = document.getElementById('dashboardMiPerfilSection');
+        if (dashboardMiPerfilSection) {
+            dashboardMiPerfilSection.classList.add('hidden');
+        }
+        
         calendarTabs.classList.remove('hidden');
         patientsVisible = false;
         calendarVisible = true;
+    }
+    
+
+    
+    // Event listener para botón Mi Perfil - redirige a perfil.html
+    const tabMiPerfil = document.getElementById('tabMiPerfil');
+    if (tabMiPerfil) {
+        tabMiPerfil.addEventListener('click', () => {
+            window.location.href = 'perfil.html';
+        });
     }
     
     // Event listener para botón Pacientes
@@ -5780,16 +5805,16 @@ async function agregarTagsUsuario(uid, displayName) {
         
         let tags = displayName;
         
-        // Agregar tag de plan
+        // Agregar tag de plan (clickeable para abrir modal de precios)
         if (planUsuario === 'pro') {
-            tags += ' <span class="text-xs bg-purple-100 text-purple-700 rounded px-2 py-0.5 ml-2">Pro</span>';
+            tags += ' <span class="text-xs bg-purple-100 text-purple-700 rounded px-2 py-0.5 ml-2 cursor-pointer hover:bg-purple-200 transition-colors" onclick="abrirModalPrecios()" title="Ver planes disponibles">Pro</span>';
         } else if (planUsuario === 'ultra') {
-            tags += ' <span class="text-xs bg-yellow-100 text-yellow-700 rounded px-2 py-0.5 ml-2">Ultra</span>';
+            tags += ' <span class="text-xs bg-yellow-100 text-yellow-700 rounded px-2 py-0.5 ml-2 cursor-pointer hover:bg-yellow-200 transition-colors" onclick="abrirModalPrecios()" title="Ver planes disponibles">Ultra</span>';
         } else if (planUsuario === 'admin') {
             tags += ' <span class="text-xs bg-green-100 text-green-700 rounded px-2 py-0.5 ml-2">Admin</span>';
         } else {
-            // Plan gratuito por defecto
-            tags += ' <span class="text-xs bg-gray-100 text-gray-700 rounded px-2 py-0.5 ml-2">Gratis</span>';
+            // Plan gratuito por defecto (clickeable para ver opciones de upgrade)
+            tags += ' <span class="text-xs bg-gray-100 text-gray-700 rounded px-2 py-0.5 ml-2 cursor-pointer hover:bg-gray-200 transition-colors" onclick="abrirModalPrecios()" title="Ver planes disponibles">Gratis</span>';
         }
         
         // Agregar tag de derivador
@@ -9400,3 +9425,5 @@ window.debugDerivacion = function() {
     
     console.log('🐛 === FIN DEBUG ===');
 };
+
+// === FUNCIONES DE PERFIL MOVIDAS A perfil.html ===

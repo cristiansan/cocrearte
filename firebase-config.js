@@ -14,10 +14,8 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 const storage = firebase.storage();
-const analytics = firebase.analytics();
 
 // Exportar para uso global
 window.firebaseAuth = auth;
 window.firebaseDB = db;
-window.firebaseStorage = storage;
-window.firebaseAnalytics = analytics; 
+window.firebaseStorage = storage; 

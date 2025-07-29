@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Perfil - Espacio Cocrearte</title>
+  <link rel="icon" type="image/x-icon" href="public/favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              500: '#3B82F6',
+              600: '#2563EB',
+              700: '#1D4ED8'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+  <script src="firebase-config.js"></script>
+</head>
+<body class="bg-gray-900 dark:bg-gray-900 min-h-screen">
+  <div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto">
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-8">
+        <div class="flex items-center space-x-4">
+          <button onclick="volverAlDashboard()" class="text-gray-400 hover:text-white transition">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+          </button>
+          <h1 class="text-3xl font-bold text-white">Mi Perfil</h1>
+        </div>
+      </div>
+
+      <!-- Profile Card -->
+      <div class="bg-gray-800 dark:bg-gray-800 rounded-lg shadow-md p-8 border border-gray-700">
+        <!-- Profile View (Read-only) -->
+        <div id="profileView">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-semibold text-white">Información del Perfil Profesional</h2>
+            <button id="editProfileBtn" class="bg-primary-700 hover:bg-primary-600 text-white px-4 py-2 rounded">Editar</button>
+          </div>
+          
+          <!-- Avatar Section -->
+          <div class="flex items-center space-x-6 mb-8">
+            <div class="relative">
+              <div class="w-24 h-24 bg-purple-600 rounded-full flex items-center justify-center relative">
+                <span id="profileInitials" class="text-2xl font-bold text-white"></span>
+                <button id="changePhotoBtn" class="absolute -bottom-1 -right-1 w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center border-2 border-gray-800 hover:bg-purple-400 transition">
+                  <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div>
+              <h3 id="profileNameHeader" class="text-xl font-semibold text-white mb-1"></h3>
+              <p id="profileSpecialtyHeader" class="text-gray-400"></p>
+            </div>
+          </div>
+          
+          <div class="space-y-4">
+            <div class="flex justify-between items-center py-2 border-b border-gray-700">
+              <span class="font-medium text-gray-300">Nombre y Apellido:</span>
+              <span id="profileName" class="text-white"></span>
+            </div>
+            <div class="flex justify-between items-center py-2 border-b border-gray-700">
+              <span class="font-medium text-gray-300">Email:</span>
+              <span id="profileEmail" class="text-white"></span>
+            </div>
+            <div class="flex justify-between items-center py-2 border-b border-gray-700">
+              <span class="font-medium text-gray-300">Teléfono:</span>
+              <span id="profilePhone" class="text-white"></span>
+            </div>
+            <div class="flex justify-between items-center py-2 border-b border-gray-700">
+              <span class="font-medium text-gray-300">Dirección:</span>
+              <span id="profileAddress" class="text-white"></span>
+            </div>
+            <div class="flex justify-between items-center py-2 border-b border-gray-700">
+              <span class="font-medium text-gray-300">Especialidad:</span>
+              <span id="profileSpecialty" class="text-white"></span>
+            </div>
+            <div class="flex justify-between items-center py-2 border-b border-gray-700">
+              <span class="font-medium text-gray-300">LinkedIn:</span>
+              <span id="profileLinkedin" class="text-white"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Edit Form (Hidden by default) -->
+        <div id="profileEditForm" class="hidden">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-semibold text-white">Editar Perfil</h2>
+            <button id="cancelEditBtn" class="text-gray-400 hover:text-white">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+          
+          <form id="profileForm" class="space-y-4">
+            <div>
+              <label for="displayName" class="block text-sm font-medium text-gray-300 mb-1">Nombre y Apellido</label>
+              <input type="text" id="displayName" name="displayName" class="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+            </div>
+            <div>
+              <label for="email" class="block text-sm font-medium text-gray-300 mb-1">Email</label>
+              <input type="email" id="email" name="email" class="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
+            </div>
+            <div>
+              <label for="phone" class="block text-sm font-medium text-gray-300 mb-1">Teléfono</label>
+              <input type="tel" id="phone" name="phone" class="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+            </div>
+            <div>
+              <label for="address" class="block text-sm font-medium text-gray-300 mb-1">Dirección</label>
+              <input type="text" id="address" name="address" class="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+            </div>
+            <div>
+              <label for="specialty" class="block text-sm font-medium text-gray-300 mb-1">Especialidad</label>
+              <input type="text" id="specialty" name="specialty" class="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Ej: Psicología, Psiquiatría, etc.">
+            </div>
+            <div>
+              <label for="linkedin" class="block text-sm font-medium text-gray-300 mb-1">LinkedIn</label>
+              <input type="url" id="linkedin" name="linkedin" class="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="https://linkedin.com/in/tu-perfil">
+            </div>
+            
+            <div class="flex justify-between pt-4">
+              <button type="submit" class="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded border">Guardar Cambios</button>
+              <button type="button" onclick="volverAlDashboard()" class="text-primary-400 hover:text-primary-300 font-medium">Volver</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Message -->
+      <div id="profileMsg" class="mt-4 text-center text-sm"></div>
+    </div>
+  </div>
+
+  <!-- Hidden file input for photo upload -->
+  <input type="file" id="photoInput" accept="image/*" class="hidden">
+
+  <!-- Modal para seleccionar opción de foto -->
+  <div id="photoModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-gray-800 rounded-lg p-6 max-w-sm w-full mx-4">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold text-white">Seleccionar Foto</h3>
+        <button id="closePhotoModal" class="text-gray-400 hover:text-white">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      <div class="space-y-3">
+        <button id="takePhotoBtn" class="w-full bg-primary-700 hover:bg-primary-600 text-white py-3 px-4 rounded-lg flex items-center justify-center space-x-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+          <span>Tomar Foto</span>
+        </button>
+        <button id="uploadPhotoBtn" class="w-full bg-gray-600 hover:bg-gray-500 text-white py-3 px-4 rounded-lg flex items-center justify-center space-x-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+          </svg>
+          <span>Subir Imagen</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Usar las variables globales de Firebase configuradas en firebase-config.js
+    
+    // Generar iniciales del nombre
+    function generarIniciales(nombre) {
+      if (!nombre) return '?';
+      
+      const palabras = nombre.trim().split(' ');
+      if (palabras.length === 1) {
+        return palabras[0].charAt(0).toUpperCase();
+      } else {
+        return (palabras[0].charAt(0) + palabras[palabras.length - 1].charAt(0)).toUpperCase();
+      }
+    }
+
+    // Mostrar formulario de edición
+    function mostrarFormularioEdicion() {
+      document.getElementById('profileView').classList.add('hidden');
+      document.getElementById('profileEditForm').classList.remove('hidden');
+    }
+
+    // Ocultar formulario de edición
+    function ocultarFormularioEdicion() {
+      document.getElementById('profileView').classList.remove('hidden');
+      document.getElementById('profileEditForm').classList.add('hidden');
+    }
+
+    // Manejar cambio de foto
+    function handlePhotoChange() {
+      const modal = document.getElementById('photoModal');
+      modal.classList.remove('hidden');
+    }
+
+    // Cerrar modal de foto
+    function closePhotoModal() {
+      const modal = document.getElementById('photoModal');
+      modal.classList.add('hidden');
+    }
+
+    // Tomar foto con cámara
+    function takePhoto() {
+      closePhotoModal();
+      // Por ahora mostrar mensaje, pero aquí se implementaría la funcionalidad de cámara
+      document.getElementById('profileMsg').textContent = 'Función de cámara en desarrollo.';
+      document.getElementById('profileMsg').className = 'mt-4 text-center text-sm text-blue-400';
+      
+      setTimeout(() => {
+        document.getElementById('profileMsg').textContent = '';
+        document.getElementById('profileMsg').className = 'mt-4 text-center text-sm';
+      }, 3000);
+    }
+
+    // Subir imagen desde archivo
+    function uploadPhoto() {
+      closePhotoModal();
+      const fileInput = document.getElementById('photoInput');
+      fileInput.click();
+    }
+
+    // Procesar archivo seleccionado
+    function processPhotoFile(file) {
+      if (file && file.type.startsWith('image/')) {
+        // Validar tamaño
+        if (file.size > 2 * 1024 * 1024) {
+          document.getElementById('profileMsg').textContent = 'La imagen es demasiado grande (máx 2MB).';
+          document.getElementById('profileMsg').className = 'mt-4 text-center text-sm text-red-400';
+          
+          setTimeout(() => {
+            document.getElementById('profileMsg').textContent = '';
+            document.getElementById('profileMsg').className = 'mt-4 text-center text-sm';
+          }, 3000);
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          // Vista previa inmediata
+          const avatarContainer = document.querySelector('.w-24.h-24.bg-purple-600');
+          
+          // Crear imagen
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          img.alt = 'Foto de perfil';
+          img.className = 'w-full h-full object-cover rounded-full';
+          
+          // Limpiar el contenedor y agregar la imagen
+          avatarContainer.innerHTML = '';
+          avatarContainer.appendChild(img);
+          
+          // Subir a Firebase Storage
+          uploadPhotoToFirebase(file);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        document.getElementById('profileMsg').textContent = 'Por favor selecciona un archivo de imagen válido.';
+        document.getElementById('profileMsg').className = 'mt-4 text-center text-sm text-red-400';
+        
+        setTimeout(() => {
+          document.getElementById('profileMsg').textContent = '';
+          document.getElementById('profileMsg').className = 'mt-4 text-center text-sm';
+        }, 3000);
+      }
+    }
+
+    // Subir foto a Firebase Storage
+    async function uploadPhotoToFirebase(file) {
+      const user = window.firebaseAuth.currentUser;
+      if (!user) {
+        document.getElementById('profileMsg').textContent = 'Debes iniciar sesión para cambiar tu foto de perfil.';
+        document.getElementById('profileMsg').className = 'mt-4 text-center text-sm text-red-400';
+        return;
+      }
+
+      try {
+        // Verificar si Firebase Storage está disponible
+        if (!window.firebaseStorage) {
+          document.getElementById('profileMsg').textContent = 'Firebase Storage no está disponible.';
+          document.getElementById('profileMsg').className = 'mt-4 text-center text-sm text-red-400';
+          return;
+        }
+
+        const storageRef = window.firebaseStorage.ref(`usuarios_fotos/${user.uid}.jpg`);
+        await storageRef.put(file);
+        const url = await storageRef.getDownloadURL();
+        
+        // Guardar URL en Firestore
+        await window.firebaseDB.collection('usuarios').doc(user.uid).set({ photoURL: url }, { merge: true });
+        
+        // Mostrar mensaje de éxito
+        document.getElementById('profileMsg').textContent = 'Foto de perfil actualizada correctamente.';
+        document.getElementById('profileMsg').className = 'mt-4 text-center text-sm text-green-400';
+        
+        setTimeout(() => {
+          document.getElementById('profileMsg').textContent = '';
+          document.getElementById('profileMsg').className = 'mt-4 text-center text-sm';
+        }, 3000);
+        
+      } catch (error) {
+        console.error('Error al subir foto:', error);
+        document.getElementById('profileMsg').textContent = 'Error al subir la foto: ' + error.message;
+        document.getElementById('profileMsg').className = 'mt-4 text-center text-sm text-red-400';
+        
+        // Restaurar iniciales si falla
+        const avatarContainer = document.querySelector('.w-24.h-24.bg-purple-600');
+        const displayName = user.displayName || user.email || '';
+        const iniciales = generarIniciales(displayName);
+        avatarContainer.innerHTML = `<span id="profileInitials" class="text-2xl font-bold text-white">${iniciales}</span>`;
+        
+        setTimeout(() => {
+          document.getElementById('profileMsg').textContent = '';
+          document.getElementById('profileMsg').className = 'mt-4 text-center text-sm';
+        }, 3000);
+      }
+    }
+
+    // Cargar foto guardada desde Firestore
+    async function loadSavedPhoto() {
+      const user = window.firebaseAuth.currentUser;
+      if (!user) return;
+
+      try {
+        const userDoc = await window.firebaseDB.collection('usuarios').doc(user.uid).get();
+        if (userDoc.exists && userDoc.data().photoURL) {
+          const avatarContainer = document.querySelector('.w-24.h-24.bg-purple-600');
+          
+          // Crear imagen
+          const img = document.createElement('img');
+          img.src = userDoc.data().photoURL;
+          img.alt = 'Foto de perfil';
+          img.className = 'w-full h-full object-cover rounded-full';
+          
+          // Limpiar el contenedor y agregar la imagen
+          avatarContainer.innerHTML = '';
+          avatarContainer.appendChild(img);
+        }
+      } catch (error) {
+        console.error('Error al cargar foto:', error);
+      }
+    }
+
+    // Redirigir si no está logueado
+    window.firebaseAuth.onAuthStateChanged(async user => {
+      if (!user) {
+        window.location.href = 'index.html';
+        return;
+      }
+      
+      try {
+        // Cargar datos
+        const userDoc = await window.firebaseDB.collection('users').doc(user.uid).get();
+        const data = userDoc.exists ? userDoc.data() : {};
+        
+        // Generar iniciales
+        const displayName = data.displayName || user.displayName || user.email || '';
+        const iniciales = generarIniciales(displayName);
+        
+        // Actualizar avatar y headers
+        document.getElementById('profileInitials').textContent = iniciales;
+        document.getElementById('profileNameHeader').textContent = displayName || 'No especificado';
+        document.getElementById('profileSpecialtyHeader').textContent = data.specialty || 'Sin especialidad';
+        
+        // Cargar foto guardada si existe
+        loadSavedPhoto();
+        
+        // Actualizar elementos del perfil
+        document.getElementById('profileName').textContent = data.displayName || user.displayName || user.email || 'No especificado';
+        document.getElementById('profileEmail').textContent = data.email || user.email || 'No especificado';
+        document.getElementById('profilePhone').textContent = data.phone || 'No especificado';
+        document.getElementById('profileAddress').textContent = data.address || 'No especificado';
+        document.getElementById('profileSpecialty').textContent = data.specialty || 'No especificado';
+        document.getElementById('profileLinkedin').textContent = data.linkedin || 'No especificado';
+
+        // Llenar formulario con datos actuales
+        document.getElementById('displayName').value = data.displayName || user.displayName || '';
+        document.getElementById('email').value = data.email || user.email || '';
+        document.getElementById('phone').value = data.phone || '';
+        document.getElementById('address').value = data.address || '';
+        document.getElementById('specialty').value = data.specialty || '';
+        document.getElementById('linkedin').value = data.linkedin || '';
+        
+      } catch (error) {
+        console.error('Error al cargar perfil:', error);
+        // Si hay error, usar datos básicos del usuario autenticado
+        const displayName = user.displayName || user.email || '';
+        const iniciales = generarIniciales(displayName);
+        
+        document.getElementById('profileInitials').textContent = iniciales;
+        document.getElementById('profileNameHeader').textContent = displayName || 'No especificado';
+        document.getElementById('profileSpecialtyHeader').textContent = 'Sin especialidad';
+        
+        // Cargar foto guardada si existe
+        loadSavedPhoto();
+        
+        document.getElementById('profileName').textContent = displayName || 'No especificado';
+        document.getElementById('profileEmail').textContent = user.email || 'No especificado';
+        document.getElementById('profilePhone').textContent = 'No especificado';
+        document.getElementById('profileAddress').textContent = 'No especificado';
+        document.getElementById('profileSpecialty').textContent = 'No especificado';
+        document.getElementById('profileLinkedin').textContent = 'No especificado';
+
+        document.getElementById('displayName').value = user.displayName || '';
+        document.getElementById('email').value = user.email || '';
+        document.getElementById('phone').value = '';
+        document.getElementById('address').value = '';
+        document.getElementById('specialty').value = '';
+        document.getElementById('linkedin').value = '';
+      }
+    });
+
+    // Event listeners
+    document.getElementById('editProfileBtn').addEventListener('click', mostrarFormularioEdicion);
+    document.getElementById('cancelEditBtn').addEventListener('click', ocultarFormularioEdicion);
+    document.getElementById('changePhotoBtn').addEventListener('click', handlePhotoChange);
+    document.getElementById('closePhotoModal').addEventListener('click', closePhotoModal);
+    document.getElementById('takePhotoBtn').addEventListener('click', takePhoto);
+    document.getElementById('uploadPhotoBtn').addEventListener('click', uploadPhoto);
+    
+    // Cerrar modal haciendo clic fuera
+    document.getElementById('photoModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closePhotoModal();
+      }
+    });
+    
+    // Cerrar modal con Escape
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closePhotoModal();
+      }
+    });
+    
+    // File input change event
+    document.getElementById('photoInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        processPhotoFile(file);
+      }
+    });
+
+    // Guardar cambios
+    document.getElementById('profileForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const user = window.firebaseAuth.currentUser;
+      if (!user) return;
+      
+      const displayName = document.getElementById('displayName').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const address = document.getElementById('address').value.trim();
+      const specialty = document.getElementById('specialty').value.trim();
+      const linkedin = document.getElementById('linkedin').value.trim();
+      
+      try {
+        // Verificar si el documento existe
+        const userDoc = await window.firebaseDB.collection('users').doc(user.uid).get();
+        
+        if (userDoc.exists) {
+          // Actualizar documento existente
+          await window.firebaseDB.collection('users').doc(user.uid).update({
+            displayName, email, phone, address, specialty, linkedin, updatedAt: new Date()
+          });
+        } else {
+          // Crear nuevo documento
+          await window.firebaseDB.collection('users').doc(user.uid).set({
+            displayName, email, phone, address, specialty, linkedin, createdAt: new Date(), updatedAt: new Date()
+          });
+        }
+        
+        if (displayName !== user.displayName) await user.updateProfile({ displayName });
+        if (email !== user.email) await user.updateEmail(email);
+        
+        // Actualizar vista
+        const iniciales = generarIniciales(displayName);
+        const profileInitialsElement = document.getElementById('profileInitials');
+        if (profileInitialsElement) {
+          profileInitialsElement.textContent = iniciales;
+        }
+        
+        const profileNameHeader = document.getElementById('profileNameHeader');
+        if (profileNameHeader) {
+          profileNameHeader.textContent = displayName || 'No especificado';
+        }
+        
+        const profileSpecialtyHeader = document.getElementById('profileSpecialtyHeader');
+        if (profileSpecialtyHeader) {
+          profileSpecialtyHeader.textContent = specialty || 'Sin especialidad';
+        }
+        
+        const profileName = document.getElementById('profileName');
+        if (profileName) {
+          profileName.textContent = displayName || 'No especificado';
+        }
+        
+        const profileEmail = document.getElementById('profileEmail');
+        if (profileEmail) {
+          profileEmail.textContent = email || 'No especificado';
+        }
+        
+        const profilePhone = document.getElementById('profilePhone');
+        if (profilePhone) {
+          profilePhone.textContent = phone || 'No especificado';
+        }
+        
+        const profileAddress = document.getElementById('profileAddress');
+        if (profileAddress) {
+          profileAddress.textContent = address || 'No especificado';
+        }
+        
+        const profileSpecialty = document.getElementById('profileSpecialty');
+        if (profileSpecialty) {
+          profileSpecialty.textContent = specialty || 'No especificado';
+        }
+        
+        const profileLinkedin = document.getElementById('profileLinkedin');
+        if (profileLinkedin) {
+          profileLinkedin.textContent = linkedin || 'No especificado';
+        }
+        
+        ocultarFormularioEdicion();
+        
+        const profileMsg = document.getElementById('profileMsg');
+        if (profileMsg) {
+          profileMsg.textContent = 'Perfil actualizado correctamente.';
+          profileMsg.className = 'mt-4 text-center text-sm text-green-400';
+          
+          setTimeout(() => {
+            if (profileMsg) {
+              profileMsg.textContent = '';
+              profileMsg.className = 'mt-4 text-center text-sm';
+            }
+          }, 3000);
+        }
+        
+      } catch (error) {
+        console.error('Error al guardar perfil:', error);
+        const profileMsg = document.getElementById('profileMsg');
+        if (profileMsg) {
+          profileMsg.textContent = 'Error al guardar: ' + error.message;
+          profileMsg.className = 'mt-4 text-center text-sm text-red-400';
+        }
+      }
+    });
+
+    function volverAlDashboard() {
+      const user = window.firebaseAuth.currentUser;
+      if (user) {
+        // Marcar en sessionStorage que debe ir directamente al dashboard
+        sessionStorage.setItem('goToDashboard', 'true');
+        window.location.href = 'index.html';
+      } else {
+        window.location.href = 'index.html';
+      }
+    }
+  </script>
+</body>
+</html> 
