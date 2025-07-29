@@ -2,7 +2,7 @@
 
 Sistema de gestión para profesionales de la salud mental.
 
-**Versión actual:** 0.4.2
+**Versión actual:** 0.4.3
 
 ## Características principales
 

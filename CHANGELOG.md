@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.4.3] - 2024-12-19
+
+### Added
+- **Sistemas de planes pagos actualizados**
+  - Plan Gratis: Hasta 3 pacientes, calendario individual, funcionalidades básicas mejoradas
+  - Plan Pro: Hasta 10 pacientes, múltiples calendarios, backup mensual, funcionalidades completas
+  - Plan Ultra: Pacientes ilimitados, múltiples calendarios, backup diario, exportar backup, recordatorios por WhatsApp
+  - Nuevas funcionalidades para todos los planes: dictado de audios (speech to text), ficha clínica personalizada, carga de fotos/imágenes
+  - Textos optimizados y más claros para todas las características
+
+### Changed
+- **Modal de precios mejorado**
+  - Estructura más detallada y profesional
+  - Características específicas por plan claramente definidas
+  - Mejor presentación visual de las funcionalidades
+
 ## [0.4.2] - 2024-12-19
 
 ### Added

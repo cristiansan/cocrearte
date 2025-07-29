@@ -76,6 +76,10 @@
               <span id="profileName" class="text-white"></span>
             </div>
             <div class="flex justify-between items-center py-2 border-b border-gray-700">
+              <span class="font-medium text-gray-300">Especialidad:</span>
+              <span id="profileSpecialty" class="text-white"></span>
+            </div>
+            <div class="flex justify-between items-center py-2 border-b border-gray-700">
               <span class="font-medium text-gray-300">Email:</span>
               <span id="profileEmail" class="text-white"></span>
             </div>
@@ -88,8 +92,8 @@
               <span id="profileAddress" class="text-white"></span>
             </div>
             <div class="flex justify-between items-center py-2 border-b border-gray-700">
-              <span class="font-medium text-gray-300">Especialidad:</span>
-              <span id="profileSpecialty" class="text-white"></span>
+              <span class="font-medium text-gray-300">Ciudad:</span>
+              <span id="profileCity" class="text-white"></span>
             </div>
             <div class="flex justify-between items-center py-2 border-b border-gray-700">
               <span class="font-medium text-gray-300">LinkedIn:</span>
@@ -115,6 +119,10 @@
               <input type="text" id="displayName" name="displayName" class="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
             </div>
             <div>
+              <label for="specialty" class="block text-sm font-medium text-gray-300 mb-1">Especialidad</label>
+              <input type="text" id="specialty" name="specialty" class="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Ej: Psicología, Psiquiatría, etc.">
+            </div>
+            <div>
               <label for="email" class="block text-sm font-medium text-gray-300 mb-1">Email</label>
               <input type="email" id="email" name="email" class="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" required>
             </div>
@@ -127,8 +135,8 @@
               <input type="text" id="address" name="address" class="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
             </div>
             <div>
-              <label for="specialty" class="block text-sm font-medium text-gray-300 mb-1">Especialidad</label>
-              <input type="text" id="specialty" name="specialty" class="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Ej: Psicología, Psiquiatría, etc.">
+              <label for="city" class="block text-sm font-medium text-gray-300 mb-1">Ciudad</label>
+              <input type="text" id="city" name="city" class="w-full px-3 py-2 border border-gray-600 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Ej: Buenos Aires, Córdoba, etc.">
             </div>
             <div>
               <label for="linkedin" class="block text-sm font-medium text-gray-300 mb-1">LinkedIn</label>
@@ -389,6 +397,7 @@
         document.getElementById('profileEmail').textContent = data.email || user.email || 'No especificado';
         document.getElementById('profilePhone').textContent = data.phone || 'No especificado';
         document.getElementById('profileAddress').textContent = data.address || 'No especificado';
+        document.getElementById('profileCity').textContent = data.city || 'No especificado';
         document.getElementById('profileSpecialty').textContent = data.specialty || 'No especificado';
         document.getElementById('profileLinkedin').textContent = data.linkedin || 'No especificado';
 
@@ -397,6 +406,7 @@
         document.getElementById('email').value = data.email || user.email || '';
         document.getElementById('phone').value = data.phone || '';
         document.getElementById('address').value = data.address || '';
+        document.getElementById('city').value = data.city || '';
         document.getElementById('specialty').value = data.specialty || '';
         document.getElementById('linkedin').value = data.linkedin || '';
         
@@ -417,6 +427,7 @@
         document.getElementById('profileEmail').textContent = user.email || 'No especificado';
         document.getElementById('profilePhone').textContent = 'No especificado';
         document.getElementById('profileAddress').textContent = 'No especificado';
+        document.getElementById('profileCity').textContent = 'No especificado';
         document.getElementById('profileSpecialty').textContent = 'No especificado';
         document.getElementById('profileLinkedin').textContent = 'No especificado';
 
@@ -424,6 +435,7 @@
         document.getElementById('email').value = user.email || '';
         document.getElementById('phone').value = '';
         document.getElementById('address').value = '';
+        document.getElementById('city').value = '';
         document.getElementById('specialty').value = '';
         document.getElementById('linkedin').value = '';
       }
@@ -469,6 +481,7 @@
       const email = document.getElementById('email').value.trim();
       const phone = document.getElementById('phone').value.trim();
       const address = document.getElementById('address').value.trim();
+      const city = document.getElementById('city').value.trim();
       const specialty = document.getElementById('specialty').value.trim();
       const linkedin = document.getElementById('linkedin').value.trim();
       
@@ -479,12 +492,12 @@
         if (userDoc.exists) {
           // Actualizar documento existente
           await window.firebaseDB.collection('users').doc(user.uid).update({
-            displayName, email, phone, address, specialty, linkedin, updatedAt: new Date()
+            displayName, email, phone, address, city, specialty, linkedin, updatedAt: new Date()
           });
         } else {
           // Crear nuevo documento
           await window.firebaseDB.collection('users').doc(user.uid).set({
-            displayName, email, phone, address, specialty, linkedin, createdAt: new Date(), updatedAt: new Date()
+            displayName, email, phone, address, city, specialty, linkedin, createdAt: new Date(), updatedAt: new Date()
           });
         }
         
@@ -526,6 +539,11 @@
         const profileAddress = document.getElementById('profileAddress');
         if (profileAddress) {
           profileAddress.textContent = address || 'No especificado';
+        }
+        
+        const profileCity = document.getElementById('profileCity');
+        if (profileCity) {
+          profileCity.textContent = city || 'No especificado';
         }
         
         const profileSpecialty = document.getElementById('profileSpecialty');

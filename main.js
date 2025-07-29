@@ -924,7 +924,7 @@ async function showDashboard(user) {
     // Mostrar el botón Backup según el plan
     const btnBackup = document.getElementById('btnBackupPacientes');
     if (btnBackup) {
-        if (isAdmin || planUsuario === 'ultra') {
+        if (isAdmin || planUsuario === 'ultra' || planUsuario === 'pro') {
             btnBackup.classList.remove('hidden');
         } else {
             btnBackup.classList.add('hidden');
@@ -946,10 +946,10 @@ async function showDashboard(user) {
         });
     }
     
-    // Mostrar el botón Agenda Múltiple solo para Ultra y Admin
+    // Mostrar el botón Agenda Múltiple (Calendario compartido) solo para Pro, Ultra y Admin
     const btnAgendaMultiple = document.getElementById('tabAgendaMultiple');
     if (btnAgendaMultiple) {
-        if (isAdmin || planUsuario === 'ultra') {
+        if (isAdmin || planUsuario === 'ultra' || planUsuario === 'pro') {
             btnAgendaMultiple.classList.remove('hidden');
         } else {
             btnAgendaMultiple.classList.add('hidden');
@@ -1236,12 +1236,7 @@ showAddPatientBtn.addEventListener('click', async () => {
     const planUsuario = window.planUsuario || 'gratis';
     const cantidadPacientes = window.cantidadPacientes || 0;
     
-    // Si es usuario Gratis, mostrar página de precios
-    if (planUsuario === 'gratis') {
-        showMessage('Para agregar pacientes, actualiza a un plan Pro o Ultra.', 'info');
-        abrirModalPrecios();
-        return;
-    }
+    console.log(`🔍 Debug Agregar Paciente - Plan: ${planUsuario}, Cantidad actual: ${cantidadPacientes}`);
     
     // Si es derivador, mostrar página de precios
     if (window.isDerivador) {
@@ -1250,19 +1245,27 @@ showAddPatientBtn.addEventListener('click', async () => {
         return;
     }
     
-    // Verificar límites para plan Pro
-    if (planUsuario === 'pro') {
-        const esEspecial = esUsuarioEspecial(user.displayName, user.email);
-        const limitePacientes = esEspecial ? 10 : 3;
-        
-        if (cantidadPacientes >= limitePacientes) {
-            const mensaje = esEspecial 
-                ? `Has alcanzado el límite de ${limitePacientes} pacientes. Actualiza a Ultra para pacientes ilimitados.`
-                : 'Has alcanzado el límite de 3 pacientes para el plan Pro. Actualiza a Ultra para pacientes ilimitados.';
-            showMessage(mensaje, 'error');
+    // Si es usuario Gratis, verificar límite de 3 pacientes
+    if (planUsuario === 'gratis') {
+        if (cantidadPacientes >= 3) {
+            showMessage('Has alcanzado el límite de 3 pacientes para el plan Gratis. Actualiza a Pro o Ultra para más pacientes.', 'info');
             abrirModalPrecios();
             return;
         }
+    }
+    
+    // Verificar límites para plan Pro (10 pacientes)
+    if (planUsuario === 'pro') {
+        if (cantidadPacientes >= 10) {
+            showMessage('Has alcanzado el límite de 10 pacientes para el plan Pro. Actualiza a Ultra para pacientes ilimitados.', 'error');
+            abrirModalPrecios();
+            return;
+        }
+    }
+    
+    // Plan Ultra y Admin no tienen límites
+    if (planUsuario === 'ultra' || planUsuario === 'admin') {
+        console.log(`✅ Usuario ${planUsuario} - Sin límite de pacientes`);
     }
     
     addPatientModal.classList.remove('hidden');
@@ -2374,6 +2377,7 @@ async function showAdminPanel() {
                           <button onclick="showEditPatientModal('${fichaPacienteId}', ${JSON.stringify(p).replace(/"/g, '&quot;')})" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
                               ✏️ Editar
                           </button>
+                          ${isAdmin ? `
                           <button onclick="abrirModalDerivarSeguro(this)" 
                                   data-paciente-id="${fichaPacienteId}" 
                                   data-paciente-nombre="${(p.nombre || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}" 
@@ -2381,6 +2385,7 @@ async function showAdminPanel() {
                                   class="bg-orange-600 hover:bg-orange-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
                               🔄 Derivar
                           </button>
+                          ` : ''}
                       </div>
                       ${isAdmin ? `
                       <button onclick="eliminarPaciente('${fichaPacienteId}')" class="bg-red-600 hover:bg-red-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1 w-full">
@@ -2403,12 +2408,7 @@ async function showAdminPanel() {
             const planUsuario = window.planUsuario || 'gratis';
             const cantidadPacientes = window.cantidadPacientes || 0;
             
-            // Si es usuario Gratis, mostrar página de precios
-            if (planUsuario === 'gratis') {
-              showMessage('Para agregar pacientes, actualiza a un plan Pro o Ultra.', 'info');
-              abrirModalPrecios();
-              return;
-            }
+            console.log(`🔍 Debug Agregar Paciente (Admin) - Plan: ${planUsuario}, Cantidad actual: ${cantidadPacientes}`);
             
             // Si es derivador, mostrar página de precios
             if (window.isDerivador) {
@@ -2417,19 +2417,27 @@ async function showAdminPanel() {
               return;
             }
             
-            // Verificar límites para plan Pro
-            if (planUsuario === 'pro') {
-              const esEspecial = esUsuarioEspecial(user.displayName, user.email);
-              const limitePacientes = esEspecial ? 10 : 3;
-              
-              if (cantidadPacientes >= limitePacientes) {
-                const mensaje = esEspecial 
-                  ? `Has alcanzado el límite de ${limitePacientes} pacientes. Actualiza a Ultra para pacientes ilimitados.`
-                  : 'Has alcanzado el límite de 3 pacientes para el plan Pro. Actualiza a Ultra para pacientes ilimitados.';
-                showMessage(mensaje, 'error');
+            // Si es usuario Gratis, verificar límite de 3 pacientes
+            if (planUsuario === 'gratis') {
+              if (cantidadPacientes >= 3) {
+                showMessage('Has alcanzado el límite de 3 pacientes para el plan Gratis. Actualiza a Pro o Ultra para más pacientes.', 'info');
                 abrirModalPrecios();
                 return;
               }
+            }
+            
+            // Verificar límites para plan Pro (10 pacientes)
+            if (planUsuario === 'pro') {
+              if (cantidadPacientes >= 10) {
+                showMessage('Has alcanzado el límite de 10 pacientes para el plan Pro. Actualiza a Ultra para pacientes ilimitados.', 'error');
+                abrirModalPrecios();
+                return;
+              }
+            }
+            
+            // Plan Ultra y Admin no tienen límites
+            if (planUsuario === 'ultra' || planUsuario === 'admin') {
+              console.log(`✅ Usuario ${planUsuario} (Admin) - Sin límite de pacientes`);
             }
             
             addPatientModal.classList.remove('hidden');
@@ -3083,9 +3091,9 @@ async function mostrarAgendaMultiple() {
     const planUsuario = window.planUsuario || 'gratis';
     const isAdmin = window.isAdmin || false;
     
-    // Solo admin y ultra pueden ver agenda múltiple
-    if (!isAdmin && planUsuario !== 'ultra') {
-        showMessage('La agenda múltiple está disponible solo para el plan Ultra. Actualiza tu plan para acceder a esta función.', 'error');
+    // Solo admin, pro y ultra pueden ver agenda múltiple (calendario compartido)
+    if (!isAdmin && planUsuario !== 'ultra' && planUsuario !== 'pro') {
+        showMessage('El calendario compartido está disponible solo para los planes Pro y Ultra. Actualiza tu plan para acceder a esta función.', 'error');
         abrirModalPrecios();
         return;
     }
@@ -5739,7 +5747,8 @@ async function verificarSiEsAdmin(uid) {
     }
 }
 
-// Función para verificar si el usuario es derivador
+// Función para verificar si el usuario es derivador (solo para mostrar tag visual)
+// NOTA: Este campo NO otorga permisos de derivación, solo los admins pueden derivar
 async function verificarSiEsDerivador(uid) {
     try {
         const userDoc = await window.firebaseDB.collection('usuarios').doc(uid).get();
@@ -5763,9 +5772,18 @@ async function verificarPlanUsuario(uid) {
         console.log(`📊 Datos del usuario ${uid}:`, userData);
         
         // Priorizar Ultra sobre Admin para mostrar el tag correcto
-        if (userData.isUltra === true) return 'ultra';
-        if (userData.isPro === true) return 'pro';
-        if (userData.isAdmin === true) return 'admin';
+        if (userData.isUltra === true) {
+            console.log(`✅ Usuario ${uid} detectado como Ultra`);
+            return 'ultra';
+        }
+        if (userData.isPro === true) {
+            console.log(`✅ Usuario ${uid} detectado como Pro`);
+            return 'pro';
+        }
+        if (userData.isAdmin === true) {
+            console.log(`✅ Usuario ${uid} detectado como Admin`);
+            return 'admin';
+        }
         
         console.log(`ℹ️ Usuario ${uid} no tiene plan específico, usando 'gratis'`);
         return 'gratis';
@@ -5779,8 +5797,9 @@ async function verificarPlanUsuario(uid) {
 async function contarPacientesUsuario(uid) {
     try {
         const pacientesSnapshot = await window.firebaseDB.collection('pacientes')
-            .where('profesionalId', '==', uid)
+            .where('owner', '==', uid)
             .get();
+        console.log(`📊 Contando pacientes para usuario ${uid}: ${pacientesSnapshot.size} pacientes encontrados`);
         return pacientesSnapshot.size;
     } catch (error) {
         console.error('Error contando pacientes:', error);
@@ -5817,7 +5836,7 @@ async function agregarTagsUsuario(uid, displayName) {
             tags += ' <span class="text-xs bg-gray-100 text-gray-700 rounded px-2 py-0.5 ml-2 cursor-pointer hover:bg-gray-200 transition-colors" onclick="abrirModalPrecios()" title="Ver planes disponibles">Gratis</span>';
         }
         
-        // Agregar tag de derivador
+        // Agregar tag de derivador (solo visual, no da permisos de derivación)
         if (isDerivador) {
             tags += ' <span class="text-xs bg-blue-100 text-blue-700 rounded px-2 py-0.5 ml-2">Derivar</span>';
         }
@@ -5829,7 +5848,8 @@ async function agregarTagsUsuario(uid, displayName) {
     }
 }
 
-// Función helper para agregar tag "Derivar" si el usuario es derivador (mantener compatibilidad)
+// Función helper para agregar tag "Derivar" si el usuario es derivador (solo visual)
+// NOTA: Este campo NO otorga permisos de derivación, solo los admins pueden derivar
 async function agregarTagDerivador(uid, displayName) {
     try {
         const isDerivador = await verificarSiEsDerivador(uid);
@@ -5887,8 +5907,8 @@ function configurarTogglePrecios() {
         toggleAnual.classList.add('text-gray-600', 'dark:text-gray-400');
         
         // Actualizar precios
-        if (precioPro) precioPro.textContent = `$${preciosMensuales.pro} USD`;
-        if (precioUltra) precioUltra.textContent = `$${preciosMensuales.ultra} USD`;
+        if (precioPro) precioPro.textContent = `u$s ${preciosMensuales.pro}`;
+        if (precioUltra) precioUltra.textContent = `u$s ${preciosMensuales.ultra}`;
         if (periodoPro) periodoPro.textContent = 'por mes';
         if (periodoUltra) periodoUltra.textContent = 'por mes';
     });
@@ -5901,8 +5921,8 @@ function configurarTogglePrecios() {
         toggleMensual.classList.add('text-gray-600', 'dark:text-gray-400');
         
         // Actualizar precios
-        if (precioPro) precioPro.textContent = `$${preciosAnuales.pro} USD`;
-        if (precioUltra) precioUltra.textContent = `$${preciosAnuales.ultra} USD`;
+        if (precioPro) precioPro.textContent = `u$s ${preciosAnuales.pro}`;
+        if (precioUltra) precioUltra.textContent = `u$s ${preciosAnuales.ultra}`;
         if (periodoPro) periodoPro.textContent = 'por año';
         if (periodoUltra) periodoUltra.textContent = 'por año';
     });
@@ -8449,7 +8469,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Event listener para mostrar/ocultar opción de WhatsApp según paciente seleccionado
+    // Event listener para mostrar/ocultar opción de WhatsApp según paciente seleccionado y plan
     const selectPaciente = document.getElementById('selectPaciente');
     const checkboxRecordatorio = document.getElementById('crearRecordatorioWhatsApp');
     const containerRecordatorio = checkboxRecordatorio ? checkboxRecordatorio.closest('div').parentElement : null;
@@ -8466,7 +8486,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         const pacienteData = pacienteDoc.data();
                         const tieneTelefono = pacienteData.telefono && pacienteData.telefono.trim() !== '';
                         
-                        if (tieneTelefono) {
+                        // Verificar plan del usuario para mostrar opción de WhatsApp
+                        const planUsuario = window.planUsuario || 'gratis';
+                        const isAdmin = window.isAdmin || false;
+                        const puedeUsarWhatsApp = isAdmin || planUsuario === 'ultra';
+                        
+                        if (tieneTelefono && puedeUsarWhatsApp) {
                             containerRecordatorio.style.display = 'block';
                             checkboxRecordatorio.checked = true;
                         } else {
@@ -8491,6 +8516,15 @@ document.addEventListener('DOMContentLoaded', function() {
 async function crearRecordatorioWhatsApp(pacienteId, fechaSesion, sesionId) {
     try {
         console.log('📅 Creando recordatorio WhatsApp para sesión:', sesionId);
+        
+        // Verificar que el usuario tenga permisos para usar WhatsApp (solo Ultra y Admin)
+        const planUsuario = window.planUsuario || 'gratis';
+        const isAdmin = window.isAdmin || false;
+        
+        if (!isAdmin && planUsuario !== 'ultra') {
+            console.warn('⚠️ Usuario sin permisos para crear recordatorios WhatsApp');
+            return;
+        }
         
         // Obtener datos del paciente
         const pacienteDoc = await window.firebaseDB.collection('pacientes').doc(pacienteId).get();
@@ -8853,6 +8887,7 @@ window.abrirModalDerivarSeguro = function(buttonElement) {
     console.log('🔍 arguments:', arguments);
     
     // Verificar permisos de administrador
+    const isAdmin = window.isAdmin || false;
     if (!isAdmin) {
         console.error('🚫 ACCESO DENEGADO: Solo administradores pueden derivar pacientes');
         showMessage('❌ Acceso denegado: Esta funcionalidad está reservada para administradores', 'error');
