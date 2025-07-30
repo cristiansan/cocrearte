@@ -1229,6 +1229,9 @@ window.hideAddPatientModal = function() {
         spanAgregar.classList.add('hidden');
         spanAgregar.title = '';
     }
+    
+    // Limpiar pestañas del formulario
+    limpiarPestanasFormulario();
 };
 
 showAddPatientBtn.addEventListener('click', async () => {
@@ -9462,3 +9465,108 @@ window.debugDerivacion = function() {
 };
 
 // === FUNCIONES DE PERFIL MOVIDAS A perfil.html ===
+
+// === FUNCIONALIDAD DE PESTAÑAS PARA FORMULARIO DE AGREGAR PACIENTE ===
+
+// Función para inicializar las pestañas del formulario
+function inicializarPestanasFormulario() {
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const targetTab = button.getAttribute('data-tab');
+            
+            // Remover clases activas de todos los botones y contenidos
+            tabButtons.forEach(btn => {
+                btn.classList.remove('active', 'border-primary-600', 'text-primary-600');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+            
+            tabContents.forEach(content => {
+                content.classList.add('hidden');
+                content.classList.remove('active');
+            });
+            
+            // Activar el botón y contenido seleccionado
+            button.classList.add('active', 'border-primary-600', 'text-primary-600');
+            button.classList.remove('border-transparent', 'text-gray-500');
+            
+            const targetContent = document.getElementById(`tab-${targetTab}`);
+            if (targetContent) {
+                targetContent.classList.remove('hidden');
+                targetContent.classList.add('active');
+            }
+        });
+    });
+}
+
+// Función para mostrar la primera pestaña por defecto
+function mostrarPrimeraPestana() {
+    const firstTabButton = document.querySelector('.tab-button[data-tab="basica"]');
+    const firstTabContent = document.getElementById('tab-basica');
+    
+    if (firstTabButton && firstTabContent) {
+        firstTabButton.click();
+    }
+}
+
+// Agregar event listener para inicializar pestañas cuando se abra el modal
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar pestañas cuando se abra el modal de agregar paciente
+    const addPatientModal = document.getElementById('addPatientModal');
+    if (addPatientModal) {
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    if (!addPatientModal.classList.contains('hidden')) {
+                        inicializarPestanasFormulario();
+                        mostrarPrimeraPestana();
+                    }
+                }
+            });
+        });
+        
+        observer.observe(addPatientModal, {
+            attributes: true,
+            attributeFilter: ['class']
+        });
+    }
+});
+
+// Función para limpiar las pestañas cuando se cierre el modal
+function limpiarPestanasFormulario() {
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    // Resetear a la primera pestaña
+    tabButtons.forEach(btn => {
+        btn.classList.remove('active', 'border-primary-600', 'text-primary-600');
+        btn.classList.add('border-transparent', 'text-gray-500');
+    });
+    
+    tabContents.forEach(content => {
+        content.classList.add('hidden');
+        content.classList.remove('active');
+    });
+    
+    // Activar la primera pestaña
+    const firstTabButton = document.querySelector('.tab-button[data-tab="basica"]');
+    const firstTabContent = document.getElementById('tab-basica');
+    
+    if (firstTabButton && firstTabContent) {
+        firstTabButton.classList.add('active', 'border-primary-600', 'text-primary-600');
+        firstTabButton.classList.remove('border-transparent', 'text-gray-500');
+        firstTabContent.classList.remove('hidden');
+        firstTabContent.classList.add('active');
+    }
+}
+
+// Sobrescribir la función hideAddPatientModal para limpiar pestañas
+const originalHideAddPatientModal = window.hideAddPatientModal;
+window.hideAddPatientModal = function() {
+    limpiarPestanasFormulario();
+    if (originalHideAddPatientModal) {
+        originalHideAddPatientModal();
+    }
+};

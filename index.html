@@ -98,6 +98,45 @@
         max-width: 1200px;
         width: 96vw;
         min-width: 320px;
+      }
+      
+      /* Estilos para las pestañas del formulario */
+      .tab-button {
+        transition: all 0.3s ease;
+        position: relative;
+        cursor: pointer;
+      }
+      
+      .tab-button:hover {
+        transform: translateY(-1px);
+      }
+      
+      .tab-button.active {
+        font-weight: 600;
+      }
+      
+      .tab-content {
+        transition: opacity 0.3s ease;
+      }
+      
+      .tab-content.active {
+        opacity: 1;
+      }
+      
+      .tab-content.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      
+      /* Responsive para pestañas en móviles */
+      @media (max-width: 768px) {
+        .tab-button {
+          font-size: 0.875rem;
+          padding: 0.5rem 0.25rem;
+        }
+      }
+      
+      .quill-fullscreen-editor {
         min-height: 60vh;
         height: 80vh;
         display: flex;
@@ -979,64 +1018,84 @@
 
     <!-- Modal para agregar paciente -->
     <div id="addPatientModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-start sm:items-center justify-center z-50 hidden p-2 sm:p-4 overflow-y-auto">
-        <div class="bg-white dark:bg-darkcard dust:bg-dustcard rounded-xl shadow-lg w-full max-w-2xl relative border dark:border-darkborder dust:border-dustborder max-h-[95vh] my-4 sm:my-8 flex flex-col" style="max-width:calc(100vw - 20px); max-height:calc(100vh - 20px); margin:10px;">
+        <div class="bg-white dark:bg-darkcard dust:bg-dustcard rounded-xl shadow-lg w-full max-w-5xl relative border dark:border-darkborder dust:border-dustborder max-h-[95vh] my-4 sm:my-8 flex flex-col" style="max-width:calc(100vw - 20px); max-height:calc(100vh - 20px); margin:10px;">
             <div class="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-darkborder shrink-0">
                 <h3 class="text-lg sm:text-xl font-bold text-primary-600">Agregar Paciente</h3>
                 <button onclick="hideAddPatientModal()" class="text-gray-400 hover:text-gray-700 text-2xl min-h-[48px] min-w-[48px] flex items-center justify-center">×</button>
             </div>
             <div class="flex-1 overflow-y-auto p-4 sm:p-6">
             <form id="addPatientForm" class="space-y-4 sm:space-y-6">
-                <!-- Motivo de Consulta -->
-                <div class="border-b pb-4 mb-4">
-                    <h4 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">💭 Motivo de Consulta</h4>
-                    <div>
-                        <label class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-2">Seleccionar motivo(s) de consulta:</label>
-                        <div id="patientMotivoCheckboxes" class="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-60 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-800">
-                            <!-- Los checkboxes se cargarán dinámicamente desde JavaScript -->
-                        </div>
-                    </div>
-                    
-                    <!-- Botón para abrir modal del Nomenclador CIE-10 -->
-                    <div class="flex justify-start mt-4">
-                        <button type="button" id="btnAbrirNomencladorAgregar" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg text-sm flex items-center gap-2 transition-colors">
-                            📋 Clasificación CIE-10
-                            <span id="nomencladorSeleccionadoAgregar" class="text-xs bg-blue-500 px-2 py-1 rounded hidden"></span>
+                <!-- Pestañas de navegación -->
+                <div class="border-b border-gray-200 dark:border-darkborder mb-6">
+                    <nav class="flex space-x-8" aria-label="Tabs">
+                        <button type="button" class="tab-button active border-b-2 border-primary-600 py-2 px-1 text-sm font-medium text-primary-600" data-tab="basica">
+                            📋 Información Básica
                         </button>
+                        <button type="button" class="tab-button border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="contacto">
+                            📞 Contacto
+                        </button>
+                        <button type="button" class="tab-button border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="educativa">
+                            🎓 Educativa
+                        </button>
+                        <button type="button" class="tab-button border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="familiar">
+                            👨‍👩‍👧‍👦 Familiar
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Pestaña: Información Básica -->
+                <div id="tab-basica" class="tab-content active">
+                    <!-- Motivo de Consulta -->
+                    <div class="mb-6">
+                        <h4 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">💭 Motivo de Consulta</h4>
+                        <div>
+                            <label class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-2">Seleccionar motivo(s) de consulta:</label>
+                            <div id="patientMotivoCheckboxes" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-40 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-800">
+                                <!-- Los checkboxes se cargarán dinámicamente desde JavaScript -->
+                            </div>
+                        </div>
+                        
+                        <!-- Botón para abrir modal del Nomenclador CIE-10 -->
+                        <div class="flex justify-start mt-4">
+                            <button type="button" id="btnAbrirNomencladorAgregar" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg text-sm flex items-center gap-2 transition-colors">
+                                📋 Clasificación CIE-10
+                                <span id="nomencladorSeleccionadoAgregar" class="text-xs bg-blue-500 px-2 py-1 rounded hidden"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Información Personal -->
+                    <div>
+                        <h4 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">📋 Información Personal</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div>
+                                <label for="patientName" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Nombre Completo *</label>
+                                <input id="patientName" name="patientName" type="text" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder dust:bg-dustbg dust:text-dusttext dust:border-dustborder" placeholder="Nombre completo">
+                            </div>
+                            <div>
+                                <label for="patientDni" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">DNI</label>
+                                <input id="patientDni" name="patientDni" type="text" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Número de documento">
+                            </div>
+                            <div>
+                                <label for="patientFechaNacimiento" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Fecha de Nacimiento</label>
+                                <input id="patientFechaNacimiento" name="patientFechaNacimiento" type="date" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder">
+                            </div>
+                            <div>
+                                <label for="patientSexo" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Sexo</label>
+                                <select id="patientSexo" name="patientSexo" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="masculino">Masculino</option>
+                                    <option value="femenino">Femenino</option>
+                                    <option value="no-binario">No binario</option>
+                                    <option value="prefiero-no-decir">Prefiero no decir</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Información Personal -->
-                <div class="border-b pb-4 mb-4">
-                    <h4 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">📋 Información Personal</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div>
-                            <label for="patientName" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Nombre Completo *</label>
-                            <input id="patientName" name="patientName" type="text" required class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder dust:bg-dustbg dust:text-dusttext dust:border-dustborder" placeholder="Nombre completo">
-                        </div>
-                        <div>
-                            <label for="patientDni" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">DNI</label>
-                            <input id="patientDni" name="patientDni" type="text" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder" placeholder="Número de documento">
-                        </div>
-                        <div>
-                            <label for="patientFechaNacimiento" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Fecha de Nacimiento</label>
-                            <input id="patientFechaNacimiento" name="patientFechaNacimiento" type="date" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder">
-                        </div>
-                        <div>
-                            <label for="patientSexo" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Sexo</label>
-                            <select id="patientSexo" name="patientSexo" class="input input-bordered w-full dark:bg-darkbg dark:text-darktext dark:border-darkborder">
-                                <option value="">Seleccionar...</option>
-                                <option value="masculino">Masculino</option>
-                                <option value="femenino">Femenino</option>
-                                <option value="no-binario">No binario</option>
-                                <option value="prefiero-no-decir">Prefiero no decir</option>
-                            </select>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- Información de Contacto -->
-                <div class="border-b pb-4 mb-4">
+                <!-- Pestaña: Contacto -->
+                <div id="tab-contacto" class="tab-content hidden">
                     <h4 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">📞 Información de Contacto</h4>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div>
@@ -1062,8 +1121,8 @@
                     </div>
                 </div>
 
-                <!-- Información Educativa -->
-                <div class="border-b pb-4 mb-4">
+                <!-- Pestaña: Educativa -->
+                <div id="tab-educativa" class="tab-content hidden">
                     <h4 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">🎓 Información Educativa</h4>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div>
@@ -1129,8 +1188,8 @@
                     </div>
                 </div>
 
-                <!-- Datos de Familia -->
-                <div class="border-b pb-4 mb-4">
+                <!-- Pestaña: Familiar -->
+                <div id="tab-familiar" class="tab-content hidden">
                     <h4 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">👨‍👩‍👧‍👦 Datos de Familia</h4>
                     
                     <!-- Información del Padre -->
