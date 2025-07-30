@@ -1282,6 +1282,7 @@ showAddPatientBtn.addEventListener('click', async () => {
 
 // Cargar pacientes desde Firestore
 async function loadPatients(uid) {
+    console.log('📋 Cargando pacientes para UID:', uid);
     pacientesLoader.classList.remove('hidden');
     patientsList.innerHTML = '';
     noPatientsMsg.classList.add('hidden');
@@ -1310,7 +1311,10 @@ async function loadPatients(uid) {
     });
     
     // Renderizar los pacientes ordenados
+    console.log(`📋 Total de pacientes a renderizar: ${pacientes.length}`);
+    
     for (const { id, data: p } of pacientes) {
+        console.log(`🎯 Renderizando paciente: ${p.nombre} (ID: ${id})`);
         const div = document.createElement('div');
         
         // Verificar si el paciente fue derivado
@@ -1333,9 +1337,27 @@ async function loadPatients(uid) {
         div.className = esDerivado ? `${baseClasses} ${derivadoClasses}` : `${baseClasses} ${normalClasses}`;
         div.setAttribute('data-paciente-id', id);
         
+        // Crear avatar del paciente
+        let avatarHTML = '';
+        console.log(`👤 Paciente ${p.nombre}: foto existe = ${!!p.foto}`);
+        console.log(`🔍 Datos completos del paciente ${p.nombre}:`, p);
+        
+        if (p.foto) {
+            console.log(`📸 Mostrando foto para ${p.nombre}`);
+            console.log(`📸 URL de la foto:`, p.foto.substring(0, 100) + '...');
+            avatarHTML = `<img src="${p.foto}" alt="Foto de ${p.nombre}" class="w-12 h-12 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600">`;
+        } else {
+            console.log(`🎨 Mostrando avatar por defecto para ${p.nombre} - NO TIENE FOTO`);
+            // Avatar por defecto con iniciales
+            const iniciales = p.nombre ? p.nombre.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) : 'P';
+            avatarHTML = `<div class="w-12 h-12 rounded-full bg-primary-600 text-white flex items-center justify-center font-bold text-sm border-2 border-gray-200 dark:border-gray-600">${iniciales}</div>`;
+        }
+        
         let contenidoHTML = `
-            <div>
-                <div class="font-bold text-[#2d3748] dark:text-gray-100">${p.nombre || ''}</div>
+            <div class="flex items-center gap-3">
+                ${avatarHTML}
+                <div>
+                    <div class="font-bold text-[#2d3748] dark:text-gray-100">${p.nombre || ''}</div>
         `;
         
         // Agregar información de derivación si corresponde
@@ -1347,7 +1369,7 @@ async function loadPatients(uid) {
             `;
         }
         
-        contenidoHTML += `</div>`;
+        contenidoHTML += `</div></div>`;
         div.innerHTML = contenidoHTML;
         patientsList.appendChild(div);
     }
@@ -1401,6 +1423,8 @@ addPatientForm.addEventListener('submit', async (e) => {
         email: addPatientForm.patientPadreEmail.value,
         direccion: addPatientForm.patientPadreDireccion.value,
         ocupacion: addPatientForm.patientPadreOcupacion.value,
+        nacionalidad: addPatientForm.patientPadreNacionalidad.value,
+        estudios: addPatientForm.patientPadreEstudios.value,
         estadoCivil: addPatientForm.patientPadreEstadoCivil.value,
         salud: addPatientForm.patientPadreSalud.value
     };
@@ -1412,6 +1436,8 @@ addPatientForm.addEventListener('submit', async (e) => {
         email: addPatientForm.patientMadreEmail.value,
         direccion: addPatientForm.patientMadreDireccion.value,
         ocupacion: addPatientForm.patientMadreOcupacion.value,
+        nacionalidad: addPatientForm.patientMadreNacionalidad.value,
+        estudios: addPatientForm.patientMadreEstudios.value,
         estadoCivil: addPatientForm.patientMadreEstadoCivil.value,
         salud: addPatientForm.patientMadreSalud.value
     };
@@ -1421,6 +1447,9 @@ addPatientForm.addEventListener('submit', async (e) => {
 
     // Obtener datos del nomenclador CIE-10 si fueron seleccionados
     const datosCIE10 = obtenerDatosCIE10('agregar');
+
+    // Obtener la foto del paciente si existe
+    const fotoPaciente = patientPhotoData;
 
     // Si eres admin y tienes seleccionado un profesional, asigna el paciente a ese profesional
     let ownerUid = user.uid;
@@ -1437,6 +1466,8 @@ addPatientForm.addEventListener('submit', async (e) => {
             fechaNacimiento,
             sexo,
             lugarNacimiento,
+            // Foto del paciente
+            foto: fotoPaciente,
             // Información de contacto
             email,
             telefono,
@@ -1476,6 +1507,11 @@ addPatientForm.addEventListener('submit', async (e) => {
             spanAgregar.textContent = '';
             spanAgregar.classList.add('hidden');
         }
+        
+        // Limpiar foto del paciente
+        patientPhotoData = null;
+        patientPhotoBlob = null;
+        
         loadPatients(ownerUid); // Recarga la lista del profesional correcto
         showMessage('Paciente agregado exitosamente', 'success');
     } catch (error) {
@@ -1503,30 +1539,8 @@ window.hideFichaPacienteModal = function() {
     fichaPacienteRef = null;
 };
 
-// Mostrar ficha clínica al hacer clic en paciente
-patientsList.addEventListener('click', async (e) => {
-    const div = e.target.closest('[data-paciente-id]');
-    if (!div) return;
-    fichaPacienteId = div.getAttribute('data-paciente-id');
-    fichaPacienteRef = window.firebaseDB.collection('pacientes').doc(fichaPacienteId);
-    fichaLoader.classList.remove('hidden');
-    fichaPacienteDatos.innerHTML = '';
-    sesionesList.innerHTML = '';
-    fichaPacienteModal.classList.remove('hidden');
-    
-    // Limpiar archivos seleccionados al abrir modal
-    if (typeof limpiarArchivos === 'function') {
-        limpiarArchivos();
-    }
-    
-    // Cargar datos paciente
-    const doc = await fichaPacienteRef.get();
-    if (!doc.exists) {
-        fichaLoader.classList.add('hidden');
-        return;
-    }
-    const p = doc.data();
-    
+// Función para generar el HTML de la ficha clínica
+function generarHTMLFichaClinica(p, pacienteId) {
     // Calcular edad si hay fecha de nacimiento
     let edadTexto = '';
     if (p.fechaNacimiento) {
@@ -1536,10 +1550,26 @@ patientsList.addEventListener('click', async (e) => {
         edadTexto = ` (${edad} años)`;
     }
     
-    fichaPacienteDatos.innerHTML = `
+    // Crear avatar del paciente para la ficha
+    let avatarHTML = '';
+    if (p.foto) {
+        avatarHTML = `<img src="${p.foto}" alt="Foto de ${p.nombre}" class="w-20 h-20 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600">`;
+    } else {
+        // Avatar por defecto con iniciales
+        const iniciales = p.nombre ? p.nombre.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) : 'P';
+        avatarHTML = `<div class="w-20 h-20 rounded-full bg-primary-600 text-white flex items-center justify-center font-bold text-xl border-2 border-gray-200 dark:border-gray-600">${iniciales}</div>`;
+    }
+    
+    return `
         <div class="flex justify-between items-start mb-2">
             <div class="flex-1">
-                <div class="font-bold text-[#2d3748] dark:text-gray-100 text-lg mb-2">${p.nombre || ''}${edadTexto}</div>
+                <div class="flex items-center gap-4 mb-3">
+                    ${avatarHTML}
+                    <div>
+                        <div class="font-bold text-[#2d3748] dark:text-gray-100 text-lg">${p.nombre || ''}${edadTexto}</div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">ID: ${pacienteId}</div>
+                    </div>
+                </div>
                 
                 <!-- Información Personal -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
@@ -1566,7 +1596,7 @@ patientsList.addEventListener('click', async (e) => {
                 
                 <!-- Información Familiar -->
                 <div class="mb-3 border-t pt-3">
-                    <button onclick="abrirModalInfoHermanos('${fichaPacienteId}')" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors w-full max-w-xs">
+                    <button onclick="abrirModalInfoHermanos('${pacienteId}')" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors w-full max-w-xs">
                         👫 Info. Hermanos ${p.infoHermanos && p.infoHermanos.length > 0 ? '✓' : ''}
                     </button>
                 </div>
@@ -1593,30 +1623,56 @@ patientsList.addEventListener('click', async (e) => {
                 ` : ''}
             </div>
             <div class="flex flex-col gap-2">
-                <div class="flex flex-col gap-2 items-end -mt-4">
-                    <div class="flex gap-2 w-full">
-                        <button onclick="showEditPatientModal('${fichaPacienteId}', ${JSON.stringify(p).replace(/"/g, '&quot;')})" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
-                            ✏️ Editar
-                        </button>
-                        ${isAdmin ? `
-                        <button onclick="abrirModalDerivarSeguro(this)"
-                                data-paciente-id="${fichaPacienteId}"
-                                data-paciente-nombre="${(p.nombre || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
-                                data-paciente-email="${(p.email || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
-                                class="bg-orange-600 hover:bg-orange-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
-                            🔄 Derivar
-                        </button>
-                        ` : ''}
-                    </div>
-                    ${isAdmin ? `
-                    <button onclick="eliminarPaciente('${fichaPacienteId}')" class="bg-red-600 hover:bg-red-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1 w-full">
-                        🗑️ Eliminar paciente
+                <div class="flex gap-2">
+                    <button onclick="showEditPatientModal('${pacienteId}', ${JSON.stringify(p).replace(/"/g, '&quot;')})" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
+                        ✏️ Editar
+                    </button>
+                    ${window.isAdmin ? `
+                    <button onclick="abrirModalDerivarSeguro(this)"
+                            data-paciente-id="${pacienteId}"
+                            data-paciente-nombre="${(p.nombre || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
+                            data-paciente-email="${(p.email || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
+                            class="bg-orange-600 hover:bg-orange-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
+                        🔄 Derivar
                     </button>
                     ` : ''}
                 </div>
+                ${window.isAdmin ? `
+                <button onclick="eliminarPaciente('${pacienteId}')" class="bg-red-600 hover:bg-red-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1 w-full">
+                    🗑️ Eliminar
+                </button>
+                ` : ''}
             </div>
         </div>
     `;
+}
+
+// Mostrar ficha clínica al hacer clic en paciente
+patientsList.addEventListener('click', async (e) => {
+    const div = e.target.closest('[data-paciente-id]');
+    if (!div) return;
+    fichaPacienteId = div.getAttribute('data-paciente-id');
+    fichaPacienteRef = window.firebaseDB.collection('pacientes').doc(fichaPacienteId);
+    fichaLoader.classList.remove('hidden');
+    fichaPacienteDatos.innerHTML = '';
+    sesionesList.innerHTML = '';
+    fichaPacienteModal.classList.remove('hidden');
+    
+    // Limpiar archivos seleccionados al abrir modal
+    if (typeof limpiarArchivos === 'function') {
+        limpiarArchivos();
+    }
+    
+    // Cargar datos paciente
+    const doc = await fichaPacienteRef.get();
+    if (!doc.exists) {
+        fichaLoader.classList.add('hidden');
+        return;
+    }
+    const p = doc.data();
+    
+    // Generar HTML de la ficha clínica
+    fichaPacienteDatos.innerHTML = generarHTMLFichaClinica(p, fichaPacienteId);
     await loadSesiones();
     fichaLoader.classList.add('hidden');
 });
@@ -4887,6 +4943,10 @@ window.showEditPatientModal = function(pacienteId, pacienteData) {
     pacienteEditandoId = pacienteId;
     pacienteEditandoRef = window.firebaseDB.collection('pacientes').doc(pacienteId);
     
+    console.log('🔧 Variables de edición establecidas:');
+    console.log('🔧 pacienteEditandoId:', pacienteEditandoId);
+    console.log('🔧 pacienteEditandoRef:', pacienteEditandoRef);
+    
     // Verificar que los campos existen
     const nameField = document.getElementById('editPatientName');
     const dniField = document.getElementById('editPatientDni');
@@ -4919,57 +4979,75 @@ window.showEditPatientModal = function(pacienteId, pacienteData) {
         motivo: !!motivoCheckboxesContainer
     });
     
-    // Cargar opciones del selector de motivos ANTES de prellenar los campos
-    cargarOpcionesMotivoConsulta();
-    
-    // Prellenar los campos con los datos actuales
-    if (nameField) nameField.value = pacienteData.nombre || '';
-    if (dniField) dniField.value = pacienteData.dni || '';
-    if (fechaNacimientoField) fechaNacimientoField.value = pacienteData.fechaNacimiento || '';
-    if (sexoField) sexoField.value = pacienteData.sexo || '';
-    if (lugarNacimientoField) lugarNacimientoField.value = pacienteData.lugarNacimiento || '';
-    if (emailField) emailField.value = pacienteData.email || '';
-    if (telefonoField) telefonoField.value = pacienteData.telefono || '';
-    if (contactoField) contactoField.value = pacienteData.contacto || '';
-    if (direccionField) direccionField.value = pacienteData.direccion || '';
-    if (educacionField) educacionField.value = pacienteData.educacion || '';
-    if (institutoField) institutoField.value = pacienteData.instituto || '';
-    
-    // Función para establecer motivos cuando los checkboxes estén listos
-    function establecerMotivosCuandoListos(intentos = 0) {
-        const checkboxesContainer = document.getElementById('editPatientMotivoCheckboxes');
-        const checkboxes = checkboxesContainer.querySelectorAll('input[type="checkbox"]');
+    // Función para cargar todos los datos del paciente
+    function cargarDatosPaciente() {
+        console.log('🔄 Cargando datos del paciente en el formulario...');
         
-        console.log('🔧 Verificando checkboxes...', checkboxes.length, 'intento:', intentos);
+        // Cargar opciones del selector de motivos ANTES de prellenar los campos
+        cargarOpcionesMotivoConsulta();
         
-        if (checkboxes.length > 0) {
-            console.log('🔧 Datos de motivos del paciente:', pacienteData.motivos);
-            console.log('🔧 Tipo de datos de motivos:', typeof pacienteData.motivos);
-            console.log('🔧 Es array:', Array.isArray(pacienteData.motivos));
-            establecerMotivosSeleccionados('editPatientMotivoCheckboxes', pacienteData.motivos || []);
-        } else if (intentos < 20) { // Máximo 20 intentos (1 segundo)
-            console.log('⏳ Checkboxes aún no están listos, reintentando...');
-            setTimeout(() => establecerMotivosCuandoListos(intentos + 1), 50);
+        // Prellenar los campos con los datos actuales
+        if (nameField) nameField.value = pacienteData.nombre || '';
+        if (dniField) dniField.value = pacienteData.dni || '';
+        if (fechaNacimientoField) fechaNacimientoField.value = pacienteData.fechaNacimiento || '';
+        if (sexoField) sexoField.value = pacienteData.sexo || '';
+        if (lugarNacimientoField) lugarNacimientoField.value = pacienteData.lugarNacimiento || '';
+        if (emailField) emailField.value = pacienteData.email || '';
+        if (telefonoField) telefonoField.value = pacienteData.telefono || '';
+        if (contactoField) contactoField.value = pacienteData.contacto || '';
+        if (direccionField) direccionField.value = pacienteData.direccion || '';
+        if (educacionField) educacionField.value = pacienteData.educacion || '';
+        if (institutoField) institutoField.value = pacienteData.instituto || '';
+        
+        // Función para establecer motivos cuando los checkboxes estén listos
+        function establecerMotivosCuandoListos(intentos = 0) {
+            const checkboxesContainer = document.getElementById('editPatientMotivoCheckboxes');
+            const checkboxes = checkboxesContainer.querySelectorAll('input[type="checkbox"]');
+            
+            console.log('🔧 Verificando checkboxes...', checkboxes.length, 'intento:', intentos);
+            
+            if (checkboxes.length > 0) {
+                console.log('🔧 Datos de motivos del paciente:', pacienteData.motivos);
+                console.log('🔧 Tipo de datos de motivos:', typeof pacienteData.motivos);
+                console.log('🔧 Es array:', Array.isArray(pacienteData.motivos));
+                establecerMotivosSeleccionados('editPatientMotivoCheckboxes', pacienteData.motivos || []);
+            } else if (intentos < 20) { // Máximo 20 intentos (1 segundo)
+                console.log('⏳ Checkboxes aún no están listos, reintentando...');
+                setTimeout(() => establecerMotivosCuandoListos(intentos + 1), 50);
+            } else {
+                console.error('❌ No se pudieron generar los checkboxes después de 20 intentos');
+            }
+        }
+        
+        // Iniciar el proceso de establecimiento de motivos
+        establecerMotivosCuandoListos();
+        
+        // Cargar datos de familia
+        cargarDatosFamilia(pacienteData, 'editar');
+        
+        // Precargar datos del nomenclador CIE-10 si existen
+        if (pacienteData.nomencladorCIE10) {
+            datosNomencladorSeleccionados.editar = pacienteData.nomencladorCIE10;
+            const spanEditar = document.getElementById('nomencladorSeleccionadoEditar');
+            if (spanEditar) {
+                spanEditar.textContent = pacienteData.nomencladorCIE10.codigo;
+                spanEditar.classList.remove('hidden');
+                spanEditar.title = `${pacienteData.nomencladorCIE10.codigo}: ${pacienteData.nomencladorCIE10.descripcion}`;
+            }
+        }
+        
+        // Cargar foto existente del paciente si existe
+        if (pacienteData.foto) {
+            console.log('📸 Cargando foto existente del paciente...');
+            console.log('📸 Tipo de foto:', typeof pacienteData.foto);
+            console.log('📸 Longitud de datos de foto:', pacienteData.foto ? pacienteData.foto.length : 0);
+            patientPhotoData = pacienteData.foto;
+            // La foto se mostrará cuando se abra el modal de foto
         } else {
-            console.error('❌ No se pudieron generar los checkboxes después de 20 intentos');
+            console.log('📸 No hay foto existente para este paciente');
         }
-    }
-    
-    // Iniciar el proceso de establecimiento de motivos
-    establecerMotivosCuandoListos();
-    
-    // Cargar datos de familia
-    cargarDatosFamilia(pacienteData, 'editar');
-    
-    // Precargar datos del nomenclador CIE-10 si existen
-    if (pacienteData.nomencladorCIE10) {
-        datosNomencladorSeleccionados.editar = pacienteData.nomencladorCIE10;
-        const spanEditar = document.getElementById('nomencladorSeleccionadoEditar');
-        if (spanEditar) {
-            spanEditar.textContent = pacienteData.nomencladorCIE10.codigo;
-            spanEditar.classList.remove('hidden');
-            spanEditar.title = `${pacienteData.nomencladorCIE10.codigo}: ${pacienteData.nomencladorCIE10.descripcion}`;
-        }
+        
+        console.log('✅ Datos del paciente cargados correctamente');
     }
     
     console.log('✅ Mostrando modal...');
@@ -4994,8 +5072,14 @@ window.showEditPatientModal = function(pacienteId, pacienteData) {
     
     console.log('🔧 Estilos forzados aplicados al modal');
     
-    // Configurar botones de hermanos después de mostrar el modal
-    setTimeout(() => configurarBotonesHermanos(), 100);
+    // Inicializar pestañas del formulario de edición y cargar datos
+    setTimeout(() => {
+        // Inicializar pestañas específicamente para el formulario de edición
+        inicializarPestanasFormularioEdicion();
+        mostrarPrimeraPestanaEdicion();
+        cargarDatosPaciente(); // Cargar datos después de que las pestañas estén listas
+        configurarBotonesHermanos();
+    }, 100);
 };
 
 // Event listeners adicionales para el modal de edición
@@ -5037,6 +5121,11 @@ const editPatientFormElement = document.getElementById('editPatientForm');
 if (editPatientFormElement) {
     editPatientFormElement.addEventListener('submit', async (e) => {
         e.preventDefault();
+        
+        console.log('📝 Iniciando submit del formulario de edición...');
+        console.log('🔍 Estado de variables de edición:');
+        console.log('🔍 pacienteEditandoId:', pacienteEditandoId);
+        console.log('🔍 pacienteEditandoRef:', pacienteEditandoRef);
         
         if (!pacienteEditandoRef) {
             console.error('❌ No hay referencia del paciente a editar');
@@ -5089,6 +5178,8 @@ if (editPatientFormElement) {
             email: editPatientFormElement.editPatientPadreEmail.value,
             direccion: editPatientFormElement.editPatientPadreDireccion.value,
             ocupacion: editPatientFormElement.editPatientPadreOcupacion.value,
+            nacionalidad: editPatientFormElement.editPatientPadreNacionalidad.value,
+            estudios: editPatientFormElement.editPatientPadreEstudios.value,
             estadoCivil: editPatientFormElement.editPatientPadreEstadoCivil.value,
             salud: editPatientFormElement.editPatientPadreSalud.value
         };
@@ -5100,6 +5191,8 @@ if (editPatientFormElement) {
             email: editPatientFormElement.editPatientMadreEmail.value,
             direccion: editPatientFormElement.editPatientMadreDireccion.value,
             ocupacion: editPatientFormElement.editPatientMadreOcupacion.value,
+            nacionalidad: editPatientFormElement.editPatientMadreNacionalidad.value,
+            estudios: editPatientFormElement.editPatientMadreEstudios.value,
             estadoCivil: editPatientFormElement.editPatientMadreEstadoCivil.value,
             salud: editPatientFormElement.editPatientMadreSalud.value
         };
@@ -5148,6 +5241,8 @@ if (editPatientFormElement) {
                 infoPadre,
                 infoMadre,
                 infoHermanos: hermanos,
+                // Foto del paciente (si existe)
+                ...(patientPhotoData && { foto: patientPhotoData }),
                 // Metadatos
                 actualizado: new Date()
             };
@@ -5164,6 +5259,10 @@ if (editPatientFormElement) {
             
             console.log('✅ Paciente actualizado exitosamente');
             
+            // Guardar las variables antes de limpiarlas para actualizar la ficha
+            const pacienteIdParaActualizar = pacienteEditandoId;
+            const pacienteRefParaActualizar = pacienteEditandoRef;
+            
             // Cerrar modal y limpiar completamente el formulario
             hideEditPatientModal();
             limpiarFormularioEdicion();
@@ -5176,112 +5275,37 @@ if (editPatientFormElement) {
                 spanEditar.classList.add('hidden');
             }
             
+            // Limpiar variables de foto después de guardar
+            patientPhotoData = null;
+            patientPhotoBlob = null;
+            
             // Recargar la lista de pacientes
             const user = window.firebaseAuth.currentUser;
             if (user) {
+                console.log('🔄 Recargando lista de pacientes...');
+                console.log('🔍 Estado de admin:', isAdmin);
+                console.log('🔍 adminPanelState.selectedUser:', adminPanelState?.selectedUser);
+                console.log('🔍 user.uid:', user.uid);
+                
                 // Determinar qué lista recargar según el contexto
                 if (isAdmin && adminPanelState.selectedUser) {
+                    console.log('👑 Admin: recargando pacientes de', adminPanelState.selectedUser);
                     loadPatients(adminPanelState.selectedUser);
                 } else {
+                    console.log('👤 Usuario normal: recargando pacientes propios');
                     loadPatients(user.uid);
                 }
             }
             
             // Si la ficha clínica está abierta para este paciente, actualizarla
-            if (fichaPacienteId === pacienteEditandoId) {
+            if (fichaPacienteId === pacienteIdParaActualizar && pacienteRefParaActualizar) {
                 console.log('🔄 Actualizando ficha clínica abierta...');
-                const doc = await pacienteEditandoRef.get();
+                const doc = await pacienteRefParaActualizar.get();
                 if (doc.exists) {
                     const p = doc.data();
                     
-                    // Calcular edad si hay fecha de nacimiento
-                    let edadTexto = '';
-                    if (p.fechaNacimiento) {
-                        const hoy = new Date();
-                        const fechaNac = new Date(p.fechaNacimiento);
-                        const edad = Math.floor((hoy - fechaNac) / (365.25 * 24 * 60 * 60 * 1000));
-                        edadTexto = ` (${edad} años)`;
-                    }
-                    
-                    fichaPacienteDatos.innerHTML = `
-                        <div class="flex justify-between items-start mb-2">
-                            <div class="flex-1">
-                                <div class="font-bold text-[#2d3748] dark:text-gray-100 text-lg mb-2">${p.nombre || ''}${edadTexto}</div>
-                                
-                                <!-- Información Personal -->
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
-                                    ${p.dni ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">DNI:</span> ${p.dni}</div>` : ''}
-                                    ${p.fechaNacimiento ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Fecha Nac.:</span> ${new Date(p.fechaNacimiento).toLocaleDateString('es-AR')}</div>` : ''}
-                                    ${p.sexo ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Sexo:</span> ${p.sexo.charAt(0).toUpperCase() + p.sexo.slice(1)}</div>` : ''}
-                                    ${p.lugarNacimiento ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Lugar Nac.:</span> ${p.lugarNacimiento}</div>` : ''}
-                                </div>
-                                
-                                <!-- Información de Contacto -->
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
-                                    ${p.email ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Email:</span> ${p.email}</div>` : ''}
-                                    ${p.telefono ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Teléfono:</span> ${p.telefono}</div>` : ''}
-                                    ${p.contacto ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm md:col-span-2"><span class="font-semibold">Contacto Emerg.:</span> ${p.contacto}</div>` : ''}
-                                </div>
-                                
-                                <!-- Información Educativa -->
-                                ${p.educacion || p.instituto ? `
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
-                                    ${p.educacion ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Educación:</span> ${p.educacion.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>` : ''}
-                                    ${p.instituto ? `<div class="text-[#4b5563] dark:text-gray-200 text-sm"><span class="font-semibold">Instituto:</span> ${p.instituto}</div>` : ''}
-                                </div>
-                                ` : ''}
-                                
-                                <!-- Información Familiar -->
-                                <div class="mb-3 border-t pt-3">
-                                    <button onclick="abrirModalInfoHermanos('${pacienteId}')" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors w-full max-w-xs">
-                                        👫 Info. Hermanos ${p.infoHermanos && p.infoHermanos.length > 0 ? '✓' : ''}
-                                    </button>
-                                </div>
-                                
-                                <!-- Motivo de Consulta -->
-                                ${p.motivos && p.motivos.length > 0 ? `
-                                <div class="text-[#4b5563] dark:text-gray-200 text-sm mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded">
-                                    <span class="font-semibold">Motivos de Consulta:</span>
-                                    <ul class="mt-1 list-disc list-inside space-y-1">
-                                        ${p.motivos.map(motivo => `<li>${motivo}</li>`).join('')}
-                                    </ul>
-                                </div>` : ''}
-                                
-                                <!-- Clasificación CIE-10 -->
-                                ${p.nomencladorCIE10 ? `
-                                <div class="mt-3 p-2 bg-green-50 dark:bg-green-900/20 rounded border-l-4 border-green-400">
-                                    <div class="text-xs font-semibold text-green-700 dark:text-green-300 mb-1">📋 Clasificación CIE-10</div>
-                                    <div class="text-xs text-green-600 dark:text-green-400">
-                                        <div><strong>Código:</strong> ${p.nomencladorCIE10.codigo}</div>
-                                        <div><strong>Categoría:</strong> ${p.nomencladorCIE10.categoriaNombre}</div>
-                                        <div class="mt-1 text-green-500 dark:text-green-300">${p.nomencladorCIE10.descripcion}</div>
-                                    </div>
-                                </div>
-                                ` : ''}
-                            </div>
-                            <div class="flex flex-col gap-2">
-                                <div class="flex gap-2">
-                                    <button onclick="showEditPatientModal('${pacienteEditandoId}', ${JSON.stringify(p).replace(/"/g, '&quot;')})" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
-                                        ✏️ Editar
-                                    </button>
-                                    ${isAdmin ? `
-                                    <button onclick="abrirModalDerivarSeguro(this)"
-                                            data-paciente-id="${pacienteEditandoId}"
-                                            data-paciente-nombre="${(p.nombre || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
-                                            data-paciente-email="${(p.email || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
-                                            class="bg-orange-600 hover:bg-orange-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1">
-                                        🔄 Derivar
-                                    </button>
-                                    ` : ''}
-                                </div>
-                                ${isAdmin ? `
-                                <button onclick="eliminarPaciente('${pacienteEditandoId}')" class="bg-red-600 hover:bg-red-700 text-white font-medium py-1 px-3 rounded text-sm flex items-center gap-1 w-full">
-                                    🗑️ Eliminar paciente
-                                </button>
-                                ` : ''}
-                            </div>
-                        </div>
-                    `;
+                    // Generar HTML de la ficha clínica usando la función unificada
+                    fichaPacienteDatos.innerHTML = generarHTMLFichaClinica(p, pacienteIdParaActualizar);
                 }
             }
             
@@ -6622,8 +6646,8 @@ function limpiarDatosFamilia(tipo) {
     // Limpiar campos de padre
     const padrePrefix = tipo === 'agregar' ? 'patientPadre' : 'editPatientPadre';
     const madrePrefix = tipo === 'agregar' ? 'patientMadre' : 'editPatientMadre';
-    const padreCampos = ['Nombre', 'Edad', 'Ocupacion', 'EstadoCivil', 'Salud'];
-    const madreCampos = ['Nombre', 'Edad', 'Ocupacion', 'EstadoCivil', 'Salud'];
+    const padreCampos = ['Nombre', 'Edad', 'Dni', 'Email', 'Direccion', 'Ocupacion', 'Nacionalidad', 'Estudios', 'EstadoCivil', 'Salud'];
+    const madreCampos = ['Nombre', 'Edad', 'Dni', 'Email', 'Direccion', 'Ocupacion', 'Nacionalidad', 'Estudios', 'EstadoCivil', 'Salud'];
     padreCampos.forEach(campo => {
         const input = document.getElementById(`${padrePrefix}${campo}`);
         if (input) input.value = '';
@@ -6656,6 +6680,8 @@ function cargarDatosFamilia(pacienteData, modo) {
         const emailField = document.getElementById(`${prefijo}PatientPadreEmail`);
         const direccionField = document.getElementById(`${prefijo}PatientPadreDireccion`);
         const ocupacionField = document.getElementById(`${prefijo}PatientPadreOcupacion`);
+        const nacionalidadField = document.getElementById(`${prefijo}PatientPadreNacionalidad`);
+        const estudiosField = document.getElementById(`${prefijo}PatientPadreEstudios`);
         const estadoCivilField = document.getElementById(`${prefijo}PatientPadreEstadoCivil`);
         const saludField = document.getElementById(`${prefijo}PatientPadreSalud`);
         
@@ -6665,6 +6691,8 @@ function cargarDatosFamilia(pacienteData, modo) {
         if (emailField) emailField.value = padre.email || '';
         if (direccionField) direccionField.value = padre.direccion || '';
         if (ocupacionField) ocupacionField.value = padre.ocupacion || '';
+        if (nacionalidadField) nacionalidadField.value = padre.nacionalidad || '';
+        if (estudiosField) estudiosField.value = padre.estudios || '';
         if (estadoCivilField) estadoCivilField.value = padre.estadoCivil || '';
         if (saludField) saludField.value = padre.salud || '';
     }
@@ -6678,6 +6706,8 @@ function cargarDatosFamilia(pacienteData, modo) {
         const emailField = document.getElementById(`${prefijo}PatientMadreEmail`);
         const direccionField = document.getElementById(`${prefijo}PatientMadreDireccion`);
         const ocupacionField = document.getElementById(`${prefijo}PatientMadreOcupacion`);
+        const nacionalidadField = document.getElementById(`${prefijo}PatientMadreNacionalidad`);
+        const estudiosField = document.getElementById(`${prefijo}PatientMadreEstudios`);
         const estadoCivilField = document.getElementById(`${prefijo}PatientMadreEstadoCivil`);
         const saludField = document.getElementById(`${prefijo}PatientMadreSalud`);
         
@@ -6687,6 +6717,8 @@ function cargarDatosFamilia(pacienteData, modo) {
         if (emailField) emailField.value = madre.email || '';
         if (direccionField) direccionField.value = madre.direccion || '';
         if (ocupacionField) ocupacionField.value = madre.ocupacion || '';
+        if (nacionalidadField) nacionalidadField.value = madre.nacionalidad || '';
+        if (estudiosField) estudiosField.value = madre.estudios || '';
         if (estadoCivilField) estadoCivilField.value = madre.estadoCivil || '';
         if (saludField) saludField.value = madre.salud || '';
     }
@@ -9511,6 +9543,69 @@ function mostrarPrimeraPestana() {
     }
 }
 
+// Función para inicializar las pestañas del formulario de edición específicamente
+function inicializarPestanasFormularioEdicion() {
+    console.log('🔄 Inicializando pestañas del formulario de edición...');
+    
+    const editModal = document.getElementById('editPatientModal');
+    const tabButtons = editModal.querySelectorAll('.tab-button');
+    const tabContents = editModal.querySelectorAll('.tab-content');
+    
+    console.log('🔍 Encontrados:', tabButtons.length, 'botones de pestaña y', tabContents.length, 'contenidos');
+    
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const targetTab = button.getAttribute('data-tab');
+            console.log('🔄 Cambiando a pestaña:', targetTab);
+            
+            // Remover clases activas de todos los botones y contenidos
+            tabButtons.forEach(btn => {
+                btn.classList.remove('active', 'border-primary-600', 'text-primary-600');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+            
+            tabContents.forEach(content => {
+                content.classList.add('hidden');
+                content.classList.remove('active');
+            });
+            
+            // Activar el botón y contenido seleccionado
+            button.classList.add('active', 'border-primary-600', 'text-primary-600');
+            button.classList.remove('border-transparent', 'text-gray-500');
+            
+            const targetContent = editModal.querySelector(`#tab-${targetTab}`);
+            if (targetContent) {
+                targetContent.classList.remove('hidden');
+                targetContent.classList.add('active');
+                console.log('✅ Pestaña activada:', targetTab);
+            } else {
+                console.error('❌ No se encontró el contenido para la pestaña:', targetTab);
+            }
+        });
+    });
+    
+    console.log('✅ Pestañas del formulario de edición inicializadas');
+}
+
+// Función para mostrar la primera pestaña del formulario de edición
+function mostrarPrimeraPestanaEdicion() {
+    console.log('🔄 Mostrando primera pestaña del formulario de edición...');
+    
+    const editModal = document.getElementById('editPatientModal');
+    const firstTabButton = editModal.querySelector('.tab-button[data-tab="basica"]');
+    const firstTabContent = editModal.querySelector('#tab-basica');
+    
+    console.log('🔍 Botón primera pestaña encontrado:', !!firstTabButton);
+    console.log('🔍 Contenido primera pestaña encontrado:', !!firstTabContent);
+    
+    if (firstTabButton && firstTabContent) {
+        firstTabButton.click();
+        console.log('✅ Primera pestaña activada');
+    } else {
+        console.error('❌ No se pudo activar la primera pestaña');
+    }
+}
+
 // Agregar event listener para inicializar pestañas cuando se abra el modal
 document.addEventListener('DOMContentLoaded', function() {
     // Inicializar pestañas cuando se abra el modal de agregar paciente
@@ -9533,6 +9628,400 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// Variables globales para la foto del paciente
+let patientPhotoData = null;
+let patientPhotoBlob = null;
+
+// Función para mostrar el modal de foto del paciente
+window.showPatientPhotoModal = function() {
+    console.log('📸 Abriendo modal de foto del paciente...');
+    
+    const modal = document.getElementById('patientPhotoModal');
+    if (!modal) {
+        console.error('❌ No se encontró el modal de foto');
+        showMessage('Error: No se pudo abrir el modal de foto', 'error');
+        return;
+    }
+    
+    modal.classList.remove('hidden');
+    
+    // Forzar que el modal sea visible y esté por encima de todo
+    modal.style.display = 'flex';
+    modal.style.zIndex = '999999';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.right = '0';
+    modal.style.bottom = '0';
+    modal.style.backgroundColor = 'rgba(0, 0, 0, 0.4)';
+    modal.style.visibility = 'visible';
+    modal.style.opacity = '1';
+    
+    // Asegurar que el contenido del modal también esté visible
+    const modalContent = modal.querySelector('.bg-white, .dark\\:bg-darkcard');
+    if (modalContent) {
+        modalContent.style.zIndex = '1000000';
+        modalContent.style.position = 'relative';
+    }
+    
+    // Ocultar temporalmente el modal de editar para que no interfiera
+    const editModal = document.getElementById('editPatientModal');
+    if (editModal) {
+        editModal.style.zIndex = '1';
+    }
+    
+    // Verificar que el input file esté disponible
+    const input = document.getElementById('patientPhotoInput');
+    if (!input) {
+        console.error('❌ No se encontró el input de foto en el modal');
+        showMessage('Error: No se pudo configurar la cámara', 'error');
+        return;
+    }
+    
+    console.log('✅ Modal de foto abierto correctamente');
+    console.log('🔍 Estilos aplicados al modal:', {
+        display: modal.style.display,
+        zIndex: modal.style.zIndex,
+        position: modal.style.position,
+        visibility: getComputedStyle(modal).visibility
+    });
+    
+    // Si hay una foto existente (desde edición), mostrarla
+    console.log('🔍 Verificando foto existente...');
+    console.log('🔍 patientPhotoData existe:', !!patientPhotoData);
+    console.log('🔍 patientPhotoData tipo:', typeof patientPhotoData);
+    console.log('🔍 patientPhotoData longitud:', patientPhotoData ? patientPhotoData.length : 0);
+    
+    if (patientPhotoData) {
+        console.log('📸 Mostrando foto existente del paciente...');
+        const photoImage = document.getElementById('patientPhotoImage');
+        const photoIcon = document.getElementById('patientPhotoIcon');
+        const removeBtn = document.getElementById('removePhotoBtn');
+        const redDot = document.getElementById('patientPhotoRedDot');
+        
+        if (photoImage && photoIcon && removeBtn && redDot) {
+            // Mostrar imagen y ocultar ícono
+            photoImage.classList.remove('hidden');
+            photoIcon.classList.add('hidden');
+            photoImage.src = patientPhotoData;
+            
+            // Ocultar punto rojo
+            redDot.classList.add('hidden');
+            
+            // Mostrar botón de eliminar
+            removeBtn.classList.remove('hidden');
+            
+            console.log('✅ Foto existente mostrada correctamente');
+        } else {
+            console.error('❌ No se encontraron elementos del modal de foto');
+        }
+    } else {
+        // Resetear la vista previa solo si no hay foto existente
+        console.log('📸 No hay foto existente, reseteando vista previa...');
+        resetPatientPhotoPreview();
+        
+        // NO resetear variables aquí para mantener la foto existente
+        // patientPhotoData = null;
+        // patientPhotoBlob = null;
+    }
+};
+
+// Función para resetear la vista previa de la foto
+function resetPatientPhotoPreview() {
+    const photoImage = document.getElementById('patientPhotoImage');
+    const photoIcon = document.getElementById('patientPhotoIcon');
+    const removeBtn = document.getElementById('removePhotoBtn');
+    const redDot = document.getElementById('patientPhotoRedDot');
+    
+    // Ocultar imagen y mostrar ícono
+    photoImage.classList.add('hidden');
+    photoIcon.classList.remove('hidden');
+    
+    // Mostrar punto rojo
+    redDot.classList.remove('hidden');
+    
+    // Ocultar botón de eliminar
+    removeBtn.classList.add('hidden');
+};
+
+// Función para ocultar el modal de foto del paciente
+window.hidePatientPhotoModal = function() {
+    console.log('🔄 Cerrando modal de foto del paciente...');
+    const modal = document.getElementById('patientPhotoModal');
+    
+    if (modal) {
+        // Restaurar el modal de editar a su z-index original
+        const editModal = document.getElementById('editPatientModal');
+        if (editModal) {
+            editModal.style.zIndex = '50';
+        }
+        
+        // Ocultar el modal de foto
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+        modal.style.visibility = 'hidden';
+        modal.style.opacity = '0';
+        
+        console.log('✅ Modal de foto cerrado correctamente');
+    } else {
+        console.error('❌ No se encontró el modal de foto');
+    }
+};
+
+// Función para capturar foto con la cámara
+window.capturePatientPhoto = function() {
+    console.log('📷 Intentando capturar foto con cámara...');
+    const input = document.getElementById('patientPhotoInput');
+    if (!input) {
+        console.error('❌ No se encontró el input de foto');
+        showMessage('Error: No se pudo acceder a la cámara', 'error');
+        return;
+    }
+    
+    // Limpiar el valor anterior para asegurar que se dispare el evento
+    input.value = '';
+    input.setAttribute('capture', 'user');
+    console.log('📷 Input configurado para cámara, haciendo clic...');
+    input.click();
+};
+
+// Función para subir archivo de foto
+window.uploadPatientPhoto = function() {
+    console.log('📁 Intentando subir archivo de foto...');
+    const input = document.getElementById('patientPhotoInput');
+    if (!input) {
+        console.error('❌ No se encontró el input de foto');
+        showMessage('Error: No se pudo acceder a los archivos', 'error');
+        return;
+    }
+    
+    // Limpiar el valor anterior para asegurar que se dispare el evento
+    input.value = '';
+    input.removeAttribute('capture');
+    console.log('📁 Input configurado para archivo, haciendo clic...');
+    input.click();
+};
+
+// Función para comprimir imagen
+function compressImage(file, maxWidth = 800, maxHeight = 800, quality = 0.8) {
+    return new Promise((resolve, reject) => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        
+        img.onload = function() {
+            // Calcular nuevas dimensiones manteniendo proporción
+            let { width, height } = img;
+            
+            if (width > maxWidth) {
+                height = (height * maxWidth) / width;
+                width = maxWidth;
+            }
+            
+            if (height > maxHeight) {
+                width = (width * maxHeight) / height;
+                height = maxHeight;
+            }
+            
+            // Configurar canvas
+            canvas.width = width;
+            canvas.height = height;
+            
+            // Dibujar imagen comprimida
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Convertir a blob con calidad especificada
+            canvas.toBlob((blob) => {
+                resolve(blob);
+            }, 'image/jpeg', quality);
+        };
+        
+        img.onerror = reject;
+        img.src = URL.createObjectURL(file);
+    });
+}
+
+// Función para manejar la selección de archivo
+window.handlePhotoFileSelect = function(event) {
+    console.log('📸 Archivo seleccionado:', event.target.files[0]);
+    
+    const file = event.target.files[0];
+    if (!file) {
+        console.log('❌ No se seleccionó ningún archivo');
+        return;
+    }
+    
+    console.log('📸 Información del archivo:', {
+        name: file.name,
+        size: file.size,
+        type: file.type
+    });
+    
+    // Validar tamaño del archivo (máximo 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB en bytes
+    if (file.size > maxSize) {
+        console.error('❌ Archivo demasiado grande:', file.size, 'bytes');
+        showMessage('El archivo es demasiado grande. Selecciona una imagen de menos de 10MB.', 'error');
+        return;
+    }
+    
+    if (!file.type.startsWith('image/')) {
+        console.error('❌ Tipo de archivo no válido:', file.type);
+        showMessage('Por favor selecciona un archivo de imagen válido (JPG, PNG, GIF)', 'error');
+        return;
+    }
+    
+    console.log('✅ Archivo válido, procesando...');
+    // Mostrar indicador de carga
+    showMessage('Procesando imagen...', 'info');
+    
+    // Comprimir imagen antes de procesar
+    compressImage(file)
+                .then(compressedBlob => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const photoImage = document.getElementById('patientPhotoImage');
+                        const photoIcon = document.getElementById('patientPhotoIcon');
+                        const removeBtn = document.getElementById('removePhotoBtn');
+                        const redDot = document.getElementById('patientPhotoRedDot');
+                        
+                        // Mostrar imagen y ocultar ícono
+                        photoImage.src = e.target.result;
+                        photoImage.classList.remove('hidden');
+                        photoIcon.classList.add('hidden');
+                        
+                        // Ocultar punto rojo
+                        redDot.classList.add('hidden');
+                        
+                        // Guardar datos comprimidos
+                        patientPhotoData = e.target.result;
+                        patientPhotoBlob = compressedBlob;
+                        
+                        // Mostrar botón de eliminar
+                        removeBtn.classList.remove('hidden');
+                        
+                        // Mostrar mensaje de éxito
+                        showMessage('Imagen procesada correctamente', 'success');
+                    };
+                    reader.readAsDataURL(compressedBlob);
+                })
+                .catch(error => {
+                    console.error('Error al comprimir imagen:', error);
+                    showMessage('Error al procesar la imagen. Intenta con una imagen más pequeña.', 'error');
+                });
+};
+
+// Función para eliminar la foto
+window.removePatientPhoto = function() {
+    // Resetear la vista previa
+    resetPatientPhotoPreview();
+    
+    // Resetear variables
+    patientPhotoData = null;
+    patientPhotoBlob = null;
+    
+    // Limpiar input
+    document.getElementById('patientPhotoInput').value = '';
+};
+
+// Función para guardar la foto
+window.savePatientPhoto = function() {
+    console.log('💾 Guardando foto del paciente...');
+    console.log('📸 patientPhotoData existe:', !!patientPhotoData);
+    console.log('📸 patientPhotoBlob existe:', !!patientPhotoBlob);
+    
+    if (patientPhotoData && patientPhotoBlob) {
+        // La foto ya está guardada en las variables globales
+        console.log('✅ Foto del paciente guardada en memoria');
+        console.log('📊 Tamaño del archivo comprimido:', patientPhotoBlob.size, 'bytes');
+        console.log('📊 Tipo de archivo:', patientPhotoBlob.type);
+        console.log('📊 Primeros 100 caracteres de la foto:', patientPhotoData.substring(0, 100));
+        
+        // Mostrar información útil para debugging
+        const sizeInMB = (patientPhotoBlob.size / (1024 * 1024)).toFixed(2);
+        showMessage(`Foto guardada correctamente (${sizeInMB}MB)`, 'success');
+        
+        // Cerrar el modal
+        hidePatientPhotoModal();
+        
+        console.log('✅ Modal cerrado, foto lista para ser guardada en el formulario');
+    } else {
+        console.error('❌ No hay foto para guardar');
+        showMessage('No hay foto para guardar', 'error');
+    }
+};
+
+// Función para verificar si un paciente tiene foto
+async function verificarFotoPaciente(pacienteId) {
+    try {
+        console.log(`🔍 Verificando foto del paciente ${pacienteId}...`);
+        const doc = await window.firebaseDB.collection('pacientes').doc(pacienteId).get();
+        
+        if (doc.exists) {
+            const data = doc.data();
+            console.log(`📋 Datos del paciente ${pacienteId}:`, data);
+            console.log(`📸 Tiene foto: ${!!data.foto}`);
+            if (data.foto) {
+                console.log(`📸 Tipo de foto: ${typeof data.foto}`);
+                console.log(`📸 Longitud de foto: ${data.foto.length}`);
+                console.log(`📸 Primeros 100 caracteres: ${data.foto.substring(0, 100)}`);
+            }
+            return data.foto;
+        } else {
+            console.log(`❌ Paciente ${pacienteId} no encontrado`);
+            return null;
+        }
+    } catch (error) {
+        console.error(`❌ Error verificando foto del paciente ${pacienteId}:`, error);
+        return null;
+    }
+}
+
+// Función global para debug de fotos de pacientes
+window.debugFotosPacientes = async function() {
+    console.log('🔍 === DEBUG FOTOS DE PACIENTES ===');
+    
+    try {
+        // Obtener el UID del usuario seleccionado (admin) o actual
+        const user = window.firebaseAuth.currentUser;
+        if (!user) {
+            console.error('❌ No hay usuario autenticado');
+            return;
+        }
+        
+        let uidParaVerificar = user.uid;
+        if (isAdmin && adminPanelState.selectedUser) {
+            uidParaVerificar = adminPanelState.selectedUser;
+            console.log(`👑 Admin verificando pacientes de: ${uidParaVerificar}`);
+        } else {
+            console.log(`👤 Usuario normal verificando sus pacientes`);
+        }
+        
+        // Obtener todos los pacientes
+        const snapshot = await window.firebaseDB.collection('pacientes').where('owner', '==', uidParaVerificar).get();
+        
+        console.log(`📋 Total de pacientes encontrados: ${snapshot.size}`);
+        
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            console.log(`\n👤 Paciente: ${data.nombre} (ID: ${doc.id})`);
+            console.log(`📸 Tiene foto: ${!!data.foto}`);
+            if (data.foto) {
+                console.log(`📸 Tipo: ${typeof data.foto}`);
+                console.log(`📸 Longitud: ${data.foto.length}`);
+                console.log(`📸 Inicio: ${data.foto.substring(0, 50)}...`);
+            } else {
+                console.log(`❌ NO TIENE FOTO`);
+            }
+        });
+        
+        console.log('🔍 === FIN DEBUG FOTOS ===');
+        
+    } catch (error) {
+        console.error('❌ Error en debug de fotos:', error);
+    }
+};
 
 // Función para limpiar las pestañas cuando se cierre el modal
 function limpiarPestanasFormulario() {
