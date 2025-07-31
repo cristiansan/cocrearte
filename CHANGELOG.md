@@ -1,6 +1,15 @@
 # Changelog
 
-## [0.4.3] - 2024-12-19
+## [0.4.5] - 2024-12-19
+
+### Fixed
+- **Corrección de límite de pacientes para plan Pro**
+  - Corregido error en la lógica de verificación de límites durante la creación de pacientes
+  - El plan Pro ahora permite correctamente hasta 10 pacientes (antes limitaba incorrectamente a 3)
+  - La verificación se realizaba en `main.js` línea 1387 dentro de `addPatientForm.addEventListener('submit')`
+  - Cambio: `cantidadPacientes >= 3` → `cantidadPacientes >= 10` para usuarios con plan Pro
+
+## [0.4.4] - 2024-12-19
 
 ### Added
 - **Sistemas de planes pagos actualizados**
@@ -15,6 +24,17 @@
   - Estructura más detallada y profesional
   - Características específicas por plan claramente definidas
   - Mejor presentación visual de las funcionalidades
+
+## [0.4.3] - 2024-12-19
+
+### Added
+- **Mejoras en el sistema de gestión de pacientes**
+  - Optimizaciones en la interfaz de usuario
+  - Mejoras en la experiencia de usuario
+
+### Changed
+- **Actualizaciones menores en la interfaz**
+  - Correcciones de estilo y presentación
 
 ## [0.4.2] - 2024-12-19
 

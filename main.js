@@ -1385,8 +1385,8 @@ addPatientForm.addEventListener('submit', async (e) => {
     const planUsuario = window.planUsuario || 'gratis';
     const cantidadPacientes = window.cantidadPacientes || 0;
     
-    if (planUsuario === 'pro' && cantidadPacientes >= 3) {
-        showMessage('Has alcanzado el límite de 3 pacientes para el plan Pro. Actualiza a Ultra para pacientes ilimitados.', 'error');
+    if (planUsuario === 'pro' && cantidadPacientes >= 10) {
+        showMessage('Has alcanzado el límite de 10 pacientes para el plan Pro. Actualiza a Ultra para pacientes ilimitados.', 'error');
         abrirModalPrecios();
         return;
     }
