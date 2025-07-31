@@ -473,46 +473,131 @@ let adminPanel = null;
 // Panel admin: muestra lista de profesionales y permite ver pacientes/sesiones de cada uno
 let adminPanelState = { selectedUser: null, profesionales: [], pacientes: [], sesiones: {} };
 
-// Opciones para el selector múltiple de Motivo de Consulta
-const MOTIVOS_CONSULTA = [
-    'Retraso en el lenguaje o en el desarrollo',
-    'Trastornos del lenguaje (TDL)',
-    'Sospecha Trastorno del espectro autista (TEA)',
-    'Problemas de conducta',
-    'Trastornos del sueño',
-    'Ansiedad por separación / miedos intensos',
-    'Síntomas somáticos (dolores, vómitos, regresiones)',
-    'Regresiones evolutivas',
-    'Hipersensibilidad sensorial o conductas repetitivas',
-    'Problemas de atención / sospecha de TDAH',
-    'Dificultades en el aprendizaje',
-    'Dislexia',
-    'Discalculia',
-    'Disgrafía',
-    'Problemas de concentracion',
-    'Ansiedad escolar / fobia escolar',
-    'Baja autoestima',
-    'retraimiento social',
-    'bullying',
-    'Conflictos con figuras de autoridad',
-    'Síntomas depresivos',
-    'Celos entre hermanos',
-    'Miedos intensos o trastornos obsesivos (rituales, manías)',
-    'Consultas vinculadas a muerte, divorcio o mudanzas',
-    'Depresión / síntomas depresivos / desmotivación',
-    'Autolesiones',
-    'Problemas con la imagen corporal',
-    'Aislamiento social o problemas de vinculación con pares',
-    'Identidad de género u orientación sexual',
-    'Problemas de rendimiento escolar / abandono escolar',
-    'Consultas por demanda de terceros (escuela, pediatra, padres separados)',
-    'Situaciones de abuso (sexual, físico o emocional)',
-    'Violencia familiar (presenciada o sufrida)',
-    'Secretos Familiares (ocultar maternidad o paternidad)',
-    'Dependencia o uso excesivo de pantallas',
-    'Mutismo Selectivo',
-    'No controla esfínteres'
+// Opciones para el selector múltiple de Motivo de Consulta organizadas por profesional
+const MOTIVOS_CONSULTA_POR_PROFESIONAL = {
+    'psicologia_infantil': [
+        'Retraso en el lenguaje o en el desarrollo',
+        'Trastornos del lenguaje (TDL)',
+        'Sospecha Trastorno del espectro autista (TEA)',
+        'Problemas de conducta',
+        'Trastornos del sueño',
+        'Ansiedad por separación / miedos intensos',
+        'Síntomas somáticos (dolores, vómitos, regresiones)',
+        'Regresiones evolutivas',
+        'Hipersensibilidad sensorial o conductas repetitivas',
+        'Problemas de atención / sospecha de TDAH',
+        'Dificultades en el aprendizaje',
+        'Dislexia',
+        'Discalculia',
+        'Disgrafía',
+        'Problemas de concentracion',
+        'Ansiedad escolar / fobia escolar',
+        'Baja autoestima',
+        'retraimiento social',
+        'bullying',
+        'Conflictos con figuras de autoridad',
+        'Síntomas depresivos',
+        'Celos entre hermanos',
+        'Miedos intensos o trastornos obsesivos (rituales, manías)',
+        'Consultas vinculadas a muerte, divorcio o mudanzas',
+        'Depresión / síntomas depresivos / desmotivación',
+        'Autolesiones',
+        'Problemas con la imagen corporal',
+        'Aislamiento social o problemas de vinculación con pares',
+        'Identidad de género u orientación sexual',
+        'Problemas de rendimiento escolar / abandono escolar',
+        'Consultas por demanda de terceros (escuela, pediatra, padres separados)',
+        'Situaciones de abuso (sexual, físico o emocional)',
+        'Violencia familiar (presenciada o sufrida)',
+        'Secretos Familiares (ocultar maternidad o paternidad)',
+        'Dependencia o uso excesivo de pantallas',
+        'Mutismo Selectivo',
+        'No controla esfínteres'
+    ],
+    'fonoaudiologia': [
+        'TDL (Trastorno del desarrollo del lenguaje) severo',
+        'TDL (Trastorno del desarrollo del lenguaje) moderado',
+        'TDL (Trastorno del desarrollo del lenguaje) leve',
+        'Mutismo (no TEA)',
+        'TSH (Trastorno de los sonidos del habla)',
+        'Tartamudez (Disfluencia)',
+        'Respiración Bucal',
+        'Deglución Disfuncional',
+        'Afasia Global',
+        'Afasia Mixta',
+        'Afasia Expresiva',
+        'Disartria',
+        'Disfonía',
+        'Apraxia del habla',
+        'Trastorno Deglutorio'
+    ],
+    'nutricion': [
+        'Sobrepeso/Obesidad',
+        'Bajo peso/Desnutrición',
+        'Trastornos de la conducta alimentaria',
+        'Alergias alimentarias',
+        'Intolerancias alimentarias',
+        'Diabetes',
+        'Hipertensión arterial',
+        'Dislipidemias',
+        'Anemia',
+        'Problemas digestivos',
+        'Educación nutricional',
+        'Planificación de menús',
+        'Suplementación nutricional'
+    ],
+    'psicologia_adultos': [
+        'Ansiedad',
+        'Depresión',
+        'Estrés laboral',
+        'Problemas de pareja',
+        'Duelo',
+        'Trastornos de personalidad',
+        'Trastornos obsesivo-compulsivos',
+        'Fobias',
+        'Trastornos del sueño',
+        'Problemas de autoestima',
+        'Crisis vitales',
+        'Trastornos adaptativos',
+        'Problemas de comunicación',
+        'Manejo de emociones',
+        'Desarrollo personal'
+    ],
+    'psicopedagogia': [
+        'Dificultades de aprendizaje',
+        'Problemas de atención',
+        'Dislexia',
+        'Discalculia',
+        'Disgrafía',
+        'Problemas de memoria',
+        'Dificultades en comprensión lectora',
+        'Problemas de razonamiento lógico',
+        'Dificultades en matemáticas',
+        'Problemas de organización y planificación',
+        'Dificultades en expresión escrita',
+        'Problemas de velocidad de procesamiento',
+        'Dificultades visoespaciales',
+        'Problemas de coordinación motora',
+        'Evaluación psicopedagógica'
+    ]
+};
+
+// Lista de profesionales disponibles
+const PROFESIONALES = [
+    { id: 'psicologia_infantil', nombre: 'Psicología Infantil', icono: '🧒' },
+    { id: 'fonoaudiologia', nombre: 'Fonoaudiología', icono: '🗣️' },
+    { id: 'nutricion', nombre: 'Nutrición', icono: '🥗' },
+    { id: 'psicologia_adultos', nombre: 'Psicología Adultos', icono: '👨‍🦳' },
+    { id: 'psicopedagogia', nombre: 'Psicopedagogía', icono: '📚' }
 ];
+
+// Variable global para el profesional seleccionado
+let profesionalSeleccionado = 'psicologia_infantil'; // Por defecto psicología infantil
+
+// Función para obtener la lista de motivos según el profesional seleccionado
+function obtenerMotivosPorProfesional(profesionalId) {
+    return MOTIVOS_CONSULTA_POR_PROFESIONAL[profesionalId] || MOTIVOS_CONSULTA_POR_PROFESIONAL['psicologia_infantil'];
+}
 
 // Referencias al modal de nueva sesión
 const modalNuevaSesion = document.getElementById('modalNuevaSesion');
@@ -1097,18 +1182,38 @@ logoutBtn.addEventListener('click', async () => {
     location.hash = '';
 });
 
+// Función para cambiar el profesional seleccionado
+function cambiarProfesional(profesionalId) {
+    profesionalSeleccionado = profesionalId;
+    cargarOpcionesMotivoConsulta();
+    
+    // Actualizar botones activos
+    document.querySelectorAll('.btn-profesional').forEach(btn => {
+        btn.classList.remove('bg-primary-600', 'text-white');
+        btn.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+    });
+    
+    const btnActivo = document.querySelector(`[data-profesional="${profesionalId}"]`);
+    if (btnActivo) {
+        btnActivo.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+        btnActivo.classList.add('bg-primary-600', 'text-white');
+    }
+}
+
 // Función para cargar opciones en los checkboxes de motivo de consulta
 function cargarOpcionesMotivoConsulta() {
     const checkboxesAgregar = document.getElementById('patientMotivoCheckboxes');
     const checkboxesEditar = document.getElementById('editPatientMotivoCheckboxes');
     
-    console.log('📋 Cargando opciones de motivo de consulta...');
+    console.log('📋 Cargando opciones de motivo de consulta para profesional:', profesionalSeleccionado);
     console.log('🔍 Checkboxes agregar encontrado:', !!checkboxesAgregar);
     console.log('🔍 Checkboxes editar encontrado:', !!checkboxesEditar);
     
+    const motivosActuales = obtenerMotivosPorProfesional(profesionalSeleccionado);
+    
     if (checkboxesAgregar) {
         checkboxesAgregar.innerHTML = '';
-        MOTIVOS_CONSULTA.forEach(motivo => {
+        motivosActuales.forEach(motivo => {
             const div = document.createElement('div');
             div.className = 'flex items-center space-x-2';
             
@@ -1134,7 +1239,7 @@ function cargarOpcionesMotivoConsulta() {
     if (checkboxesEditar) {
         checkboxesEditar.innerHTML = '';
         console.log('🔧 Generando checkboxes para editar...');
-        MOTIVOS_CONSULTA.forEach((motivo, index) => {
+        motivosActuales.forEach((motivo, index) => {
             const div = document.createElement('div');
             div.className = 'flex items-center space-x-2';
             
@@ -1161,6 +1266,35 @@ function cargarOpcionesMotivoConsulta() {
         console.log('✅ Checkboxes cargados en editar:', checkboxesEditar.children.length);
         console.log('✅ Checkboxes DOM generados:', checkboxesEditar.querySelectorAll('input[type="checkbox"]').length);
     }
+}
+
+// Función para crear los botones de profesionales
+function crearBotonesProfesionales() {
+    const contenedorAgregar = document.getElementById('botonesProfesionalesAgregar');
+    const contenedorEditar = document.getElementById('botonesProfesionalesEditar');
+    
+    const crearBotones = (contenedor) => {
+        if (!contenedor) return;
+        
+        contenedor.innerHTML = '';
+        PROFESIONALES.forEach(profesional => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = `btn-profesional px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                profesional.id === profesionalSeleccionado 
+                    ? 'bg-primary-600 text-white' 
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`;
+            btn.setAttribute('data-profesional', profesional.id);
+            btn.onclick = () => cambiarProfesional(profesional.id);
+            btn.innerHTML = `${profesional.icono} ${profesional.nombre}`;
+            
+            contenedor.appendChild(btn);
+        });
+    };
+    
+    crearBotones(contenedorAgregar);
+    crearBotones(contenedorEditar);
 }
 
 // Función para obtener los motivos seleccionados de los checkboxes
@@ -1276,6 +1410,8 @@ showAddPatientBtn.addEventListener('click', async () => {
     limpiarDatosFamilia('agregar');
     // Cargar opciones del selector de motivos
     cargarOpcionesMotivoConsulta();
+    // Crear botones de profesionales
+    crearBotonesProfesionales();
     // Configurar botones de hermanos después de mostrar el modal
     setTimeout(() => configurarBotonesHermanos(), 100);
 });
@@ -1425,8 +1561,7 @@ addPatientForm.addEventListener('submit', async (e) => {
         ocupacion: addPatientForm.patientPadreOcupacion.value,
         nacionalidad: addPatientForm.patientPadreNacionalidad.value,
         estudios: addPatientForm.patientPadreEstudios.value,
-        estadoCivil: addPatientForm.patientPadreEstadoCivil.value,
-        salud: addPatientForm.patientPadreSalud.value
+        estadoCivil: addPatientForm.patientPadreEstadoCivil.value
     };
 
     const infoMadre = {
@@ -1438,12 +1573,10 @@ addPatientForm.addEventListener('submit', async (e) => {
         ocupacion: addPatientForm.patientMadreOcupacion.value,
         nacionalidad: addPatientForm.patientMadreNacionalidad.value,
         estudios: addPatientForm.patientMadreEstudios.value,
-        estadoCivil: addPatientForm.patientMadreEstadoCivil.value,
-        salud: addPatientForm.patientMadreSalud.value
+        estadoCivil: addPatientForm.patientMadreEstadoCivil.value
     };
 
-    // Obtener datos de hermanos
-    const hermanos = obtenerDatosHermanos('agregar');
+
 
     // Obtener datos del nomenclador CIE-10 si fueron seleccionados
     const datosCIE10 = obtenerDatosCIE10('agregar');
@@ -1480,10 +1613,10 @@ addPatientForm.addEventListener('submit', async (e) => {
             infoColegio,
             // Motivo de consulta
             motivos,
+            profesionalSeleccionado,
             // Información de familia
             infoPadre,
             infoMadre,
-            infoHermanos: hermanos,
             // Metadatos
             creado: new Date(),
             actualizado: new Date()
@@ -1971,6 +2104,8 @@ window.cerrarHistorialExpandido = function() {
 document.addEventListener('DOMContentLoaded', function() {
     // Inicializar selectores de motivo de consulta
     cargarOpcionesMotivoConsulta();
+    // Crear botones de profesionales
+    crearBotonesProfesionales();
     
     setTimeout(() => {
         const historialMaxBtn = document.getElementById('historialMaximizeBtn');
@@ -4985,6 +5120,8 @@ window.showEditPatientModal = function(pacienteId, pacienteData) {
         
         // Cargar opciones del selector de motivos ANTES de prellenar los campos
         cargarOpcionesMotivoConsulta();
+        // Crear botones de profesionales
+        crearBotonesProfesionales();
         
         // Prellenar los campos con los datos actuales
         if (nameField) nameField.value = pacienteData.nombre || '';
@@ -5021,6 +5158,24 @@ window.showEditPatientModal = function(pacienteId, pacienteData) {
         
         // Iniciar el proceso de establecimiento de motivos
         establecerMotivosCuandoListos();
+        
+        // Establecer el profesional seleccionado si existe en los datos
+        if (pacienteData.profesionalSeleccionado) {
+            profesionalSeleccionado = pacienteData.profesionalSeleccionado;
+            // Actualizar los botones de profesionales para reflejar la selección
+            setTimeout(() => {
+                document.querySelectorAll('.btn-profesional').forEach(btn => {
+                    btn.classList.remove('bg-primary-600', 'text-white');
+                    btn.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+                });
+                
+                const btnActivo = document.querySelector(`[data-profesional="${profesionalSeleccionado}"]`);
+                if (btnActivo) {
+                    btnActivo.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+                    btnActivo.classList.add('bg-primary-600', 'text-white');
+                }
+            }, 100);
+        }
         
         // Cargar datos de familia
         cargarDatosFamilia(pacienteData, 'editar');
@@ -5078,6 +5233,7 @@ window.showEditPatientModal = function(pacienteId, pacienteData) {
         inicializarPestanasFormularioEdicion();
         mostrarPrimeraPestanaEdicion();
         cargarDatosPaciente(); // Cargar datos después de que las pestañas estén listas
+        crearBotonesProfesionales(); // Crear botones de profesionales
         configurarBotonesHermanos();
     }, 100);
 };
@@ -5180,8 +5336,7 @@ if (editPatientFormElement) {
             ocupacion: editPatientFormElement.editPatientPadreOcupacion.value,
             nacionalidad: editPatientFormElement.editPatientPadreNacionalidad.value,
             estudios: editPatientFormElement.editPatientPadreEstudios.value,
-            estadoCivil: editPatientFormElement.editPatientPadreEstadoCivil.value,
-            salud: editPatientFormElement.editPatientPadreSalud.value
+            estadoCivil: editPatientFormElement.editPatientPadreEstadoCivil.value
         };
 
         const infoMadre = {
@@ -5193,12 +5348,10 @@ if (editPatientFormElement) {
             ocupacion: editPatientFormElement.editPatientMadreOcupacion.value,
             nacionalidad: editPatientFormElement.editPatientMadreNacionalidad.value,
             estudios: editPatientFormElement.editPatientMadreEstudios.value,
-            estadoCivil: editPatientFormElement.editPatientMadreEstadoCivil.value,
-            salud: editPatientFormElement.editPatientMadreSalud.value
+            estadoCivil: editPatientFormElement.editPatientMadreEstadoCivil.value
         };
 
-        // Obtener datos de hermanos
-        const hermanos = obtenerDatosHermanos('editar');
+
         
         // Obtener datos del nomenclador CIE-10 si fueron seleccionados
         const datosCIE10 = obtenerDatosCIE10('editar');
@@ -5237,10 +5390,10 @@ if (editPatientFormElement) {
                 infoColegio,
                 // Motivo de consulta
                 motivos,
+                profesionalSeleccionado,
                 // Información de familia
                 infoPadre,
                 infoMadre,
-                infoHermanos: hermanos,
                 // Foto del paciente (si existe)
                 ...(patientPhotoData && { foto: patientPhotoData }),
                 // Metadatos
@@ -6646,8 +6799,8 @@ function limpiarDatosFamilia(tipo) {
     // Limpiar campos de padre
     const padrePrefix = tipo === 'agregar' ? 'patientPadre' : 'editPatientPadre';
     const madrePrefix = tipo === 'agregar' ? 'patientMadre' : 'editPatientMadre';
-    const padreCampos = ['Nombre', 'Edad', 'Dni', 'Email', 'Direccion', 'Ocupacion', 'Nacionalidad', 'Estudios', 'EstadoCivil', 'Salud'];
-    const madreCampos = ['Nombre', 'Edad', 'Dni', 'Email', 'Direccion', 'Ocupacion', 'Nacionalidad', 'Estudios', 'EstadoCivil', 'Salud'];
+    const padreCampos = ['Nombre', 'Edad', 'Dni', 'Email', 'Direccion', 'Ocupacion', 'Nacionalidad', 'Estudios', 'EstadoCivil'];
+    const madreCampos = ['Nombre', 'Edad', 'Dni', 'Email', 'Direccion', 'Ocupacion', 'Nacionalidad', 'Estudios', 'EstadoCivil'];
     padreCampos.forEach(campo => {
         const input = document.getElementById(`${padrePrefix}${campo}`);
         if (input) input.value = '';
@@ -6656,11 +6809,7 @@ function limpiarDatosFamilia(tipo) {
         const input = document.getElementById(`${madrePrefix}${campo}`);
         if (input) input.value = '';
     });
-    // Limpiar hermanos
-    const hermanosContainer = document.getElementById(tipo === 'agregar' ? 'hermanosContainer' : 'hermanosContainerEditar');
-    if (hermanosContainer) hermanosContainer.innerHTML = '';
-    if (typeof hermanosData !== 'undefined') hermanosData = [];
-    if (typeof renderizarHermanos === 'function') renderizarHermanos();
+
 }
 
 // Función para cargar datos de familia en el formulario
@@ -6683,7 +6832,6 @@ function cargarDatosFamilia(pacienteData, modo) {
         const nacionalidadField = document.getElementById(`${prefijo}PatientPadreNacionalidad`);
         const estudiosField = document.getElementById(`${prefijo}PatientPadreEstudios`);
         const estadoCivilField = document.getElementById(`${prefijo}PatientPadreEstadoCivil`);
-        const saludField = document.getElementById(`${prefijo}PatientPadreSalud`);
         
         if (nombreField) nombreField.value = padre.nombre || '';
         if (edadField) edadField.value = padre.edad || '';
@@ -6694,7 +6842,6 @@ function cargarDatosFamilia(pacienteData, modo) {
         if (nacionalidadField) nacionalidadField.value = padre.nacionalidad || '';
         if (estudiosField) estudiosField.value = padre.estudios || '';
         if (estadoCivilField) estadoCivilField.value = padre.estadoCivil || '';
-        if (saludField) saludField.value = padre.salud || '';
     }
     
     // Cargar datos de la madre
@@ -6709,7 +6856,6 @@ function cargarDatosFamilia(pacienteData, modo) {
         const nacionalidadField = document.getElementById(`${prefijo}PatientMadreNacionalidad`);
         const estudiosField = document.getElementById(`${prefijo}PatientMadreEstudios`);
         const estadoCivilField = document.getElementById(`${prefijo}PatientMadreEstadoCivil`);
-        const saludField = document.getElementById(`${prefijo}PatientMadreSalud`);
         
         if (nombreField) nombreField.value = madre.nombre || '';
         if (edadField) edadField.value = madre.edad || '';
@@ -6720,7 +6866,6 @@ function cargarDatosFamilia(pacienteData, modo) {
         if (nacionalidadField) nacionalidadField.value = madre.nacionalidad || '';
         if (estudiosField) estudiosField.value = madre.estudios || '';
         if (estadoCivilField) estadoCivilField.value = madre.estadoCivil || '';
-        if (saludField) saludField.value = madre.salud || '';
     }
     
     // Cargar datos del colegio
@@ -9535,8 +9680,8 @@ function inicializarPestanasFormulario() {
 
 // Función para mostrar la primera pestaña por defecto
 function mostrarPrimeraPestana() {
-    const firstTabButton = document.querySelector('.tab-button[data-tab="basica"]');
-    const firstTabContent = document.getElementById('tab-basica');
+    const firstTabButton = document.querySelector('.tab-button[data-tab="motivos"]');
+    const firstTabContent = document.getElementById('tab-motivos');
     
     if (firstTabButton && firstTabContent) {
         firstTabButton.click();
@@ -9592,8 +9737,8 @@ function mostrarPrimeraPestanaEdicion() {
     console.log('🔄 Mostrando primera pestaña del formulario de edición...');
     
     const editModal = document.getElementById('editPatientModal');
-    const firstTabButton = editModal.querySelector('.tab-button[data-tab="basica"]');
-    const firstTabContent = editModal.querySelector('#tab-basica');
+    const firstTabButton = editModal.querySelector('.tab-button[data-tab="motivos"]');
+    const firstTabContent = editModal.querySelector('#tab-motivos');
     
     console.log('🔍 Botón primera pestaña encontrado:', !!firstTabButton);
     console.log('🔍 Contenido primera pestaña encontrado:', !!firstTabContent);

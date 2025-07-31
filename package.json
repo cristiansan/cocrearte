@@ -1,6 +1,6 @@
 {
   "name": "cocrearte",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "description": "Sistema de gestión para profesionales de la salud mental",
   "dependencies": {
     "anthropic": "^0.0.0"

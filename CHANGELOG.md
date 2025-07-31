@@ -1,5 +1,39 @@
 # Changelog
 
+## [0.4.6] - 2024-12-19
+
+### Added
+- **Sistema de motivos de consulta dinámicos por profesional**
+  - Nueva ficha "Motivos de Consulta" separada en formularios de agregar y editar pacientes
+  - Botones de selección de profesional: Nutrición, Psicología adultos, Psicología infantil, Psicopedagogía, Fonoaudiología
+  - Listas dinámicas de motivos de consulta según el profesional seleccionado
+  - Lista específica para Fonoaudiología con 13 motivos especializados (TDL severo/moderado/leve, Mutismo, TSH, Tartamudez, etc.)
+  - Persistencia del profesional seleccionado en Firestore
+  - Carga correcta del profesional al editar pacientes existentes
+
+### Changed
+- **Restructuración de formularios de pacientes**
+  - "Motivos de Consulta" movido a ficha independiente como primera pestaña
+  - Ficha "Información" desplazada a segunda posición
+  - Eliminación de campos "Estado de Salud" (padre y madre) de la sección Familiar
+  - Eliminación de sección "Información de Hermanos" en formulario de editar paciente
+  - Mejora en la organización y flujo de trabajo de los formularios
+
+### Fixed
+- **Corrección de errores de datos en Firestore**
+  - Eliminación de referencias a campos removidos en JavaScript
+  - Corrección de inconsistencia entre HTML y JavaScript en formulario de agregar paciente
+  - Resolución de error 400 Bad Request al guardar datos de pacientes
+  - Sincronización completa entre estructura de datos y formularios
+
+### Technical
+- **Optimizaciones en main.js**
+  - Nuevo objeto `MOTIVOS_CONSULTA_POR_PROFESIONAL` con listas específicas por especialidad
+  - Función `obtenerMotivosPorProfesional()` para carga dinámica de opciones
+  - Función `cambiarProfesional()` para actualización en tiempo real
+  - Función `crearBotonesProfesionales()` para generación dinámica de interfaz
+  - Integración completa con sistema de carga y guardado de datos
+
 ## [0.4.5] - 2024-12-19
 
 ### Fixed
