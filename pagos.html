@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagos - Espacio Cocrearte</title>
+    <!-- Tailwind CSS CDN para prototipo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: '#f5f3ff',
+                100: '#ede9fe',
+                500: '#8b5cf6',
+                600: '#818cf8',
+                700: '#6366f1',
+                800: '#3730a3',
+                900: '#312e81',
+              },
+              secondary: {
+                100: '#e5e7eb',
+                900: '#2d3748',
+              },
+              darkbg: '#181f2a',
+              darkcard: '#232b3b',
+              darkborder: '#313a4d',
+              darktext: '#d1d5db',
+              dustbg: '#2a2024',
+              dustcard: '#32272c',
+              dustborder: '#463a41',
+              dusttext: '#f2e9e4',
+            },
+            fontFamily: {
+              sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+            },
+          },
+        },
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="public/favicon.ico" type="image/x-icon">
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-storage-compat.js"></script>
+    <script src="firebase-config.js"></script>
+</head>
+<body class="bg-gray-50 dark:bg-darkbg text-gray-900 dark:text-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white dark:bg-darkcard shadow-sm border-b border-gray-200 dark:border-darkborder">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-4">
+                    <a href="index.html" class="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                        <span class="font-medium">Volver</span>
+                    </a>
+                    <div class="w-px h-6 bg-gray-300 dark:bg-gray-600"></div>
+                    <a href="index.html" class="flex items-center space-x-2">
+                        <img src="./public/favicon.ico" alt="Logo" class="h-8 w-8 rounded">
+                        <span class="text-xl font-bold text-primary-600 dark:text-primary-400">Espacio Cocrearte</span>
+                    </a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="themeToggle" title="Cambiar tema" class="p-2 rounded-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                        <span id="themeIcon" class="text-lg">🌙</span>
+                    </button>
+                    <button id="logoutBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition">
+                        Cerrar Sesión
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Gestión de Pagos</h1>
+            <p class="text-gray-600 dark:text-gray-400">Consulta y gestiona los pagos de tus pacientes</p>
+        </div>
+
+                 <!-- Selector de Paciente -->
+         <div class="bg-white dark:bg-darkcard rounded-lg shadow p-6 border dark:border-darkborder mb-6">
+             <div class="mb-4">
+                 <label for="selectPaciente" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                     Seleccionar Paciente
+                 </label>
+                 <select id="selectPaciente" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-darkbg dark:text-darktext">
+                     <option value="">Selecciona un paciente...</option>
+                 </select>
+             </div>
+             
+             <!-- Botones para actualizar sesiones -->
+             <div class="mt-4 space-y-2">
+                 <div>
+                     <button id="btnActualizarSesiones" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition">
+                         🔄 Actualizar Sesiones Sin Pago
+                     </button>
+                     <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                         Este botón actualiza las sesiones existentes que no tienen información de pago.
+                     </p>
+                 </div>
+                 
+                 
+             </div>
+            <!-- Mensaje cuando no hay pacientes -->
+            <div id="noPacientesMsg" class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg hidden">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                    <p class="text-yellow-800 dark:text-yellow-200 text-sm">
+                        No se encontraron pacientes. Asegúrate de haber creado pacientes en la página principal.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+                 <!-- Información del Paciente -->
+         <div id="infoPaciente" class="bg-white dark:bg-darkcard rounded-lg shadow p-6 border dark:border-darkborder mb-6 hidden">
+             <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Información del Paciente</h2>
+             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                 <div>
+                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nombre:</label>
+                     <p id="nombrePaciente" class="text-gray-900 dark:text-white font-medium"></p>
+                 </div>
+                 <div>
+                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Total Pagado:</label>
+                     <p id="totalPagado" class="text-green-600 dark:text-green-400 font-bold text-lg"></p>
+                 </div>
+                 <div>
+                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Total Adeudado:</label>
+                     <p id="totalAdeudado" class="text-red-600 dark:text-red-400 font-bold text-lg"></p>
+                 </div>
+             </div>
+         </div>
+
+        <!-- Tabla de Sesiones -->
+        <div id="tablaSesiones" class="bg-white dark:bg-darkcard rounded-lg shadow border dark:border-darkborder hidden">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-darkborder">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Historial de Sesiones y Pagos</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                                         <thead class="bg-gray-50 dark:bg-gray-800">
+                         <tr>
+                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sesión</th>
+                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Fecha</th>
+                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estado Pago</th>
+                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Costo Sesión</th>
+                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Pagado</th>
+                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Impagas</th>
+                         </tr>
+                     </thead>
+                    <tbody id="sesionesTableBody" class="bg-white dark:bg-darkcard divide-y divide-gray-200 dark:divide-gray-700">
+                        <!-- Aquí se cargarán las sesiones dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Mensaje cuando no hay sesiones -->
+        <div id="noSesionesMsg" class="bg-white dark:bg-darkcard rounded-lg shadow p-6 border dark:border-darkborder text-center hidden">
+            <p class="text-gray-500 dark:text-gray-400">No hay sesiones registradas para este paciente.</p>
+        </div>
+        
+    </main>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white dark:bg-darkcard rounded-lg p-6 flex items-center space-x-3">
+            <svg class="animate-spin h-6 w-6 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+            </svg>
+            <span class="text-gray-900 dark:text-white">Cargando...</span>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let currentUser = null;
+        let pacientes = [];
+        let sesiones = [];
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        // Inicializar la aplicación
+        async function initializeApp() {
+            console.log('🚀 Iniciando aplicación de pagos...');
+            console.log('🔧 Firebase disponible:', typeof firebase !== 'undefined');
+            console.log('🔧 Firebase Auth disponible:', typeof firebase.auth !== 'undefined');
+            console.log('🔧 Firebase Firestore disponible:', typeof firebase.firestore !== 'undefined');
+            
+            // Configurar tema
+            setupTheme();
+            
+            // Configurar autenticación
+            setupAuth();
+            
+            // Configurar event listeners
+            setupEventListeners();
+        }
+
+        // Configurar tema
+        function setupTheme() {
+            const themeToggle = document.getElementById('themeToggle');
+            const themeIcon = document.getElementById('themeIcon');
+            
+            // Obtener tema guardado
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+            themeIcon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+            
+            themeToggle.addEventListener('click', () => {
+                const isDark = document.documentElement.classList.toggle('dark');
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                themeIcon.textContent = isDark ? '☀️' : '🌙';
+            });
+        }
+
+        // Configurar autenticación
+        function setupAuth() {
+            console.log('🔧 Configurando autenticación...');
+            console.log('🔧 Firebase Auth disponible:', !!window.firebaseAuth);
+            console.log('🔧 Firebase DB disponible:', !!window.firebaseDB);
+            
+            if (!window.firebaseAuth) {
+                console.error('❌ Firebase Auth no está disponible');
+                return;
+            }
+            
+            window.firebaseAuth.onAuthStateChanged(user => {
+                console.log('🔧 Estado de autenticación cambiado:', user ? 'Usuario logueado' : 'Usuario no logueado');
+                if (user) {
+                    currentUser = user;
+                    console.log('👤 Usuario actual establecido:', user.uid);
+                    loadPacientes();
+                    
+                    // Verificar y actualizar sesiones sin pago automáticamente
+                    setTimeout(async () => {
+                        await actualizarSesionesSinPago();
+                    }, 2000); // Esperar 2 segundos para que se carguen los pacientes
+                } else {
+                    console.log('🚪 Redirigiendo a index.html');
+                    window.location.href = 'index.html';
+                }
+            });
+        }
+
+        // Configurar event listeners
+        function setupEventListeners() {
+            const logoutBtn = document.getElementById('logoutBtn');
+            const selectPaciente = document.getElementById('selectPaciente');
+            const btnActualizarSesiones = document.getElementById('btnActualizarSesiones');
+            
+            logoutBtn.addEventListener('click', () => {
+                window.firebaseAuth.signOut();
+            });
+            
+            selectPaciente.addEventListener('change', (e) => {
+                if (e.target.value) {
+                    loadSesionesPaciente(e.target.value);
+                } else {
+                    hidePacienteInfo();
+                }
+            });
+            
+            btnActualizarSesiones.addEventListener('click', async () => {
+                showLoading();
+                await actualizarSesionesSinPago();
+                hideLoading();
+            });
+            
+            // (Eliminado botón de datos de prueba)
+        }
+
+        // Cargar pacientes
+        async function loadPacientes() {
+            showLoading();
+            try {
+                console.log('🔍 Cargando pacientes para usuario:', currentUser.uid);
+                console.log('🔍 Usuario actual:', currentUser);
+                
+                const db = window.firebaseDB;
+                console.log('🔍 Firebase DB disponible:', !!db);
+                
+                const pacientesRef = db.collection('pacientes');
+                console.log('🔍 Referencia a colección pacientes creada');
+                
+                let querySnapshot;
+                let isAdminFromFirestore = false;
+                
+                // Verificar estado de admin desde Firestore
+                try {
+                    const userDoc = await db.collection('usuarios').doc(currentUser.uid).get();
+                    if (userDoc.exists) {
+                        const userData = userDoc.data();
+                        isAdminFromFirestore = userData.isAdmin === true;
+                        console.log('🔐 Datos del usuario en Firestore:', userData);
+                        console.log('🔐 isAdmin desde Firestore:', isAdminFromFirestore);
+                    }
+                } catch (error) {
+                    console.log('🔐 Error verificando admin en Firestore:', error);
+                }
+                
+                // Usar el estado de admin de Firestore
+                const finalIsAdmin = isAdminFromFirestore;
+                console.log('🔐 Estado final de admin:', finalIsAdmin);
+                
+                if (finalIsAdmin) {
+                    // Los administradores ven todos los pacientes
+                    console.log('👑 Cargando TODOS los pacientes (modo admin)');
+                    querySnapshot = await pacientesRef.get();
+                } else {
+                    // Los usuarios normales ven solo sus pacientes
+                    console.log('👤 Cargando pacientes del usuario actual');
+                    querySnapshot = await pacientesRef.where('owner', '==', currentUser.uid).get();
+                }
+                
+                console.log('📋 Total de pacientes encontrados:', querySnapshot.size);
+                
+                pacientes = [];
+                querySnapshot.forEach(doc => {
+                    const pacienteData = doc.data();
+                    console.log('👤 Paciente encontrado:', pacienteData.nombre, 'ID:', doc.id, 'Owner:', pacienteData.owner);
+                    pacientes.push({
+                        id: doc.id,
+                        ...pacienteData
+                    });
+                });
+                
+                // Ordenar pacientes alfabéticamente por nombre
+                pacientes.sort((a, b) => {
+                    const nombreA = (a.nombre || '').toLowerCase();
+                    const nombreB = (b.nombre || '').toLowerCase();
+                    return nombreA.localeCompare(nombreB);
+                });
+                
+                console.log('📝 Pacientes ordenados:', pacientes.map(p => p.nombre));
+                populatePacientesSelect();
+            } catch (error) {
+                console.error('Error cargando pacientes:', error);
+                console.error('Detalles del error:', error.message, error.stack);
+                showMessage('Error al cargar los pacientes', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Poblar el select de pacientes
+        function populatePacientesSelect() {
+            const select = document.getElementById('selectPaciente');
+            const noPacientesMsg = document.getElementById('noPacientesMsg');
+            
+            select.innerHTML = '<option value="">Selecciona un paciente...</option>';
+            
+            if (pacientes.length === 0) {
+                console.log('⚠️ No se encontraron pacientes para mostrar');
+                noPacientesMsg.classList.remove('hidden');
+                return;
+            }
+            
+            noPacientesMsg.classList.add('hidden');
+            
+            pacientes.forEach(paciente => {
+                const option = document.createElement('option');
+                option.value = paciente.id;
+                option.textContent = paciente.nombre || 'Sin nombre';
+                select.appendChild(option);
+            });
+            
+            console.log('✅ Se agregaron', pacientes.length, 'pacientes al dropdown');
+        }
+
+        // Cargar sesiones del paciente
+        async function loadSesionesPaciente(pacienteId) {
+            showLoading();
+            try {
+                const paciente = pacientes.find(p => p.id === pacienteId);
+                if (!paciente) {
+                    console.error('❌ Paciente no encontrado:', pacienteId);
+                    return;
+                }
+                
+                console.log('🔍 Cargando sesiones para paciente:', paciente.nombre, 'ID:', pacienteId);
+                
+                const db = window.firebaseDB;
+                // Corregido: buscar en la subcolección de sesiones del paciente
+                const sesionesRef = db.collection('pacientes').doc(pacienteId).collection('sesiones');
+                const querySnapshot = await sesionesRef
+                    .orderBy('fecha', 'desc')
+                    .get();
+                
+                console.log('📅 Total de sesiones encontradas:', querySnapshot.size);
+                
+                sesiones = [];
+                querySnapshot.forEach(doc => {
+                    const sesionData = doc.data();
+                    console.log('📝 Sesión encontrada:', {
+                        id: doc.id,
+                        fecha: sesionData.fecha,
+                        pago: sesionData.pago,
+                        monto: sesionData.monto,
+                        // Mostrar todos los campos para debug
+                        todosLosCampos: Object.keys(sesionData)
+                    });
+                    
+                    // Verificar si los campos de pago están presentes
+                    if (!sesionData.hasOwnProperty('pago')) {
+                        console.warn('⚠️ Sesión sin campo pago:', doc.id);
+                    }
+                    if (!sesionData.hasOwnProperty('monto')) {
+                        console.warn('⚠️ Sesión sin campo monto:', doc.id);
+                    }
+                    
+                    sesiones.push({
+                        id: doc.id,
+                        ...sesionData
+                    });
+                });
+                
+                console.log('📊 Total de sesiones cargadas:', sesiones.length);
+                console.log('📊 Sesiones con pago:', sesiones.filter(s => s.pago).length);
+                console.log('📊 Sesiones con monto:', sesiones.filter(s => s.monto).length);
+                
+                showPacienteInfo(paciente);
+                renderSesionesTable();
+            } catch (error) {
+                console.error('Error cargando sesiones:', error);
+                showMessage('Error al cargar las sesiones', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Mostrar información del paciente
+        function showPacienteInfo(paciente) {
+            const infoPaciente = document.getElementById('infoPaciente');
+            const nombrePaciente = document.getElementById('nombrePaciente');
+            const totalPagado = document.getElementById('totalPagado');
+            const totalAdeudado = document.getElementById('totalAdeudado');
+            
+            nombrePaciente.textContent = paciente.nombre || 'Sin nombre';
+            
+            // Calcular totales
+            let totalPagadoSum = 0;
+            let totalAdeudadoSum = 0;
+            
+            sesiones.forEach(sesion => {
+                const rawMonto = sesion.monto;
+                const rawCosto = sesion.costo;
+                const montoPagado = typeof rawMonto === 'string' ? parseFloat(rawMonto.replace(/\./g, '').replace(/,/g, '.')) || 0 : (parseFloat(rawMonto) || 0);
+                const costo = typeof rawCosto === 'string' ? parseFloat(rawCosto.replace(/\./g, '').replace(/,/g, '.')) || 0 : (parseFloat(rawCosto) || 0);
+                const pago = sesion.pago;
+                
+                switch (pago) {
+                    case 'pago':
+                        totalPagadoSum += montoPagado;
+                        break;
+                    case 'pago-una-parte':
+                        totalPagadoSum += montoPagado;
+                        totalAdeudadoSum += Math.max(costo - montoPagado, 0);
+                        break;
+                    case 'debe':
+                    default:
+                        totalAdeudadoSum += costo;
+                        break;
+                }
+            });
+            
+            const fmt = (n) => n.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            totalPagado.textContent = `$${fmt(totalPagadoSum)}`;
+            totalAdeudado.textContent = `$${fmt(totalAdeudadoSum)}`;
+            infoPaciente.classList.remove('hidden');
+        }
+
+        // Renderizar tabla de sesiones
+        function renderSesionesTable() {
+            const tablaSesiones = document.getElementById('tablaSesiones');
+            const noSesionesMsg = document.getElementById('noSesionesMsg');
+            const tbody = document.getElementById('sesionesTableBody');
+            
+            if (sesiones.length === 0) {
+                tablaSesiones.classList.add('hidden');
+                noSesionesMsg.classList.remove('hidden');
+                return;
+            }
+            
+            tablaSesiones.classList.remove('hidden');
+            noSesionesMsg.classList.add('hidden');
+            
+            tbody.innerHTML = '';
+            
+            sesiones.forEach(sesion => {
+                const row = document.createElement('tr');
+                let fecha = 'Sin fecha';
+                if (sesion.fecha) {
+                    if (sesion.fecha.toDate) {
+                        fecha = sesion.fecha.toDate().toLocaleDateString('es-ES');
+                    } else if (sesion.fecha.seconds) {
+                        fecha = new Date(sesion.fecha.seconds * 1000).toLocaleDateString('es-ES');
+                    } else {
+                        fecha = new Date(sesion.fecha).toLocaleDateString('es-ES');
+                    }
+                }
+                const montoPagado = parseFloat(sesion.monto) || 0;
+                const costo = typeof sesion.costo !== 'undefined' ? (parseFloat(sesion.costo) || 0) : 0;
+                const pago = sesion.pago || 'debe';
+                
+                console.log('🔍 Procesando sesión:', {
+                    fecha: fecha,
+                    costo: costo,
+                    montoPagado: montoPagado,
+                    pago: pago,
+                    sesionCompleta: sesion
+                });
+                
+                let estadoPago = '';
+                let pagado = 0;
+                let impagas = 0;
+                
+                switch (pago) {
+                    case 'pago':
+                        estadoPago = '<span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded-full">Pagado</span>';
+                        pagado = montoPagado;
+                        impagas = Math.max(costo - montoPagado, 0);
+                        console.log('✅ Sesión marcada como PAGADA, montoPagado:', montoPagado, 'pagado:', pagado);
+                        break;
+                    case 'pago-una-parte':
+                        estadoPago = '<span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 rounded-full">Pago Parcial</span>';
+                        pagado = montoPagado;
+                        impagas = Math.max(costo - montoPagado, 0);
+                        console.log('⚠️ Sesión marcada como PAGO PARCIAL, montoPagado:', montoPagado, 'pagado:', pagado);
+                        break;
+                    case 'debe':
+                    default:
+                        estadoPago = '<span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 rounded-full">Pendiente</span>';
+                        pagado = 0;
+                        impagas = costo;
+                        console.log('❌ Sesión marcada como DEBE, costo:', costo, 'pagado:', pagado);
+                        break;
+                }
+                
+                const fmt = (n) => n.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                        Sesión ${sesiones.indexOf(sesion) + 1}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                        ${fecha}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${estadoPago}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white font-medium">
+                        $${fmt(costo)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 dark:text-green-400 font-medium">
+                        <div class="flex items-center gap-2">
+                            <span>$${fmt(pagado)}</span>
+                            <button class="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 edit-sesion" data-sesion-id="${sesion.id}">Editar</button>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600 dark:text-red-400 font-medium">
+                        $${fmt(impagas)}
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+
+            // Listeners de edición
+            tbody.querySelectorAll('.edit-sesion').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const sesionId = e.currentTarget.getAttribute('data-sesion-id');
+                    const select = document.getElementById('selectPaciente');
+                    const pacienteId = select.value;
+                    if (!pacienteId || !sesionId) return;
+                    const sesion = sesiones.find(s => s.id === sesionId);
+                    if (!sesion) return;
+
+                    // Prompt simples para edición rápida (podemos mejorar a modal luego)
+                    const nuevoPago = prompt('Estado de pago (debe, pago, pago-una-parte):', sesion.pago || 'debe');
+                    if (nuevoPago === null) return;
+                    const nuevoCostoStr = prompt('Costo de la sesión:', String(Math.round(Number(sesion.costo || 0))).replace(/\B(?=(\d{3})+(?!\d))/g, '.'));
+                    if (nuevoCostoStr === null) return;
+                    const nuevoMontoStr = prompt('Monto pagado:', String(Math.round(Number(sesion.monto || 0))).replace(/\B(?=(\d{3})+(?!\d))/g, '.'));
+                    if (nuevoMontoStr === null) return;
+
+                    const parseMoney = (val) => {
+                        if (typeof val !== 'string') return Number(val) || 0;
+                        const clean = val.replace(/\./g, '').replace(/,/g, '.');
+                        return parseFloat(clean) || 0;
+                    };
+                    const update = {
+                        pago: (nuevoPago || '').trim() || 'debe',
+                        costo: parseMoney(nuevoCostoStr),
+                        monto: parseMoney(nuevoMontoStr)
+                    };
+
+                    try {
+                        showLoading();
+                        await window.firebaseDB.collection('pacientes').doc(pacienteId).collection('sesiones').doc(sesionId).update(update);
+                        await loadSesionesPaciente(pacienteId);
+                    } catch (err) {
+                        console.error('Error al actualizar sesión:', err);
+                        alert('No se pudo actualizar la sesión.');
+                    } finally {
+                        hideLoading();
+                    }
+                });
+            });
+        }
+
+        // Ocultar información del paciente
+        function hidePacienteInfo() {
+            document.getElementById('infoPaciente').classList.add('hidden');
+            document.getElementById('tablaSesiones').classList.add('hidden');
+            document.getElementById('noSesionesMsg').classList.add('hidden');
+        }
+
+        // Mostrar loading
+        function showLoading() {
+            document.getElementById('loadingSpinner').classList.remove('hidden');
+        }
+
+        // Ocultar loading
+        function hideLoading() {
+            document.getElementById('loadingSpinner').classList.add('hidden');
+        }
+
+        // Mostrar mensaje
+        function showMessage(message, type = 'info') {
+            // Implementar sistema de mensajes si es necesario
+            console.log(`${type.toUpperCase()}: ${message}`);
+        }
+        
+        // Función para actualizar sesiones existentes sin campos de pago
+        async function actualizarSesionesSinPago() {
+            console.log('🔄 Verificando sesiones sin campos de pago...');
+            
+            try {
+                const db = window.firebaseDB;
+                const pacientesRef = db.collection('pacientes');
+                
+                // Obtener todos los pacientes
+                const pacientesSnapshot = await pacientesRef.get();
+                console.log(`📊 Total de pacientes encontrados: ${pacientesSnapshot.size}`);
+                
+                let sesionesActualizadas = 0;
+                let sesionesSinPago = 0;
+                let sesionesConPago = 0;
+                let totalSesiones = 0;
+                
+                // Iterar sobre cada paciente
+                for (const pacienteDoc of pacientesSnapshot.docs) {
+                    const pacienteId = pacienteDoc.id;
+                    console.log(`🔍 Verificando sesiones del paciente: ${pacienteId}`);
+                    
+                    // Obtener las sesiones de este paciente
+                    const sesionesRef = pacientesRef.doc(pacienteId).collection('sesiones');
+                    const sesionesSnapshot = await sesionesRef.get();
+                    
+                    console.log(`📊 Sesiones del paciente ${pacienteId}: ${sesionesSnapshot.size}`);
+                    totalSesiones += sesionesSnapshot.size;
+                    
+                    // Contar y actualizar sesiones
+                    const actualizaciones = [];
+                    
+                    sesionesSnapshot.forEach(doc => {
+                        const sesionData = doc.data();
+                        
+                        if (!sesionData.hasOwnProperty('pago') || !sesionData.hasOwnProperty('monto')) {
+                            sesionesSinPago++;
+                            console.log(`⚠️ Sesión sin campos de pago encontrada: ${pacienteId}/${doc.id}`);
+                            
+                            // Actualizar la sesión con valores por defecto
+                            const datosActualizacion = {
+                                pago: 'debe',
+                                monto: 0,
+                                costo: typeof sesionData.costo === 'undefined' ? 0 : sesionData.costo
+                            };
+                            
+                            // Agregar a la lista de actualizaciones
+                            actualizaciones.push(
+                                sesionesRef.doc(doc.id).update(datosActualizacion)
+                                    .then(() => {
+                                        console.log(`✅ Sesión actualizada: ${pacienteId}/${doc.id}`);
+                                        sesionesActualizadas++;
+                                    })
+                                    .catch(error => {
+                                        console.error(`❌ Error actualizando sesión: ${pacienteId}/${doc.id}`, error);
+                                    })
+                            );
+                        } else {
+                            sesionesConPago++;
+                        }
+                    });
+                    
+                    // Esperar a que se completen las actualizaciones de este paciente
+                    if (actualizaciones.length > 0) {
+                        await Promise.all(actualizaciones);
+                    }
+                }
+                
+                console.log(`📊 Resumen final:`);
+                console.log(`📊 Total de pacientes: ${pacientesSnapshot.size}`);
+                console.log(`📊 Total de sesiones: ${totalSesiones}`);
+                console.log(`📊 Sesiones con pago: ${sesionesConPago}`);
+                console.log(`📊 Sesiones sin pago: ${sesionesSinPago}`);
+                console.log(`🔄 Proceso completado. ${sesionesActualizadas} sesiones actualizadas.`);
+                
+                // Recargar las sesiones del paciente actual si hay uno seleccionado
+                const selectPaciente = document.getElementById('selectPaciente');
+                if (selectPaciente.value) {
+                    await loadSesionesPaciente(selectPaciente.value);
+                }
+                
+            } catch (error) {
+                console.error('❌ Error verificando sesiones sin pago:', error);
+            }
+        }
+        
+        // (Función de datos de prueba eliminada)
+    </script>
+</body>
+</html> 

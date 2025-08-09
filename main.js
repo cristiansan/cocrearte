@@ -607,6 +607,39 @@ const inputFechaSesion = document.getElementById('inputFechaSesion');
 const inputPresentismoSesion = document.getElementById('inputPresentismoSesion');
 const inputNotasSesion = document.getElementById('inputNotasSesion');
 const cancelNuevaSesion = document.getElementById('cancelNuevaSesion');
+// Nuevos campos para pagos
+const inputPagoSesion = document.getElementById('inputPagoSesion');
+const inputMontoSesion = document.getElementById('inputMontoSesion');
+const inputCostoSesion = document.getElementById('inputCostoSesion');
+
+// Formateo y parseo de montos
+function formatThousandDotsFromString(str) {
+    const digits = String(str || '').replace(/\D/g, '');
+    if (!digits) return '';
+    return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+function parseMoneyString(str) {
+    if (typeof str !== 'string') return Number(str) || 0;
+    const clean = str.replace(/\./g, '').replace(/,/g, '.');
+    return parseFloat(clean) || 0;
+}
+
+function setupMoneyInputs() {
+    const moneyInputs = document.querySelectorAll('.money-input');
+    moneyInputs.forEach((el) => {
+        el.addEventListener('input', () => {
+            const caretEnd = el.selectionEnd;
+            el.value = formatThousandDotsFromString(el.value);
+            try { el.setSelectionRange(caretEnd, caretEnd); } catch (_) {}
+        });
+        // Inicializar formato si tiene valor
+        if (el.value) el.value = formatThousandDotsFromString(el.value);
+    });
+}
+
+// Inicializar formateo para inputs ya presentes
+setupMoneyInputs();
 
 // Referencias al modal de solo lectura para agenda múltiple
 const modalDetalleSesionMultiple = document.getElementById('modalDetalleSesionMultiple');
@@ -844,6 +877,30 @@ function abrirModalNuevaSesion(info) {
     inputFechaSesion.value = local;
     inputPresentismoSesion.value = '';
     inputNotasSesion.value = '';
+    if (inputPagoSesion) inputPagoSesion.value = '';
+    if (inputMontoSesion) inputMontoSesion.value = '';
+    
+    // Prefill costo sesión con el último usado del paciente (si hay paciente ya cargado en ficha)
+    if (inputCostoSesion) {
+        inputCostoSesion.value = '';
+        (async () => {
+            try {
+                // Si hay fichaPacienteRef activo, tomar última sesión que tenga 'costo'
+                if (fichaPacienteRef) {
+                    const lastSnap = await fichaPacienteRef.collection('sesiones').orderBy('fecha', 'desc').limit(1).get();
+                    if (!lastSnap.empty) {
+                        const last = lastSnap.docs[0].data();
+                        if (typeof last.costo !== 'undefined' && last.costo !== null) {
+                            const formatted = String(Math.round(Number(last.costo) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                            inputCostoSesion.value = formatted;
+                        }
+                    }
+                }
+            } catch (err) {
+                console.warn('No se pudo prellenar costo sesión:', err);
+            }
+        })();
+    }
     cargarPacientesParaSelect();
     // Mostrar select de profesional solo si es admin
     if (isAdmin && profesionalSelectContainer && selectProfesional) {
@@ -1028,6 +1085,14 @@ async function showDashboard(user) {
         // Configurar event listener para redirigir a estadísticas
         btnEstadisticas.addEventListener('click', () => {
             window.location.href = 'estadisticas.html';
+        });
+    }
+    
+    // Configurar event listener para el botón Pagos
+    const btnPagos = document.getElementById('btnPagos');
+    if (btnPagos) {
+        btnPagos.addEventListener('click', () => {
+            window.location.href = 'pagos.html';
         });
     }
     
@@ -1851,6 +1916,19 @@ async function loadSesiones() {
     // Identificar la primera sesión con comentarios (la más antigua que tenga comentarios)
     const primeraSesionConComentariosId = sesionesConComentarios.length > 0 ? sesionesConComentarios[0].id : null;
     
+    // Obtener último costo para prellenar en el formulario principal también
+    let lastCosto = 0;
+    if (sesionesParaMostrar.length > 0) {
+        const first = sesionesParaMostrar[0].data;
+        if (typeof first.costo !== 'undefined' && first.costo !== null) {
+            lastCosto = Number(first.costo) || 0;
+        }
+    }
+    const costoInput = document.getElementById('sesionCosto');
+    if (costoInput) {
+        costoInput.value = lastCosto ? String(Math.round(lastCosto)).replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '';
+    }
+
     sesionesParaMostrar.forEach(sesionInfo => {
         const s = sesionInfo.data;
         const esPrimera = sesionInfo.id === primeraSesionConComentariosId;
@@ -2234,14 +2312,38 @@ O usa un servidor local diferente como Live Server en VS Code.`);
         const datosCIE10 = obtenerDatosCIE10('ficha');
         console.log('📋 Datos CIE-10 para guardar:', datosCIE10);
         
+        // Obtener datos de pago
+        const pago = addSesionForm.sesionPago ? addSesionForm.sesionPago.value : 'debe';
+        // Parsear montos con separadores (puntos) a número
+        const parseMoney = (val) => {
+            if (typeof val !== 'string') return Number(val) || 0;
+            const clean = val.replace(/\./g, '').replace(/,/g, '.');
+            return parseFloat(clean) || 0;
+        };
+        const monto = addSesionForm.sesionMonto ? parseMoney(addSesionForm.sesionMonto.value) : 0;
+        const costo = addSesionForm.sesionCosto ? parseMoney(addSesionForm.sesionCosto.value) : 0;
+        
+        console.log('💰 Datos de pago a guardar:', { pago, monto });
+        console.log('💰 Elementos del formulario:', {
+            sesionPago: addSesionForm.sesionPago,
+            sesionMonto: addSesionForm.sesionMonto,
+            pagoValue: addSesionForm.sesionPago ? addSesionForm.sesionPago.value : 'no existe',
+            montoValue: addSesionForm.sesionMonto ? addSesionForm.sesionMonto.value : 'no existe'
+        });
+        
         const datosSession = {
             fecha,
             comentario,
             notas,
             presentismo,
+            pago,
+            monto,
+            costo,
             archivosUrls,
             creado: new Date()
         };
+        
+        console.log('💾 Datos completos de la sesión a guardar:', datosSession);
         
         // Agregar datos CIE-10 si están disponibles
         if (datosCIE10) {
@@ -3901,6 +4003,22 @@ if (formNuevaSesion) {
         const fecha = inputFechaSesion.value;
         const presentismo = inputPresentismoSesion.value;
         const notas = inputNotasSesion.value;
+        const pago = inputPagoSesion ? inputPagoSesion.value : 'debe';
+        const parseMoney = (val) => {
+            if (typeof val !== 'string') return Number(val) || 0;
+            const clean = val.replace(/\./g, '').replace(/,/g, '.');
+            return parseFloat(clean) || 0;
+        };
+        const monto = inputMontoSesion ? parseMoney(inputMontoSesion.value) : 0;
+        const costo = typeof inputCostoSesion !== 'undefined' && inputCostoSesion ? parseMoney(inputCostoSesion.value) : 0;
+        
+        console.log('💰 Datos de pago del calendario a guardar:', { pago, monto });
+        console.log('💰 Elementos del formulario del calendario:', {
+            inputPagoSesion: inputPagoSesion,
+            inputMontoSesion: inputMontoSesion,
+            pagoValue: inputPagoSesion ? inputPagoSesion.value : 'no existe',
+            montoValue: inputMontoSesion ? inputMontoSesion.value : 'no existe'
+        });
         const crearRecordatorio = document.getElementById('crearRecordatorioWhatsApp').checked;
         let profesionalId = null;
         if (isAdmin && profesionalSelectContainer && profesionalSelectContainer.style.display !== 'none' && selectProfesional) {
@@ -3917,7 +4035,10 @@ if (formNuevaSesion) {
                     fecha,
                     comentario: notas,
                     notas: notas, // <-- Guardar también como 'notas'
-                    presentismo: presentismo
+                    presentismo: presentismo,
+                    pago: pago,
+                    monto: monto,
+                    costo: costo
                 };
                 if (profesionalId) datosActualizacion.profesionalId = profesionalId;
                 if (datosCIE10) {
@@ -3946,8 +4067,13 @@ if (formNuevaSesion) {
                     comentario: notas,
                     notas: notas, // <-- Guardar también como 'notas'
                     presentismo: presentismo,
+                    pago: pago,
+                    monto: monto,
+                    costo: costo,
                     creado: new Date()
                 };
+                
+                console.log('💾 Datos completos de la sesión del calendario a guardar:', datosSession);
                 if (profesionalId) datosSession.profesionalId = profesionalId;
                 if (datosCIE10) {
                     datosSession.nomencladorCIE10 = datosCIE10;
@@ -8660,6 +8786,21 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (pacienteId) {
                 try {
+                        // Prefill costo sesión (último valor)
+                        try {
+                            const sesionesSnap = await window.firebaseDB.collection('pacientes').doc(pacienteId).collection('sesiones').orderBy('fecha', 'desc').limit(1).get();
+                            const costoInputMain = document.getElementById('sesionCosto');
+                            if (costoInputMain) {
+                                if (!sesionesSnap.empty) {
+                                    const d = sesionesSnap.docs[0].data();
+                                    const lastCosto = Number(d.costo) || 0;
+                                    costoInputMain.value = lastCosto ? String(Math.round(lastCosto)).replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '';
+                                } else {
+                                    costoInputMain.value = '';
+                                }
+                            }
+                        } catch (e) { console.warn('No se pudo precargar costo en ficha:', e); }
+                        
                     // Obtener datos del paciente
                     const pacienteDoc = await window.firebaseDB.collection('pacientes').doc(pacienteId).get();
                     if (pacienteDoc.exists) {

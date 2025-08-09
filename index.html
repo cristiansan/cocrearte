@@ -781,7 +781,7 @@
                     </p>
                     <!-- Número de versión - Visible para todos los usuarios -->
                             <button id="versionBtn" class="text-xs text-gray-500 hover:text-gray-300 transition mt-2 sm:mt-0 cursor-pointer" onclick="abrirModalVersion()">
-          v0.4.6
+          v0.4.7
         </button>
                 </div>
                 <div class="flex space-x-6 mt-4 md:mt-0">
@@ -910,7 +910,7 @@
             <div class="flex items-center gap-3">
                 <!-- Número de versión - Visible para todos los usuarios -->
                         <button id="versionBtnDashboard" class="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 dust:text-gray-400 dust:hover:text-gray-200 transition cursor-pointer px-2 py-1 rounded" onclick="abrirModalVersion()">
-          v0.4.6
+          v0.4.7
         </button>
                 <button id="logoutBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded transition">Cerrar sesión</button>
                 <!-- Botón de tema -->
@@ -928,6 +928,7 @@
             <button id="tabAgendaMultiple" class="tab-calendar bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-t">Agenda múltiple</button>
             <button id="btnEstadisticas" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-t hidden">Estadísticas</button>
             <button id="btnBackupPacientes" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-t hidden">Backup</button>
+            <button id="btnPagos" class="bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 px-4 rounded-t">Pagos</button>
 
         </div>
         <div id="calendarTabs" class="hidden">
@@ -1849,6 +1850,26 @@
                                 </div>
                             </div>
                             
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div>
+                                    <label for="sesionPago" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-1">Pago</label>
+                                    <select id="sesionPago" name="sesionPago" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-darkbg dark:text-darktext">
+                                        <option value="">Seleccionar</option>
+                                        <option value="debe">Debe</option>
+                                        <option value="pago">Pago</option>
+                                        <option value="pago-una-parte">Pago una parte</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="sesionMonto" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-1">Monto Pagado</label>
+                                    <input id="sesionMonto" name="sesionMonto" type="text" inputmode="numeric" class="money-input w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-darkbg dark:text-darktext" placeholder="0">
+                                </div>
+                                <div>
+                                    <label for="sesionCosto" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-1">Costo Sesión</label>
+                                    <input id="sesionCosto" name="sesionCosto" type="text" inputmode="numeric" class="money-input w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-darkbg dark:text-darktext" placeholder="0">
+                                </div>
+                            </div>
+                            
                             <div>
                                 <div class="flex items-center justify-between mb-1">
                                     <label for="sesionComentario" class="block text-sm font-medium text-[#2d3748] dark:text-gray-100">Observaciones</label>
@@ -1995,6 +2016,25 @@
               <option value="segunda-entrevista" data-color="#000000">⚫ Requiere segunda entrevista admisión</option>
               <option value="vacaciones" data-color="#0ea5e9">🔵 Vacaciones</option>
             </select>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label for="inputPagoSesion" class="block text-sm font-medium mb-2">Pago</label>
+              <select id="inputPagoSesion" name="pago" class="w-full px-3 py-3 border rounded-lg text-base">
+                <option value="">Seleccionar</option>
+                <option value="debe">Debe</option>
+                <option value="pago">Pago</option>
+                <option value="pago-una-parte">Pago una parte</option>
+              </select>
+            </div>
+            <div>
+              <label for="inputMontoSesion" class="block text-sm font-medium mb-2">Monto Pagado</label>
+              <input id="inputMontoSesion" name="monto" type="text" inputmode="numeric" class="money-input w-full px-3 py-3 border rounded-lg text-base" placeholder="0">
+            </div>
+            <div>
+              <label for="inputCostoSesion" class="block text-sm font-medium mb-2">Costo Sesión</label>
+              <input id="inputCostoSesion" name="costo" type="text" inputmode="numeric" class="money-input w-full px-3 py-3 border rounded-lg text-base" placeholder="0">
+            </div>
           </div>
           <div>
             <label for="inputNotasSesion" class="block text-sm font-medium mb-2">Notas</label>
@@ -3684,31 +3724,27 @@
                     <span class="text-2xl">🚀</span>
                     <div>
                         <h3 class="text-xl font-bold text-primary-700 dark:text-primary-400">Historial de Versiones</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 dust:text-gray-400">Espacio Cocrearte v0.4.6</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 dust:text-gray-400">Espacio Cocrearte v0.4.7</p>
                     </div>
                 </div>
                 <button onclick="cerrarModalVersion()" class="text-gray-400 hover:text-gray-700 text-2xl p-1">×</button>
             </div>
             
             <div class="p-6 space-y-6">
-                <!-- Versión 0.4.6 -->
+                <!-- Versión 0.4.7 -->
                 <div class="border-l-4 border-green-600 pl-4 mb-4">
                   <div class="flex items-center gap-2 mb-2">
-                                            <span class="bg-green-100 text-green-800 text-sm font-medium px-2 py-1 rounded">v0.4.6</span>
+                                            <span class="bg-green-100 text-green-800 text-sm font-medium px-2 py-1 rounded">v0.4.7</span>
                     <span class="text-sm text-gray-500">Actual</span>
                   </div>
-                  <h4 class="font-bold text-lg text-gray-900 dark:text-white dust:text-dusttext mb-3">🎯 Sistema de Motivos de Consulta Dinámicos por Profesional</h4>
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white dust:text-dusttext mb-3">💳 Gestión de Pagos por Sesión</h4>
                   <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300 dust:text-dusttext">
-                    <li>• <strong>🎯 Nueva Ficha "Motivos de Consulta":</strong> Separada en formularios de agregar y editar pacientes</li>
-                    <li>• <strong>👨‍⚕️ Botones de Profesional:</strong> Nutrición, Psicología adultos, Psicología infantil, Psicopedagogía, Fonoaudiología</li>
-                    <li>• <strong>📋 Listas Dinámicas:</strong> Motivos de consulta cambian según el profesional seleccionado</li>
-                    <li>• <strong>🔊 Fonoaudiología Especializada:</strong> 13 motivos específicos (TDL severo/moderado/leve, Mutismo, TSH, etc.)</li>
-                    <li>• <strong>💾 Persistencia de Datos:</strong> Profesional seleccionado se guarda en Firestore</li>
-                    <li>• <strong>🔄 Carga Inteligente:</strong> Al editar pacientes, se carga correctamente el profesional</li>
-                    <li>• <strong>🗂️ Restructuración de Formularios:</strong> "Motivos de Consulta" como primera pestaña</li>
-                    <li>• <strong>🧹 Limpieza de Campos:</strong> Eliminación de "Estado de Salud" y "Información de Hermanos"</li>
-                    <li>• <strong>🔧 Corrección de Errores:</strong> Resuelto error 400 Bad Request de Firestore</li>
-                    <li>• <strong>⚡ Optimización:</strong> Nuevas funciones para manejo dinámico de datos</li>
+                    <li>• <strong>Campos de pago en ficha clínica:</strong> Pago, Monto Pagado, Costo Sesión</li>
+                    <li>• <strong>Nueva página:</strong> pagos.html con selector de paciente y tabla de sesiones</li>
+                    <li>• <strong>Cálculo automático:</strong> Costo, Pagado, Impagas y totales por paciente</li>
+                    <li>• <strong>Edición rápida:</strong> Actualización de pago/costo/monto desde la propia tabla</li>
+                    <li>• <strong>Autorrelleno:</strong> Último Costo Sesión se prellena al crear nuevas sesiones</li>
+                    <li>• <strong>Formato:</strong> Puntos de miles en inputs y vistas</li>
                   </ul>
                 </div>
                 

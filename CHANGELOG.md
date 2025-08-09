@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.4.7] - 2024-12-19
+
+### Added
+- Gestión de pagos completa
+  - Campos en ficha clínica: Pago, Monto Pagado, Costo Sesión
+  - Persistencia de `pago`, `monto` y `costo` en Firestore por sesión
+  - Nueva página `pagos.html` con selector de paciente, tabla de sesiones y totales
+  - Cálculo por sesión: Costo, Pagado, Impagas; y totales: Total Pagado y Total Adeudado
+  - Edición rápida de cada sesión desde `pagos.html` (pago, costo, monto pagado)
+  - Autorrelleno del último “Costo Sesión” al crear nuevas sesiones
+  - Formato con puntos de miles en inputs y vistas
+
+### Changed
+- Botón y función de “Establecer Datos de Prueba” removidos de `pagos.html`
+- Corrección del logo roto en header de `pagos.html` (uso de `public/favicon.ico`)
+
+### Fixed
+- Carga de sesiones desde subcolecciones `pacientes/{id}/sesiones` en `pagos.html`
+- Migración que completa campos faltantes `pago`, `monto`, `costo` en sesiones antiguas
+
 ## [0.4.6] - 2024-12-19
 
 ### Added
