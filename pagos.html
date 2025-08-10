@@ -63,7 +63,6 @@
                     </a>
                     <div class="w-px h-6 bg-gray-300 dark:bg-gray-600"></div>
                     <a href="index.html" class="flex items-center space-x-2">
-                        <img src="./public/favicon.ico" alt="Logo" class="h-8 w-8 rounded">
                         <span class="text-xl font-bold text-primary-600 dark:text-primary-400">Espacio Cocrearte</span>
                     </a>
                 </div>
@@ -141,6 +140,30 @@
                  </div>
              </div>
          </div>
+
+        <!-- Resumen de Impagos -->
+        <div id="resumenImpagos" class="bg-white dark:bg-darkcard rounded-lg shadow p-6 border dark:border-darkborder mb-6 hidden">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Resumen de Pacientes con Deuda</h2>
+                <button id="btnDescargarResumenCSV" class="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg font-medium transition disabled:opacity-50" disabled>
+                    ⬇️ Descargar CSV
+                </button>
+            </div>
+            <div id="resumenImpagosEmpty" class="text-gray-600 dark:text-gray-400 hidden">No hay deudas registradas.</div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 dark:bg-gray-800">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Paciente</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Adeudado</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sesiones Impagas</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sesiones Totales</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resumenImpagosBody" class="bg-white dark:bg-darkcard divide-y divide-gray-200 dark:divide-gray-700"></tbody>
+                </table>
+            </div>
+        </div>
 
         <!-- Tabla de Sesiones -->
         <div id="tablaSesiones" class="bg-white dark:bg-darkcard rounded-lg shadow border dark:border-darkborder hidden">
@@ -368,6 +391,7 @@
             if (pacientes.length === 0) {
                 console.log('⚠️ No se encontraron pacientes para mostrar');
                 noPacientesMsg.classList.remove('hidden');
+                renderResumenImpagos([]);
                 return;
             }
             
@@ -381,6 +405,107 @@
             });
             
             console.log('✅ Se agregaron', pacientes.length, 'pacientes al dropdown');
+
+            // Calcular resumen de impagos para todos los pacientes
+            calcularYRenderResumenImpagos();
+        }
+
+        // Calcular deudas de todos los pacientes y renderizar resumen
+        async function calcularYRenderResumenImpagos() {
+            const db = window.firebaseDB;
+            const pacientesRef = db.collection('pacientes');
+            const resultados = [];
+            for (const p of pacientes) {
+                try {
+                    const sesionesSnap = await pacientesRef.doc(p.id).collection('sesiones').get();
+                    let totalAdeudado = 0;
+                    let sesionesImpagas = 0;
+                    let sesionesTotales = 0;
+                    sesionesSnap.forEach(doc => {
+                        const s = doc.data();
+                        sesionesTotales += 1;
+                        const rawMonto = s.monto;
+                        const rawCosto = s.costo;
+                        const montoPagado = typeof rawMonto === 'string' ? parseFloat(String(rawMonto).replace(/\./g, '').replace(/,/g, '.')) || 0 : (parseFloat(rawMonto) || 0);
+                        const costo = typeof rawCosto === 'string' ? parseFloat(String(rawCosto).replace(/\./g, '').replace(/,/g, '.')) || 0 : (parseFloat(rawCosto) || 0);
+                        const pago = s.pago || 'debe';
+                        switch (pago) {
+                            case 'pago':
+                                break;
+                            case 'pago-una-parte':
+                                totalAdeudado += Math.max(costo - montoPagado, 0);
+                                if (costo - montoPagado > 0) sesionesImpagas += 1;
+                                break;
+                            case 'debe':
+                            default:
+                                totalAdeudado += costo;
+                                if (costo > 0) sesionesImpagas += 1;
+                                break;
+                        }
+                    });
+                    resultados.push({ id: p.id, nombre: p.nombre || 'Sin nombre', totalAdeudado, sesionesImpagas, sesionesTotales });
+                } catch (err) {
+                    console.warn('No se pudieron obtener sesiones para', p.id, err);
+                }
+            }
+            // Ordenar por mayor deuda
+            resultados.sort((a,b) => b.totalAdeudado - a.totalAdeudado);
+            renderResumenImpagos(resultados);
+        }
+
+        function renderResumenImpagos(items) {
+            const cont = document.getElementById('resumenImpagos');
+            const empty = document.getElementById('resumenImpagosEmpty');
+            const body = document.getElementById('resumenImpagosBody');
+            const btnCsv = document.getElementById('btnDescargarResumenCSV');
+            if (!cont || !empty || !body || !btnCsv) return;
+            if (!items || items.length === 0 || items.every(i => (i.totalAdeudado || 0) <= 0)) {
+                cont.classList.remove('hidden');
+                empty.classList.remove('hidden');
+                body.innerHTML = '';
+                btnCsv.disabled = true;
+                btnCsv.onclick = null;
+                return;
+            }
+            empty.classList.add('hidden');
+            cont.classList.remove('hidden');
+            body.innerHTML = '';
+            const fmt = (n) => (n || 0).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            items.forEach(it => {
+                if ((it.totalAdeudado || 0) <= 0) return;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">${it.nombre}</td>
+                    <td class="px-6 py-3 whitespace-nowrap text-sm text-red-600 dark:text-red-400 font-semibold">$${fmt(it.totalAdeudado)}</td>
+                    <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">${it.sesionesImpagas}</td>
+                    <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">${it.sesionesTotales}</td>
+                `;
+                body.appendChild(tr);
+            });
+            btnCsv.disabled = false;
+            btnCsv.onclick = () => descargarResumenCSV(items);
+        }
+
+        function descargarResumenCSV(items) {
+            const headers = ['Paciente','Total Adeudado','Sesiones Impagas','Sesiones Totales'];
+            const rows = items
+                .filter(i => (i.totalAdeudado || 0) > 0)
+                .map(i => [
+                    (i.nombre || '').replaceAll('"','""'),
+                    String(Math.round(i.totalAdeudado)),
+                    String(i.sesionesImpagas || 0),
+                    String(i.sesionesTotales || 0),
+                ]);
+            const csv = [headers.join(','), ...rows.map(r => r.map(v => /[",\n]/.test(v) ? `"${v}"` : v).join(','))].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `resumen_impagos_${new Date().toISOString().slice(0,10)}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
 
         // Cargar sesiones del paciente

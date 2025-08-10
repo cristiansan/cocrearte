@@ -788,7 +788,6 @@ if (showLoginFormFromForgotBtn) {
 contactBtn.addEventListener('click', () => {
     alert('Contacto: cristiansan@gmail.com');
 });
-
 // Event listeners para el modal de información de un hermano
 if (formInfoHermano) {
     formInfoHermano.addEventListener('submit', (e) => {
@@ -1480,7 +1479,6 @@ showAddPatientBtn.addEventListener('click', async () => {
     // Configurar botones de hermanos después de mostrar el modal
     setTimeout(() => configurarBotonesHermanos(), 100);
 });
-
 // Cargar pacientes desde Firestore
 async function loadPatients(uid) {
     console.log('📋 Cargando pacientes para UID:', uid);
@@ -1530,12 +1528,52 @@ async function loadPatients(uid) {
             }
         }
         
+        // Consultar última sesión para resaltar si desiste tratamiento
+        let ultimaSesDesiste = false;
+        try {
+            const lastSesSnap = await window.firebaseDB
+                .collection('pacientes').doc(id)
+                .collection('sesiones')
+                .orderBy('fecha', 'desc')
+                .limit(1)
+                .get();
+            if (!lastSesSnap.empty) {
+                const lastData = lastSesSnap.docs[0].data();
+                const lastPresentismo = (lastData.presentismo || '').toLowerCase();
+                ultimaSesDesiste = lastPresentismo.includes('desiste');
+            }
+        } catch (e) {
+            console.warn('No se pudo obtener última sesión de', id, e);
+        }
+        // Fallback por 'creado'
+        if (!ultimaSesDesiste) {
+            try {
+                const lastByCreated = await window.firebaseDB
+                    .collection('pacientes').doc(id)
+                    .collection('sesiones')
+                    .orderBy('creado', 'desc')
+                    .limit(1)
+                    .get();
+                if (!lastByCreated.empty) {
+                    const lastData = lastByCreated.docs[0].data();
+                    const lastPresentismo = (lastData.presentismo || '').toLowerCase();
+                    ultimaSesDesiste = lastPresentismo.includes('desiste');
+                }
+            } catch (e2) {
+                console.warn('Fallback por creado falló para', id, e2);
+            }
+        }
+        
         // Aplicar clases CSS según si es derivado o no
-        const baseClasses = 'border rounded p-4 flex flex-col md:flex-row md:items-center md:justify-between cursor-pointer transition';
-        const normalClasses = 'hover:bg-gray-50 dark:hover:bg-darkborder';
+        const baseClasses = 'border rounded p-3 cursor-pointer transition';
+        const normalClasses = 'bg-gray-50 dark:bg-darkbg hover:bg-primary-50 dark:hover:bg-darkborder';
         const derivadoClasses = 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-600 hover:bg-green-100 dark:hover:bg-green-900/30';
         
-        div.className = esDerivado ? `${baseClasses} ${derivadoClasses}` : `${baseClasses} ${normalClasses}`;
+        const cardClasses = ultimaSesDesiste
+            ? `${baseClasses} ${normalClasses}`
+            : (esDerivado ? `${baseClasses} ${derivadoClasses}` : `${baseClasses} ${normalClasses}`);
+        
+        div.className = `${cardClasses}`;
         div.setAttribute('data-paciente-id', id);
         
         // Crear avatar del paciente
@@ -1558,7 +1596,7 @@ async function loadPatients(uid) {
             <div class="flex items-center gap-3">
                 ${avatarHTML}
                 <div>
-                    <div class="font-bold text-[#2d3748] dark:text-gray-100">${p.nombre || ''}</div>
+                    <div class="font-bold ${ultimaSesDesiste ? 'text-red-700 dark:text-red-300' : 'text-[#2d3748] dark:text-gray-100'}">${p.nombre || ''}${ultimaSesDesiste ? ' (desiste)' : ''}</div>
         `;
         
         // Agregar información de derivación si corresponde
@@ -1575,7 +1613,6 @@ async function loadPatients(uid) {
         patientsList.appendChild(div);
     }
 }
-
     // Agregar paciente
 addPatientForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -2219,7 +2256,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
-
 // Modal de confirmación personalizado
 function customConfirm(message) {
     return new Promise((resolve) => {
@@ -2237,7 +2273,6 @@ function customConfirm(message) {
         customConfirmCancel.addEventListener('click', cancelHandler);
     });
 }
-
 // Modificar submit de sesión para usar el modal
 addSesionForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -2375,7 +2410,6 @@ function disableFileInput() {
     const archivoInput = document.getElementById('sesionArchivo');
     if (archivoInput) archivoInput.disabled = true;
 }
-
 function enableFileInput() {
     const archivoInput = document.getElementById('sesionArchivo');
     if (archivoInput) archivoInput.disabled = false;
@@ -2572,22 +2606,64 @@ async function showAdminPanel() {
             }
           }
           
+          // Consultar última sesión para resaltar si desiste tratamiento
+          let ultimaSesDesiste = false;
+          try {
+            const lastSesSnap = await window.firebaseDB
+              .collection('pacientes').doc(id)
+              .collection('sesiones')
+              .orderBy('fecha', 'desc')
+              .limit(1)
+              .get();
+            if (!lastSesSnap.empty) {
+              const lastData = lastSesSnap.docs[0].data();
+              const lastPresentismo = (lastData.presentismo || '').toLowerCase();
+              ultimaSesDesiste = lastPresentismo.includes('desiste');
+            }
+          } catch (e) {
+            console.warn('No se pudo obtener última sesión de', id, e);
+          }
+          // Fallback por 'creado'
+          if (!ultimaSesDesiste) {
+            try {
+                const lastByCreated = await window.firebaseDB
+                    .collection('pacientes').doc(id)
+                    .collection('sesiones')
+                    .orderBy('creado', 'desc')
+                    .limit(1)
+                    .get();
+                if (!lastByCreated.empty) {
+                    const lastData = lastByCreated.docs[0].data();
+                    const lastPresentismo = (lastData.presentismo || '').toLowerCase();
+                    ultimaSesDesiste = lastPresentismo.includes('desiste');
+                }
+            } catch (e2) {
+                console.warn('Fallback por creado falló para', id, e2);
+            }
+          }
+          
           // Aplicar clases CSS según si es derivado o no
           const baseClasses = 'border rounded p-3 cursor-pointer transition';
           const normalClasses = 'bg-gray-50 dark:bg-darkbg hover:bg-primary-50 dark:hover:bg-darkborder';
           const derivadoClasses = 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-600 hover:bg-green-100 dark:hover:bg-green-900/30';
           
-          const cardClasses = esDerivado ? `${baseClasses} ${derivadoClasses}` : `${baseClasses} ${normalClasses}`;
+          const cardClasses = ultimaSesDesiste
+            ? `${baseClasses} ${normalClasses}`
+            : (esDerivado ? `${baseClasses} ${derivadoClasses}` : `${baseClasses} ${normalClasses}`);
           
-          pacientesHtml += `<div class=\"${cardClasses}\" data-paciente-id=\"${id}\">\n` +
-            `<div class=\"font-bold text-[#2d3748] dark:text-gray-100\">${p.nombre || '(sin nombre)'}</div>\n`;
+          const div = document.createElement('div');
+          div.className = `${cardClasses}`;
+          div.setAttribute('data-paciente-id', id);
+          
+          div.innerHTML = `
+            <div class="font-bold ${ultimaSesDesiste ? 'text-red-700 dark:text-red-300' : 'text-[#2d3748] dark:text-gray-100'}">${p.nombre || '(sin nombre)'}${ultimaSesDesiste ? ' (desiste)' : ''}</div>\n`;
           
           // Agregar información de derivación si corresponde
           if (esDerivado) {
-            pacientesHtml += `<div class=\"text-sm text-green-600 dark:text-green-400 mt-1\">📤 Derivado de ${nombreDerivador}</div>\n`;
+            div.innerHTML += `<div class=\"text-sm text-green-600 dark:text-green-400 mt-1\">📤 Derivado de ${nombreDerivador}</div>\n`;
           }
           
-          pacientesHtml += '</div>';
+          pacientesHtml += div.outerHTML;
         }
         pacientesHtml += '</div>';
       }
@@ -2967,17 +3043,14 @@ function activarBotonVista(tipo) {
     }
     actualizarLabelCalendario();
 }
-
 // Variables para el filtro de profesionales
 let profesionalesDisponibles = [];
 let profesionalesSeleccionados = [];
-
 // Función para asignar colores: Violeta para días ocupados
 function getColorForProfessional(profesionalId) {
     // Todos los eventos (días ocupados) serán de color violeta
     return '#8b5cf6'; // violet
 }
-
 // Función para cargar select de profesionales
 function cargarFiltrosProfesionales() {
     console.log('🎯 === INICIANDO cargarFiltrosProfesionales ===');
@@ -3658,7 +3731,6 @@ async function mostrarAgendaMultiple() {
         activarBotonVista('month');
     }
 }
-
 // Función para volver a la agenda individual
 function mostrarAgendaIndividual() {
     // Ocultar sección de pacientes cuando se muestra el calendario
@@ -4451,7 +4523,6 @@ function cargarSubcategoriasCIE10(categoriaId, selectCodigoId, descripcionId) {
         console.warn('⚠️ No se encontraron subcategorías para la categoría:', categoriaId);
     }
 }
-
 // Función para mostrar la descripción del código seleccionado
 function mostrarDescripcionCIE10(codigo, descripcionId) {
     const descripcionDiv = document.getElementById(descripcionId);
@@ -5186,7 +5257,6 @@ function limpiarFormularioEdicion() {
         console.log('✅ Formulario de edición completamente reseteado');
     }
 }
-
 // Función para abrir el modal de edición con los datos del paciente
 window.showEditPatientModal = function(pacienteId, pacienteData) {
     console.log('✏️ Abriendo modal de edición para paciente:', pacienteId);
@@ -5942,7 +6012,6 @@ window.guardarInfoHermanos = async function() {
         showMessage('❌ Error al guardar información de hermanos', 'error');
     }
 };
-
 // === EVENT LISTENERS PARA FORMULARIOS ===
 document.addEventListener('DOMContentLoaded', function() {
     // Form Padre
@@ -6448,9 +6517,7 @@ document.addEventListener('click', function(e) {
         }
     }
 });
-
 console.log('🚀 Funciones de versión cargadas correctamente');
-
 // === FOTO DE PERFIL DEL TERAPEUTA ===
 function inicializarFotoPerfil() {
   console.log('[DEBUG] Inicializando funcionalidad de foto de perfil...');
@@ -7014,9 +7081,6 @@ function cargarDatosFamilia(pacienteData, modo) {
     
     console.log('✅ Datos de familia y colegio cargados correctamente');
 }
-
-// (Bloque duplicado eliminado para evitar error de referencia a cargarPacientesBackup)
-
 // === BACKUP MODAL LOGIC ===
 window.addEventListener('DOMContentLoaded', () => {
     console.log('[DEBUG] DOMContentLoaded ejecutándose para backup modal');
@@ -8294,7 +8358,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 });
-
 // Función para crear botón de dictado en vista maximizada
 function createFullscreenDictateButton() {
     // Verificar que no exista ya
@@ -9094,7 +9157,6 @@ Si necesitas reprogramar, responde a este mensaje.
 ¡Te esperamos! 😊`,
 
     formal: `Estimado/a {nombre},
-
 Le recordamos que tiene una cita programada para mañana:
 
 📅 Fecha: {fecha}
@@ -9520,7 +9582,7 @@ window.confirmarDerivacion = async function(event) {
         console.log('📋 Datos de derivación:', {
             pacienteId: pacienteADerivar.id,
             profesionalDestino: profesionalDestino,
-            currentUser: window.firebaseAuth.currentUser?.uid
+            currentUser: window.firebaseAuth.currentUser.uid
         });
         
         // Validar Firebase
@@ -9891,7 +9953,6 @@ function mostrarPrimeraPestanaEdicion() {
         console.error('❌ No se pudo activar la primera pestaña');
     }
 }
-
 // Agregar event listener para inicializar pestañas cuando se abra el modal
 document.addEventListener('DOMContentLoaded', function() {
     // Inicializar pestañas cuando se abra el modal de agregar paciente

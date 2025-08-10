@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.4.8] - 2025-08-10
+
+### Added
+- Resumen de impagos en `pagos.html`
+  - Sección “Resumen de Pacientes con Deuda” debajo del selector de paciente
+  - Tabla con columnas: Paciente, Total Adeudado, Sesiones Impagas y Sesiones Totales
+  - Cálculo automático de totales por paciente (recorre todas las sesiones y suma deudas)
+  - Ordenado por mayor deuda
+  - Botón “Descargar CSV” que exporta el resumen a `resumen_impagos_YYYY-MM-DD.csv`
+
+### Changed
+- Marcado en rojo de pacientes que abandonan tratamiento
+  - Se pinta en rojo la tarjeta y el nombre cuando la última sesión tiene presentismo `desiste`
+  - Prioridad del rojo por `desiste` sobre el estado “derivado”
+  - Indicador mostrado como texto plano “(desiste)” (se eliminó el `span` para evitar render de `</span>` literal)
+
+### Fixed
+- Detección de última sesión más robusta: fallback por campo `creado` si la consulta por `fecha` no aplica
+- Eliminado comportamiento especial que forzaba en rojo nombres que contienen “Sabado/Sábado”
+- Corrección de referencia a variable no definida en render de pacientes (`pacientesHtml`)
+- Eliminación del logo roto en header de `pagos.html`
+
 ## [0.4.7] - 2024-12-19
 
 ### Added
