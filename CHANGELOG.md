@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.4.9] - 2025-08-11
+
+### Added
+- Historial muestra estado de pagos por sesión (Pagado / Pago parcial / Pendiente) con Costo, Pagado y Saldo
+- Tabla de sesiones en `pagos.html` muestra Saldo acumulado por sesión (arrastre entre sesiones)
+- Botón para mostrar/ocultar el “Resumen de Pacientes con Deuda” (por defecto oculto)
+
+### Changed
+- Totales en `pagos.html`: “Total Adeudado” refleja el saldo final acumulado si es positivo
+- Renombrado encabezado “Impagas” a “Saldo” en la tabla de sesiones
+
+### Removed
+- Botón “Actualizar Sesiones Sin Pago” y ejecución automática asociada
+
 ## [0.4.8] - 2025-08-10
 
 ### Added

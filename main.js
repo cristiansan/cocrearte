@@ -1996,6 +1996,31 @@ async function loadSesiones() {
         htmlContent += `
             <div class="text-sm font-bold text-[#2d3748] dark:text-gray-100"><span class="font-semibold">Fecha:</span> ${s.fecha || ''}</div>
             ${s.presentismo ? `<div class="text-xs mt-1"><span class="font-semibold">Presentismo:</span> ${obtenerTextoPresentismo(s.presentismo)}</div>` : ''}
+        `;
+
+        // Estado de pagos (resumen por sesión)
+        {
+            const parseMoney = (val) => {
+                if (typeof val === 'number') return isNaN(val) ? 0 : val;
+                if (typeof val === 'string') {
+                    const clean = val.replace(/\./g, '').replace(/,/g, '.');
+                    const n = parseFloat(clean);
+                    return isNaN(n) ? 0 : n;
+                }
+                return 0;
+            };
+            const fmt = (n) => (Number(n) || 0).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            const pago = s.pago || 'debe';
+            const costo = parseMoney(s.costo);
+            const pagado = parseMoney(s.monto);
+            const saldo = costo - pagado;
+            const pagoTexto = pago === 'pago' ? 'Pagado' : (pago === 'pago-una-parte' ? 'Pago parcial' : 'Pendiente');
+            htmlContent += `
+                <div class="text-xs mt-1"><span class="font-semibold">Pago:</span> ${pagoTexto} · Costo $${fmt(costo)} · Pagado $${fmt(pagado)} · Saldo $${fmt(saldo)}</div>
+            `;
+        }
+
+        htmlContent += `
             <div class="text-gray-900 dark:text-gray-200">${s.comentario || ''}</div>
             ${s.notas ? `<div class="text-xs mt-2 text-[#4b5563] dark:text-gray-400"><span class="font-semibold">Notas:</span> ${s.notas}</div>` : ''}
         `;
@@ -2062,7 +2087,32 @@ function crearHtmlSesionModal(sesionInfo, esPrimera) {
             <div class="text-lg font-bold text-[#2d3748] dark:text-gray-100 mb-2">
                 <span class="font-semibold">Fecha:</span> ${s.fecha || ''}
             </div>
-            ${s.presentismo ? `<div class="text-sm mb-2 text-gray-600 dark:text-gray-400"><span class="font-semibold">Presentismo:</span> ${obtenerTextoPresentismo(s.presentismo)}</div>` : ''}
+            ${s.presentismo ? `<div class=\"text-sm mb-2 text-gray-600 dark:text-gray-400\"><span class=\"font-semibold\">Presentismo:</span> ${obtenerTextoPresentismo(s.presentismo)}</div>` : ''}
+    `;
+
+    // Bloque de pagos para el modal
+    {
+        const parseMoney = (val) => {
+            if (typeof val === 'number') return isNaN(val) ? 0 : val;
+            if (typeof val === 'string') {
+                const clean = val.replace(/\./g, '').replace(/,/g, '.');
+                const n = parseFloat(clean);
+                return isNaN(n) ? 0 : n;
+            }
+            return 0;
+        };
+        const fmt = (n) => (Number(n) || 0).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        const pago = s.pago || 'debe';
+        const costo = parseMoney(s.costo);
+        const pagado = parseMoney(s.monto);
+        const saldo = costo - pagado;
+        const pagoTexto = pago === 'pago' ? 'Pagado' : (pago === 'pago-una-parte' ? 'Pago parcial' : 'Pendiente');
+        htmlContent += `
+            <div class=\"text-sm mb-2 text-gray-600 dark:text-gray-400\"><span class=\"font-semibold\">Pago:</span> ${pagoTexto} · Costo $${fmt(costo)} · Pagado $${fmt(pagado)} · Saldo $${fmt(saldo)}</div>
+        `;
+    }
+
+    htmlContent += `
         </div>
         
         <div class="mb-4">

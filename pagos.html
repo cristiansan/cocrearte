@@ -96,19 +96,12 @@
                  </select>
              </div>
              
-             <!-- Botones para actualizar sesiones -->
-             <div class="mt-4 space-y-2">
-                 <div>
-                     <button id="btnActualizarSesiones" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition">
-                         🔄 Actualizar Sesiones Sin Pago
-                     </button>
-                     <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                         Este botón actualiza las sesiones existentes que no tienen información de pago.
-                     </p>
-                 </div>
-                 
-                 
-             </div>
+            <!-- Botón para mostrar/ocultar resumen de deudas -->
+            <div class="mt-4">
+                <button id="btnToggleResumen" class="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg font-medium transition">
+                    📊 Mostrar Resumen de Deudas
+                </button>
+            </div>
             <!-- Mensaje cuando no hay pacientes -->
             <div id="noPacientesMsg" class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg hidden">
                 <div class="flex items-center">
@@ -179,7 +172,7 @@
                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estado Pago</th>
                               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Costo Sesión</th>
                               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Pagado</th>
-                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Impagas</th>
+                              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Saldo</th>
                          </tr>
                      </thead>
                     <tbody id="sesionesTableBody" class="bg-white dark:bg-darkcard divide-y divide-gray-200 dark:divide-gray-700">
@@ -269,11 +262,6 @@
                     currentUser = user;
                     console.log('👤 Usuario actual establecido:', user.uid);
                     loadPacientes();
-                    
-                    // Verificar y actualizar sesiones sin pago automáticamente
-                    setTimeout(async () => {
-                        await actualizarSesionesSinPago();
-                    }, 2000); // Esperar 2 segundos para que se carguen los pacientes
                 } else {
                     console.log('🚪 Redirigiendo a index.html');
                     window.location.href = 'index.html';
@@ -285,7 +273,7 @@
         function setupEventListeners() {
             const logoutBtn = document.getElementById('logoutBtn');
             const selectPaciente = document.getElementById('selectPaciente');
-            const btnActualizarSesiones = document.getElementById('btnActualizarSesiones');
+            const btnToggleResumen = document.getElementById('btnToggleResumen');
             
             logoutBtn.addEventListener('click', () => {
                 window.firebaseAuth.signOut();
@@ -299,11 +287,21 @@
                 }
             });
             
-            btnActualizarSesiones.addEventListener('click', async () => {
-                showLoading();
-                await actualizarSesionesSinPago();
-                hideLoading();
-            });
+            // Toggle de resumen de deudas
+            if (btnToggleResumen) {
+                btnToggleResumen.addEventListener('click', () => {
+                    const cont = document.getElementById('resumenImpagos');
+                    if (!cont) return;
+                    const visible = !cont.classList.contains('hidden');
+                    if (visible) {
+                        cont.classList.add('hidden');
+                        btnToggleResumen.textContent = '📊 Mostrar Resumen de Deudas';
+                    } else {
+                        cont.classList.remove('hidden');
+                        btnToggleResumen.textContent = '📉 Ocultar Resumen de Deudas';
+                    }
+                });
+            }
             
             // (Eliminado botón de datos de prueba)
         }
@@ -580,33 +578,34 @@
             
             // Calcular totales
             let totalPagadoSum = 0;
-            let totalAdeudadoSum = 0;
-            
-            sesiones.forEach(sesion => {
-                const rawMonto = sesion.monto;
-                const rawCosto = sesion.costo;
-                const montoPagado = typeof rawMonto === 'string' ? parseFloat(rawMonto.replace(/\./g, '').replace(/,/g, '.')) || 0 : (parseFloat(rawMonto) || 0);
-                const costo = typeof rawCosto === 'string' ? parseFloat(rawCosto.replace(/\./g, '').replace(/,/g, '.')) || 0 : (parseFloat(rawCosto) || 0);
-                const pago = sesion.pago;
-                
-                switch (pago) {
-                    case 'pago':
-                        totalPagadoSum += montoPagado;
-                        break;
-                    case 'pago-una-parte':
-                        totalPagadoSum += montoPagado;
-                        totalAdeudadoSum += Math.max(costo - montoPagado, 0);
-                        break;
-                    case 'debe':
-                    default:
-                        totalAdeudadoSum += costo;
-                        break;
+            let saldoAcumulado = 0;
+            const parseMoney = (val) => {
+                if (typeof val === 'number') return isNaN(val) ? 0 : val;
+                if (typeof val === 'string') {
+                    const clean = val.replace(/\./g, '').replace(/,/g, '.');
+                    const n = parseFloat(clean);
+                    return isNaN(n) ? 0 : n;
                 }
+                return 0;
+            };
+            const getDateMs = (s) => {
+                const f = s.fecha;
+                if (!f) return 0;
+                if (typeof f.toDate === 'function') return f.toDate().getTime();
+                if (typeof f.seconds !== 'undefined') return new Date(f.seconds * 1000).getTime();
+                return new Date(f).getTime();
+            };
+            const sesionesAsc = [...sesiones].sort((a, b) => getDateMs(a) - getDateMs(b));
+            sesionesAsc.forEach(s => {
+                const costo = parseMoney(s.costo);
+                const pagado = parseMoney(s.monto);
+                totalPagadoSum += pagado;
+                saldoAcumulado += (costo - pagado);
             });
             
             const fmt = (n) => n.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
             totalPagado.textContent = `$${fmt(totalPagadoSum)}`;
-            totalAdeudado.textContent = `$${fmt(totalAdeudadoSum)}`;
+            totalAdeudado.textContent = `$${fmt(Math.max(saldoAcumulado, 0))}`;
             infoPaciente.classList.remove('hidden');
         }
 
@@ -625,6 +624,33 @@
             tablaSesiones.classList.remove('hidden');
             noSesionesMsg.classList.add('hidden');
             
+            // Calcular saldo acumulado por sesión en orden cronológico (ascendente)
+            const parseMoney = (val) => {
+                if (typeof val === 'number') return isNaN(val) ? 0 : val;
+                if (typeof val === 'string') {
+                    const clean = val.replace(/\./g, '').replace(/,/g, '.');
+                    const n = parseFloat(clean);
+                    return isNaN(n) ? 0 : n;
+                }
+                return 0;
+            };
+            const getDateMs = (s) => {
+                const f = s.fecha;
+                if (!f) return 0;
+                if (typeof f.toDate === 'function') return f.toDate().getTime();
+                if (typeof f.seconds !== 'undefined') return new Date(f.seconds * 1000).getTime();
+                return new Date(f).getTime();
+            };
+            const sesionesAsc = [...sesiones].sort((a, b) => getDateMs(a) - getDateMs(b));
+            const saldoPorSesionId = {};
+            let saldoAcumulado = 0;
+            sesionesAsc.forEach(s => {
+                const costo = parseMoney(s.costo);
+                const pagado = parseMoney(s.monto);
+                saldoAcumulado += (costo - pagado);
+                saldoPorSesionId[s.id] = saldoAcumulado;
+            });
+
             tbody.innerHTML = '';
             
             sesiones.forEach(sesion => {
@@ -639,8 +665,8 @@
                         fecha = new Date(sesion.fecha).toLocaleDateString('es-ES');
                     }
                 }
-                const montoPagado = parseFloat(sesion.monto) || 0;
-                const costo = typeof sesion.costo !== 'undefined' ? (parseFloat(sesion.costo) || 0) : 0;
+                const montoPagado = parseMoney(sesion.monto);
+                const costo = typeof sesion.costo !== 'undefined' ? parseMoney(sesion.costo) : 0;
                 const pago = sesion.pago || 'debe';
                 
                 console.log('🔍 Procesando sesión:', {
@@ -653,31 +679,31 @@
                 
                 let estadoPago = '';
                 let pagado = 0;
-                let impagas = 0;
                 
                 switch (pago) {
                     case 'pago':
                         estadoPago = '<span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded-full">Pagado</span>';
                         pagado = montoPagado;
-                        impagas = Math.max(costo - montoPagado, 0);
                         console.log('✅ Sesión marcada como PAGADA, montoPagado:', montoPagado, 'pagado:', pagado);
                         break;
                     case 'pago-una-parte':
                         estadoPago = '<span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 rounded-full">Pago Parcial</span>';
                         pagado = montoPagado;
-                        impagas = Math.max(costo - montoPagado, 0);
                         console.log('⚠️ Sesión marcada como PAGO PARCIAL, montoPagado:', montoPagado, 'pagado:', pagado);
                         break;
                     case 'debe':
                     default:
                         estadoPago = '<span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 rounded-full">Pendiente</span>';
                         pagado = 0;
-                        impagas = costo;
                         console.log('❌ Sesión marcada como DEBE, costo:', costo, 'pagado:', pagado);
                         break;
                 }
                 
                 const fmt = (n) => n.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                const saldo = saldoPorSesionId[sesion.id] || 0;
+                const saldoColorClass = saldo > 0
+                    ? 'text-red-600 dark:text-red-400'
+                    : (saldo < 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-700 dark:text-gray-200');
                 row.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                         Sesión ${sesiones.indexOf(sesion) + 1}
@@ -697,8 +723,8 @@
                             <button class="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 edit-sesion" data-sesion-id="${sesion.id}">Editar</button>
                         </div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600 dark:text-red-400 font-medium">
-                        $${fmt(impagas)}
+                    <td class="px-6 py-4 whitespace-nowrap text-sm ${saldoColorClass} font-medium">
+                        $${fmt(saldo)}
                     </td>
                 `;
                 
