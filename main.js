@@ -1094,6 +1094,25 @@ async function showDashboard(user) {
             window.location.href = 'pagos.html';
         });
     }
+    // Mostrar botón Marketing solo a admins
+    const btnMarketing = document.getElementById('btnMarketing');
+    if (btnMarketing) {
+        const user = window.firebaseAuth && window.firebaseAuth.currentUser;
+        // Revisar flag isAdmin en Firestore
+        (async () => {
+            try {
+                if (!user) return;
+                const doc = await window.firebaseDB.collection('usuarios').doc(user.uid).get();
+                const isAdmin = !!(doc.exists && doc.data().isAdmin === true);
+                if (isAdmin) {
+                    btnMarketing.classList.remove('hidden');
+                }
+            } catch (_) {}
+        })();
+        btnMarketing.addEventListener('click', () => {
+            window.location.href = 'marketing.html';
+        });
+    }
     
     // Mostrar el botón Agenda Múltiple (Calendario compartido) solo para Pro, Ultra y Admin
     const btnAgendaMultiple = document.getElementById('tabAgendaMultiple');

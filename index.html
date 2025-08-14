@@ -781,7 +781,7 @@
                     </p>
                     <!-- Número de versión - Visible para todos los usuarios -->
                             <button id="versionBtn" class="text-xs text-gray-500 hover:text-gray-300 transition mt-2 sm:mt-0 cursor-pointer" onclick="abrirModalVersion()">
-          v0.4.9
+          v0.5.0
         </button>
                 </div>
                 <div class="flex space-x-6 mt-4 md:mt-0">
@@ -910,7 +910,7 @@
             <div class="flex items-center gap-3">
                 <!-- Número de versión - Visible para todos los usuarios -->
                         <button id="versionBtnDashboard" class="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 dust:text-gray-400 dust:hover:text-gray-200 transition cursor-pointer px-2 py-1 rounded" onclick="abrirModalVersion()">
-          v0.4.9
+          v0.5.0
         </button>
                 <button id="logoutBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded transition">Cerrar sesión</button>
                 <!-- Botón de tema -->
@@ -929,7 +929,7 @@
             <button id="btnEstadisticas" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-t hidden">Estadísticas</button>
             <button id="btnBackupPacientes" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-t hidden">Backup</button>
             <button id="btnPagos" class="bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 px-4 rounded-t">Pagos</button>
-
+            <button id="btnMarketing" class="bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-t hidden">Marketing</button>
         </div>
         <div id="calendarTabs" class="hidden">
             <div id="calendarViewButtons" class="flex items-center gap-2 mb-4">
@@ -1377,7 +1377,6 @@
             </div>
         </div>
     </div>
-
     <!-- Modal para foto del paciente -->
     <div id="patientPhotoModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[999999] hidden p-4" style="z-index: 999999;">
         <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg w-full max-w-md relative">
@@ -1786,7 +1785,6 @@
             </div>
         </div>
     </div>
-
     <!-- Modal Ficha Clínica Paciente -->
     <div id="fichaPacienteModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-start sm:items-center justify-center z-50 hidden p-2 sm:p-4 overflow-y-auto">
         <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg w-full max-w-4xl relative border dark:border-darkborder my-4 sm:my-8 max-h-[95vh] flex flex-col">
@@ -2130,7 +2128,6 @@
     </div>
     <!-- FullCalendar CSS -->
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
-    
     <!-- Estilos personalizados para FullCalendar en modo oscuro y responsividad -->
     <style>
         /* Estilos para modo oscuro del calendario */
@@ -2632,7 +2629,6 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        
         .dark .profesional-checkbox {
             background-color: #374151;
             border-color: #4b5563;
@@ -3130,7 +3126,6 @@
             background: #463a41 !important;
             color: #f5ebe0 !important;
         }
-        
         /* Badges y etiquetas admin */
         .dust .badge,
         .dust .tag,
@@ -3583,7 +3578,6 @@
             </form>
         </div>
     </div>
-
     <!-- Modal Información Madre -->
     <div id="modalInfoMadre" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden p-4">
         <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg w-full max-w-lg relative border dark:border-darkborder max-h-[90vh] overflow-y-auto">
@@ -3724,26 +3718,42 @@
                     <span class="text-2xl">🚀</span>
                     <div>
                         <h3 class="text-xl font-bold text-primary-700 dark:text-primary-400">Historial de Versiones</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 dust:text-gray-400">Espacio Cocrearte v0.4.9</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 dust:text-gray-400">Espacio Cocrearte v0.5.0</p>
                     </div>
                 </div>
                 <button onclick="cerrarModalVersion()" class="text-gray-400 hover:text-gray-700 text-2xl p-1">×</button>
             </div>
             
             <div class="p-6 space-y-6">
-                <!-- Versión 0.4.8 -->
+                <!-- Versión 0.5.0 -->
                 <div class="border-l-4 border-green-600 pl-4 mb-4">
                   <div class="flex items-center gap-2 mb-2">
-                                            <span class="bg-green-100 text-green-800 text-sm font-medium px-2 py-1 rounded">v0.4.9</span>
+                                            <span class="bg-green-100 text-green-800 text-sm font-medium px-2 py-1 rounded">v0.5.0</span>
                     <span class="text-sm text-gray-500">Actual</span>
+                  </div>
+                  <h4 class="font-bold text-lg text-gray-900 dark:text-white dust:text-dusttext mb-3">📊 Nueva Página de Marketing y Mejoras de UX</h4>
+                  <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300 dust:text-dusttext">
+                    <li>• <strong>Nueva página Marketing:</strong> Captura de datos de edad, sexo y motivos de consulta</li>
+                    <li>• <strong>Selectores múltiples:</strong> Motivos de consulta con opciones múltiples</li>
+                    <li>• <strong>Exportación CSV:</strong> Descarga de datos de marketing en formato CSV</li>
+                    <li>• <strong>UX mejorada:</strong> Selectores que se ajustan al contenido seleccionado</li>
+                    <li>• <strong>Acceso restringido:</strong> Solo visible para administradores</li>
+                  </ul>
+                </div>
+                
+                <!-- Versión 0.4.9 -->
+                <div class="border-l-4 border-blue-600 pl-4 mb-4">
+                  <div class="flex items-center gap-2 mb-2">
+                                            <span class="bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded">v0.5.0</span>
+                    <span class="text-sm text-gray-500">Anterior</span>
                   </div>
                   <h4 class="font-bold text-lg text-gray-900 dark:text-white dust:text-dusttext mb-3">📊 Resumen de Impagos y Mejoras de Presentismo</h4>
                   <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300 dust:text-dusttext">
                     <li>• <strong>Resumen de impagos:</strong> Tabla por paciente con Total Adeudado, Sesiones Impagas y Totales</li>
                     <li>• <strong>Descarga CSV:</strong> Botón para exportar el resumen</li>
-                    <li>• <strong>Marcado en rojo:</strong> Pacientes con última sesión “desiste” se resaltan en rojo (prioridad sobre derivado)</li>
-                    <li>• <strong>Indicador limpio:</strong> “(desiste)” como texto plano</li>
-                    <li>• <strong>Robustez:</strong> Fallback por campo “creado” para detectar última sesión</li>
+                    <li>• <strong>Marcado en rojo:</strong> Pacientes con última sesión "desiste" se resaltan en rojo (prioridad sobre derivado)</li>
+                    <li>• <strong>Indicador limpio:</strong> "(desiste)" como texto plano</li>
+                    <li>• <strong>Robustez:</strong> Fallback por campo "creado" para detectar última sesión</li>
                   </ul>
                 </div>
                 
@@ -4071,7 +4081,6 @@
                     <li>• <strong>UX Consistente:</strong> Comportamiento similar a otros modales expandidos del sistema</li>
                   </ul>
                 </div>
-                
                 <!-- Versión 0.2.4 -->
                 <div class="border-l-4 border-blue-600 pl-4 mb-4">
                   <div class="flex items-center gap-2 mb-2">
@@ -4548,7 +4557,6 @@
         <span id="tiempoEstimativo" class="text-primary-600 text-sm mt-2">Estimando tiempo...</span>
       </div>
     </div>
-
     <!-- Modal de Backup de Pacientes - MOVIDO AL FINAL DEL BODY -->
     <div id="modalBackupPacientes" class="modal-backup fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[99999] hidden">
       <div class="bg-white dark:bg-darkcard rounded-xl shadow-lg w-full max-w-2xl relative border dark:border-darkborder max-h-[90vh] flex flex-col">
@@ -4578,134 +4586,6 @@
       </div>
     </div>
     
-    <!-- Modal para configurar mensaje de recordatorio -->
-    <div id="modalConfiguracionMensaje" class="modal hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div class="modal-content bg-white dark:bg-darkcard rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div class="p-6">
-          <div class="flex justify-between items-center mb-4">
-            <h2 class="text-2xl font-bold text-[#2d3748] dark:text-gray-100">
-              📱 Configurar Mensaje de Recordatorio
-            </h2>
-            <button id="cerrarConfiguracionMensaje" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl">
-              ×
-            </button>
-          </div>
-          
-          <div class="space-y-4">
-            <!-- Plantillas predefinidas -->
-            <div>
-              <label class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-2">
-                Plantillas Predefinidas
-              </label>
-              <select id="plantillasSelect" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-darkbg dark:text-darktext">
-                <option value="default">Mensaje por defecto</option>
-                <option value="formal">Mensaje formal</option>
-                <option value="amigable">Mensaje amigable</option>
-                <option value="breve">Mensaje breve</option>
-              </select>
-            </div>
-            
-            <!-- Editor de mensaje -->
-            <div>
-              <label class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-2">
-                Personalizar Mensaje
-              </label>
-              <div class="mb-2 text-xs text-gray-500 dark:text-gray-400">
-                Variables disponibles: {nombre}, {fecha}, {hora}, {lugar}
-              </div>
-              <textarea id="mensajePersonalizado" rows="8" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-darkbg dark:text-darktext resize-none" 
-                        placeholder="Escribe tu mensaje personalizado aquí..."></textarea>
-            </div>
-            
-            <!-- Vista previa -->
-            <div>
-              <label class="block text-sm font-medium text-[#2d3748] dark:text-gray-100 mb-2">
-                Vista Previa
-              </label>
-              <div id="vistaPreviaMensaje" class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border text-sm whitespace-pre-wrap">
-                <!-- Vista previa del mensaje -->
-              </div>
-            </div>
-          </div>
-          
-          <div class="flex justify-end gap-3 mt-6">
-            <button id="cancelarConfiguracionMensaje" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-              Cancelar
-            </button>
-            <button id="guardarConfiguracionMensaje" class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition">
-              Guardar Configuración
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <style>
-    .dashboard-container {
-      padding: 10px;
-      min-height: 100vh;
-      width: calc(100vw - 24px);
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    body {
-      overflow-x: hidden;
-    }
-    @media (max-width: 640px) {
-      .dashboard-container {
-        padding: 4px;
-        gap: 8px;
-        width: 100vw;
-      }
-    }
-    
-    /* Estilos específicos para el modal de backup */
-    .modal-backup {
-      position: fixed !important;
-      top: 0 !important;
-      left: 0 !important;
-      width: 100vw !important;
-      height: 100vh !important;
-      z-index: 99999 !important;
-      align-items: center !important;
-      justify-content: center !important;
-      background-color: rgba(0, 0, 0, 0.4) !important;
-    }
-    
-    .modal-backup.hidden {
-      display: none !important;
-      visibility: hidden !important;
-      opacity: 0 !important;
-    }
-    
-    .modal-backup:not(.hidden) {
-      display: flex !important;
-      visibility: visible !important;
-      opacity: 1 !important;
-    }
-    </style>
-
-    <!-- Menú de opciones para foto de perfil -->
-    <div id="profilePhotoMenu" class="absolute z-50 bg-white dark:bg-darkcard rounded-lg shadow-lg border dark:border-darkborder mt-2 left-0 ml-[10px] hidden w-48">
-      <button id="optionUploadPhoto" class="w-full text-left px-4 py-2 hover:bg-primary-50 dark:hover:bg-gray-700 rounded-t transition text-gray-800 dark:text-white">Subir foto</button>
-      <button id="optionTakePhoto" class="w-full text-left px-4 py-2 hover:bg-primary-50 dark:hover:bg-gray-700 rounded-b transition text-gray-800 dark:text-white">Tomar foto</button>
-    </div>
-
-    <!-- Modal de cámara para tomar foto de perfil -->
-    <div id="cameraModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
-      <div class="bg-white dark:bg-darkcard rounded-2xl shadow-lg p-6 w-full max-w-xs sm:max-w-sm flex flex-col items-center relative">
-        <button id="closeCameraModal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">×</button>
-        <h2 class="text-lg font-bold mb-4 text-gray-900 dark:text-white">Tomar foto de perfil</h2>
-        <video id="cameraVideo" autoplay playsinline class="rounded-lg w-48 h-48 bg-black mb-4 object-cover"></video>
-        <canvas id="cameraCanvas" class="hidden"></canvas>
-        <button id="takePhotoBtn" class="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-6 rounded-lg transition mb-2">Tomar foto</button>
-        <button id="confirmPhotoBtn" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg transition mb-2 hidden">Usar esta foto</button>
-        <button id="retakePhotoBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-6 rounded-lg transition hidden">Repetir</button>
-      </div>
-    </div>
-
     <!-- Modal para configurar mensaje de recordatorio -->
     <div id="modalConfiguracionMensaje" class="modal hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div class="modal-content bg-white dark:bg-darkcard rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -4959,7 +4839,6 @@
         <button id="retakePhotoBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-6 rounded-lg transition hidden">Repetir</button>
       </div>
     </div>
-
     <!-- Modal de Precios -->
     <div id="modalPrecios" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden p-4">
         <div class="bg-white dark:bg-darkcard rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">

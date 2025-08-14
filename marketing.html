@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Marketing - Espacio Cocrearte</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<script>
+	  tailwind.config = {
+	    darkMode: 'class',
+	    theme: { extend: { colors: { darkbg: '#181f2a', darkcard: '#232b3b', darkborder: '#313a4d', darktext: '#d1d5db' } } }
+	  };
+	</script>
+	<link rel="icon" href="public/favicon.ico" type="image/x-icon">
+	<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-storage-compat.js"></script>
+	<script src="firebase-config.js"></script>
+</head>
+<body class="dark bg-darkbg text-gray-100 min-h-screen">
+	<header class="bg-gradient-to-br from-primary-500 to-primary-700 shadow-lg">
+		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+			<div class="flex items-center space-x-6">
+				<a href="index.html" class="flex items-center space-x-3 text-white hover:text-primary-100 transition-all duration-200 transform hover:scale-105">
+					<div class="bg-white bg-opacity-20 p-2 rounded-lg">
+						<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+					</div>
+					<span class="font-semibold text-lg">Volver</span>
+				</a>
+				<div class="w-px h-8 bg-white bg-opacity-30"></div>
+				<div class="flex items-center space-x-3">
+					<div class="bg-white bg-opacity-20 p-2 rounded-lg">
+						<svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+					</div>
+					<span class="text-2xl font-bold text-white">Marketing</span>
+				</div>
+			</div>
+			<div class="flex items-center gap-4">
+				<span class="text-white text-sm opacity-90">Panel de Administración</span>
+				<button id="logoutBtn" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 backdrop-blur-sm">
+					<svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+					Cerrar Sesión
+				</button>
+			</div>
+		</div>
+	</header>
+	<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 bg-darkbg">
+		<!-- Breadcrumb y título -->
+		<div class="mb-8">
+			<nav class="flex items-center space-x-2 text-sm text-gray-400 mb-4">
+				<a href="index.html" class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Inicio</a>
+				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+				<span class="text-gray-300">Marketing</span>
+			</nav>
+			<div class="flex justify-between items-center">
+				<div>
+					<h1 class="text-4xl font-bold text-white mb-2">Panel de Marketing</h1>
+					<p class="text-lg text-gray-400">Gestiona y analiza datos demográficos de consultas</p>
+				</div>
+				<div class="flex gap-4">
+					<button id="btnDescargarCSV" class="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center space-x-2">
+						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+						<span>Descargar CSV</span>
+					</button>
+					<button id="btnAgregarFila" class="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center space-x-2">
+						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+						<span>Agregar Fila</span>
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- Mensaje de acceso restringido -->
+		<div id="noAccess" class="hidden mb-8">
+			<div class="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500 text-yellow-800 dark:text-yellow-200 p-6 rounded-xl shadow-lg">
+				<div class="flex items-center">
+					<svg class="w-8 h-8 mr-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>
+					<div>
+						<h3 class="text-xl font-bold">Acceso Restringido</h3>
+						<p>Esta sección es solo para administradores del sistema.</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Panel principal -->
+		<div id="panel" class="bg-darkcard rounded-2xl shadow-2xl border border-darkborder overflow-hidden">
+			<div class="overflow-x-auto">
+				<table class="w-full">
+					<thead class="bg-darkcard border-b border-darkborder">
+						<tr>
+							<th class="px-6 py-4 text-left text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700">
+								<div class="flex items-center space-x-2">
+									<svg class="w-5 h-5 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+									<span>Edad</span>
+								</div>
+							</th>
+							<th class="px-6 py-4 text-left text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700">
+								<div class="flex items-center space-x-2">
+									<svg class="w-5 h-5 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+									<span>Sexo</span>
+								</div>
+							</th>
+							<th class="px-6 py-4 text-left text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700">
+								<div class="flex items-center space-x-2">
+									<svg class="w-5 h-5 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+									<span>Motivo de Consulta</span>
+								</div>
+							</th>
+							<th class="px-6 py-4 text-left text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700">
+								<div class="flex items-center space-x-2">
+									<svg class="w-5 h-5 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+									<span>Acciones</span>
+								</div>
+							</th>
+						</tr>
+					</thead>
+					<tbody id="marketingTable" class="divide-y divide-gray-100 dark:divide-gray-800">
+						<tr id="loadingRow" class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+							<td colspan="4" class="px-6 py-12 text-center">
+								<div class="flex flex-col items-center space-y-3 text-gray-500 dark:text-gray-400">
+									<svg class="w-12 h-12 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+									<div>
+										<p class="text-lg font-medium">Listo para cargar datos</p>
+										<p class="text-sm">Usa el botón "Agregar Fila" para comenzar</p>
+									</div>
+								</div>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</main>
+	<script>
+	// Motivos de consulta disponibles (definidos localmente)
+	const MOTIVOS_CONSULTA = [
+		"Psicología Infantil",
+		"Psicología Adolescente", 
+		"Psicología Adulto",
+		"Psicología Familiar",
+		"Psicología de Pareja",
+		"Psicología Laboral",
+		"Psicología Educativa",
+		"Psicología Clínica",
+		"Psicología Social",
+		"Psicología Forense",
+		"Psicología Deportiva",
+		"Psicología de la Salud",
+		"Neuropsicología",
+		"Psicopedagogía",
+		"Terapia Ocupacional",
+		"Fonoaudiología",
+		"Psicomotricidad",
+		"Integración Sensorial",
+		"Orientación Vocacional",
+		"Apoyo Escolar"
+	];
+
+	// Función para crear selector de motivos
+	function crearSelectorMotivos(motivosSeleccionados = []) {
+		const select = document.createElement('select');
+		select.multiple = true;
+		select.className = 'w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 cursor-pointer';
+		select.size = 3; // Tamaño inicial pequeño
+		
+		MOTIVOS_CONSULTA.forEach(motivo => {
+			const option = document.createElement('option');
+			option.value = motivo;
+			option.textContent = motivo;
+			if (motivosSeleccionados.includes(motivo)) {
+				option.selected = true;
+			}
+			select.appendChild(option);
+		});
+		
+		// Función para ajustar el tamaño del select según las opciones seleccionadas
+		const ajustarTamañoSelect = () => {
+			const opcionesSeleccionadas = Array.from(select.selectedOptions);
+			if (opcionesSeleccionadas.length === 0) {
+				select.size = 3; // Tamaño mínimo
+			} else {
+				select.size = Math.min(opcionesSeleccionadas.length + 2, 8); // Máximo 8 para no ocupar mucho espacio
+			}
+		};
+		
+		// Eventos para ajustar el tamaño
+		select.addEventListener('focus', () => {
+			select.size = 8; // Expandir al hacer focus
+			select.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+		});
+		
+		select.addEventListener('blur', () => {
+			ajustarTamañoSelect();
+			select.style.boxShadow = 'none';
+		});
+		select.addEventListener('change', ajustarTamañoSelect);
+		
+		return select;
+	}
+
+	// Función para agregar una nueva fila
+	function agregarFila() {
+		const tbody = document.getElementById('marketingTable');
+		const loadingRow = document.getElementById('loadingRow');
+		
+		// Remover la fila de carga si existe
+		if (loadingRow) {
+			loadingRow.remove();
+		}
+		
+		const tr = document.createElement('tr');
+		tr.className = 'hover:bg-gray-50 dark:hover:bg-darkcard transition-all duration-200 border-b border-gray-100 dark:border-darkborder';
+		
+		// Celda de Edad
+		const tdEdad = document.createElement('td');
+		tdEdad.className = 'px-6 py-4';
+		const inputEdad = document.createElement('input');
+		inputEdad.type = 'number';
+		inputEdad.className = 'w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-gray-400 dark:placeholder-gray-500';
+		inputEdad.placeholder = 'Ingresa la edad';
+		inputEdad.min = '0';
+		inputEdad.max = '120';
+		tdEdad.appendChild(inputEdad);
+		
+		// Celda de Sexo
+		const tdSexo = document.createElement('td');
+		tdSexo.className = 'px-6 py-4';
+		const selectSexo = document.createElement('select');
+		selectSexo.className = 'w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 cursor-pointer';
+		['Masculino', 'Femenino', 'No binario', 'Prefiero no decir'].forEach(sexo => {
+			const option = document.createElement('option');
+			option.value = sexo;
+			option.textContent = sexo;
+			selectSexo.appendChild(option);
+		});
+		tdSexo.appendChild(selectSexo);
+		
+		// Celda de Motivo de Consulta
+		const tdMotivo = document.createElement('td');
+		tdMotivo.className = 'px-6 py-4';
+		const selectMotivo = crearSelectorMotivos(['Psicología Infantil']); // Valor por defecto
+		selectMotivo.className = 'w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 cursor-pointer';
+		tdMotivo.appendChild(selectMotivo);
+		
+		// Celda de Acciones
+		const tdAcciones = document.createElement('td');
+		tdAcciones.className = 'px-6 py-4';
+		const btnEliminar = document.createElement('button');
+		btnEliminar.className = 'bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center space-x-2';
+		btnEliminar.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg><span>Eliminar</span>';
+		btnEliminar.onclick = () => {
+			tr.style.transform = 'scale(0.95)';
+			tr.style.opacity = '0';
+			setTimeout(() => tr.remove(), 200);
+		};
+		tdAcciones.appendChild(btnEliminar);
+		
+		tr.appendChild(tdEdad);
+		tr.appendChild(tdSexo);
+		tr.appendChild(tdMotivo);
+		tr.appendChild(tdAcciones);
+		
+		// Animación de entrada
+		tr.style.transform = 'translateY(20px)';
+		tr.style.opacity = '0';
+		tbody.appendChild(tr);
+		
+		setTimeout(() => {
+			tr.style.transform = 'translateY(0)';
+			tr.style.opacity = '1';
+		}, 50);
+	}
+
+	// Función para descargar CSV
+	function descargarCSV() {
+		const tbody = document.getElementById('marketingTable');
+		const filas = tbody.querySelectorAll('tr:not(#loadingRow)');
+		
+		if (filas.length === 0) {
+			alert('No hay datos para exportar. Agrega al menos una fila.');
+			return;
+		}
+		
+		let csv = 'Edad,Sexo,Motivo de Consulta\n';
+		
+		filas.forEach(fila => {
+			const edad = fila.querySelector('input[type="number"]')?.value || '';
+			const sexo = fila.querySelector('select')?.value || '';
+			const motivos = Array.from(fila.querySelector('select[multiple]')?.selectedOptions || [])
+				.map(option => option.value)
+				.join('; ');
+			
+			csv += `"${edad}","${sexo}","${motivos}"\n`;
+		});
+		
+		const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+		const link = document.createElement('a');
+		const url = URL.createObjectURL(blob);
+		link.setAttribute('href', url);
+		link.setAttribute('download', 'marketing_data.csv');
+		link.style.visibility = 'hidden';
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+	}
+
+	// Función para verificar si el usuario es admin
+	async function verificarAdmin() {
+		try {
+			const user = firebase.auth().currentUser;
+			if (!user) {
+				console.log('No hay usuario autenticado');
+				window.location.href = 'index.html';
+				return;
+			}
+			
+			console.log('Usuario autenticado:', user.email);
+			
+			const userDoc = await firebase.firestore().collection('usuarios').doc(user.uid).get();
+			console.log('Documento de usuario:', userDoc.exists ? 'existe' : 'no existe');
+			
+			if (userDoc.exists) {
+				const userData = userDoc.data();
+				console.log('Datos del usuario:', userData);
+				console.log('Es admin:', userData.isAdmin);
+			}
+			
+			if (!userDoc.exists || !userDoc.data().isAdmin) {
+				console.log('Usuario no es admin o no existe el documento');
+				document.getElementById('noAccess').classList.remove('hidden');
+				document.getElementById('panel').classList.add('hidden');
+				return;
+			}
+			
+			// Usuario es admin, mostrar panel
+			console.log('Usuario es admin, mostrando panel');
+			document.getElementById('noAccess').classList.add('hidden');
+			document.getElementById('panel').classList.remove('hidden');
+			
+			// Agregar primera fila por defecto
+			agregarFila();
+		} catch (error) {
+			console.error('Error verificando admin:', error);
+			document.getElementById('noAccess').classList.remove('hidden');
+			document.getElementById('panel').classList.add('hidden');
+		}
+	}
+
+	// Inicialización
+	document.addEventListener('DOMContentLoaded', function() {
+		// Esperar a que Firebase esté listo antes de verificar admin
+		firebase.auth().onAuthStateChanged(function(user) {
+			if (user) {
+				// Usuario autenticado, verificar si es admin
+				verificarAdmin();
+			} else {
+				// No hay usuario autenticado, redirigir
+				window.location.href = 'index.html';
+			}
+		});
+		
+		// Event listeners
+		document.getElementById('btnAgregarFila').addEventListener('click', agregarFila);
+		document.getElementById('btnDescargarCSV').addEventListener('click', descargarCSV);
+		document.getElementById('logoutBtn').addEventListener('click', () => {
+			firebase.auth().signOut().then(() => {
+				window.location.href = 'index.html';
+			});
+		});
+	});
+	</script>
+</body>
+</html>
